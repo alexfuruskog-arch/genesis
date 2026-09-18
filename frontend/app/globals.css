@@ -1,0 +1,27 @@
+@import "tailwindcss";
+
+:root {
+  --paper: #f4efe6;
+  --ink: #1c1916;
+  --copper: #c45c26;
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-ink: var(--ink);
+  --color-copper: var(--copper);
+  --font-sans: var(--font-source), "Source Sans 3", system-ui, sans-serif;
+  --font-display: var(--font-fraunces), Fraunces, Georgia, serif;
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans), "Source Sans 3", system-ui, sans-serif;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display), Fraunces, Georgia, serif;
+}

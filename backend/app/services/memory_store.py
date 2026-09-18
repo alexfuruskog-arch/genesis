@@ -1,0 +1,116 @@
+from __future__ import annotations
+
+import math
+from datetime import datetime, timezone
+from threading import Lock
+from typing import Any
+from uuid import uuid4
+
+
+def _now() -> datetime:
+    return datetime.now(timezone.utc)
+
+
+class MemoryStore:
+    """In-process fallback used when Supabase env vars are missing."""
+
+    def __init__(self) -> None:
+        self._lock = Lock()
+        self.documents: dict[str, dict[str, Any]] = {}
+        self.chunks: dict[str, dict[str, Any]] = {}
+        self.quiz_sessions: dict[str, dict[str, Any]] = {}
+        self.shopify_customers: dict[str, dict[str, Any]] = {}
+        self.webhooks: list[dict[str, Any]] = []
+
+    def create_document(self, row: dict[str, Any]) -> dict[str, Any]:
+        with self._lock:
+            self.documents[row["id"]] = row
+            return row
+
+    def get_document(self, user_id: str, document_id: str) -> dict[str, Any] | None:
+        doc = self.documents.get(document_id)
+        if not doc or doc["user_id"] != user_id:
+            return None
+        return doc
+
+    def save_chunks(self, rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        with self._lock:
+            for row in rows:
+                self.chunks[row["id"]] = row
+        return rows
+
+    def list_chunks(self, user_id: str, document_id: str) -> list[dict[str, Any]]:
+        rows = [
+            chunk
+            for chunk in self.chunks.values()
+            if chunk["document_id"] == document_id and chunk["user_id"] == user_id
+        ]
+        return sorted(rows, key=lambda item: item["chunk_index"])
+
+    def match_chunks(
+        self,
+        user_id: str,
+        document_id: str,
+        query_embedding: list[float] | None,
+        match_count: int,
+    ) -> list[dict[str, Any]]:
+        rows = self.list_chunks(user_id, document_id)
+        if not rows:
+            return []
+        if query_embedding and any(row.get("embedding") for row in rows):
+            scored: list[tuple[float, dict[str, Any]]] = []
+            for row in rows:
+                embedding = row.get("embedding")
+                if not embedding:
+                    continue
+                scored.append((_cosine(query_embedding, embedding), row))
+            scored.sort(key=lambda item: item[0], reverse=True)
+            return [row for _, row in scored[:match_count]]
+        return rows[:match_count]
+
+    def create_quiz_session(self, row: dict[str, Any]) -> dict[str, Any]:
+        with self._lock:
+            self.quiz_sessions[row["id"]] = row
+            return row
+
+    def upsert_shopify_customer(self, user_id: str, payload: dict[str, Any]) -> dict[str, Any]:
+        with self._lock:
+            existing = self.shopify_customers.get(user_id)
+            row = {
+                "id": existing["id"] if existing else str(uuid4()),
+                "user_id": user_id,
+                "updated_at": _now().isoformat(),
+                **(existing or {}),
+                **payload,
+            }
+            if not existing:
+                row["created_at"] = _now().isoformat()
+            self.shopify_customers[user_id] = row
+            return row
+
+    def get_shopify_customer(self, user_id: str) -> dict[str, Any] | None:
+        return self.shopify_customers.get(user_id)
+
+    def record_webhook(self, event: dict[str, Any]) -> dict[str, Any]:
+        with self._lock:
+            self.webhooks.insert(0, event)
+            self.webhooks[:] = self.webhooks[:25]
+        return event
+
+    def recent_webhooks(self) -> list[dict[str, Any]]:
+        return list(self.webhooks)
+
+
+def _cosine(left: list[float], right: list[float]) -> float:
+    width = min(len(left), len(right))
+    if width == 0:
+        return 0.0
+    dot = sum(left[i] * right[i] for i in range(width))
+    n1 = math.sqrt(sum(value * value for value in left[:width]))
+    n2 = math.sqrt(sum(value * value for value in right[:width]))
+    if n1 == 0 or n2 == 0:
+        return 0.0
+    return dot / (n1 * n2)
+
+
+memory_store = MemoryStore()
