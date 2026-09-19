@@ -10,7 +10,7 @@ export const shopifyStoreDomain =
 export const shopifyCornellHandle =
   process.env.NEXT_PUBLIC_SHOPIFY_CORNELL_HANDLE ?? "cornell-notebook";
 export const shopifyMathHandle =
-  process.env.NEXT_PUBLIC_SHOPIFY_MATH_HANDLE ?? "math-notebook";
+  process.env.NEXT_PUBLIC_SHOPIFY_MATH_HANDLE ?? "arzive-math-notebook";
 export const shopifyStorefrontToken =
   process.env.NEXT_PUBLIC_SHOPIFY_STOREFRONT_ACCESS_TOKEN ?? "";
 export const shopifyApiKey = process.env.NEXT_PUBLIC_SHOPIFY_API_KEY ?? "";

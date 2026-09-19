@@ -1,3 +1,7 @@
+{%- comment -%}
+  Single editorial product image — never a diptych.
+  Prefer theme cover assets over Admin featured media so pasted collages do not win.
+{%- endcomment -%}
 {%- liquid
   assign p = product
   if p == blank and handle != blank
@@ -8,35 +12,66 @@
   assign text = description_fallback
   assign url = routes.root_url
   assign price = ''
+  assign is_math = false
 
   if p != blank
     assign title = p.title
     if p.description != blank
-      assign text = p.description | strip_html | truncate: 240
+      assign text = p.description | strip_html | truncate: 220
     endif
     assign url = p.url
     assign price = p.price | money
+    assign handle_check = p.handle
   elsif handle != blank
     assign url = '/products/' | append: handle
+    assign handle_check = handle
+  else
+    assign handle_check = ''
+  endif
+
+  if handle_check contains 'math'
+    assign is_math = true
+  endif
+
+  if cover_asset == blank
+    if is_math
+      assign cover_asset = 'notebook-green.jpg'
+    else
+      assign cover_asset = 'notebook-cream.jpg'
+    endif
+  endif
+
+  if color_name == blank
+    if is_math
+      assign color_name = 'Forest green'
+    else
+      assign color_name = 'Cream'
+    endif
+  endif
+
+  if color_hex == blank
+    if is_math
+      assign color_hex = '#1a2e26'
+    else
+      assign color_hex = '#f3efe6'
+    endif
   endif
 -%}
 
 <article class="arzive-card">
-  <div class="arzive-card__media">
-    <a href="{{ url }}">
-      {% if p != blank and p.featured_media %}
-        {{ p.featured_media | image_url: width: 1200 | image_tag: class: 'arzive-card__img', loading: 'lazy', alt: title }}
-      {% elsif layout_asset != blank %}
-        <img class="arzive-card__img" src="{{ layout_asset | asset_url }}" alt="{{ title | escape }}" width="800" height="1000" loading="lazy">
-      {% endif %}
-    </a>
-    {% if cover_asset != blank %}
-      <img class="arzive-card__cover" src="{{ cover_asset | asset_url }}" alt="{{ title | escape }} cover" width="800" height="1000" loading="lazy">
-    {% endif %}
-  </div>
+  <a class="arzive-card__media" href="{{ url }}">
+    <img
+      class="arzive-card__img"
+      src="{{ cover_asset | asset_url }}"
+      alt="{{ title | escape }}"
+      width="1200"
+      height="1500"
+      loading="lazy"
+    >
+  </a>
   <div class="arzive-card__body">
     <div class="arzive-card__meta">
-      <span class="arzive-swatch" style="background:{{ color_hex | default: '#f3efe6' }}"></span>
+      <span class="arzive-swatch" style="background:{{ color_hex }}"></span>
       <span>{{ color_name }}</span>
     </div>
     <h2 class="arzive-card__title">
@@ -48,6 +83,6 @@
     {% if price != blank %}
       <p class="arzive-card__price">{{ price }}</p>
     {% endif %}
-    <a class="arzive-btn arzive-btn--ink" href="{{ url }}">Buy {{ title | split: ' ' | last }}</a>
+    <a class="arzive-btn arzive-btn--ink" href="{{ url }}">Buy notebook</a>
   </div>
 </article>

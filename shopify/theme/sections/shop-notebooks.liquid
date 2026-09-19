@@ -3,7 +3,7 @@
     <p class="arzive-kicker">Shop</p>
     <h1 class="arzive-shop__title">{{ section.settings.heading | default: 'Two notebook models' }}</h1>
     <p class="arzive-shop__intro">
-      {{ section.settings.intro | default: 'Cream Cornell for structured notes. Green Math for problem-solving. Checkout here — then scan pages in Study with Arzive under your account.' }}
+      {{ section.settings.intro | default: 'Cream Cornell for structured thinking. Forest-green Math for problem-solving. Checkout here — then scan pages in Study with Arzive under your account.' }}
     </p>
 
     <div class="arzive-shop__grid">
@@ -20,7 +20,6 @@
             color_name: block.settings.color_name,
             color_hex: block.settings.color_hex,
             cover_asset: block.settings.cover_asset,
-            layout_asset: block.settings.layout_asset,
             description_fallback: block.settings.description
           %}
         </div>
@@ -53,7 +52,7 @@
       "type": "textarea",
       "id": "intro",
       "label": "Intro",
-      "default": "Cream Cornell for structured notes. Green Math for problem-solving. Checkout here — then scan pages in Study with Arzive under your account."
+      "default": "Cream Cornell for structured thinking. Forest-green Math for problem-solving. Checkout here — then scan pages in Study with Arzive under your account."
     }
   ],
   "blocks": [
@@ -67,7 +66,6 @@
         { "type": "text", "id": "color_name", "label": "Color name", "default": "Cream" },
         { "type": "color", "id": "color_hex", "label": "Swatch", "default": "#f3efe6" },
         { "type": "text", "id": "cover_asset", "label": "Cover asset filename", "default": "notebook-cream.jpg" },
-        { "type": "text", "id": "layout_asset", "label": "Pages asset filename", "default": "cornell-pages.jpg" },
         { "type": "textarea", "id": "description", "label": "Fallback description" }
       ]
     }
@@ -84,19 +82,17 @@
             "color_name": "Cream",
             "color_hex": "#f3efe6",
             "cover_asset": "notebook-cream.jpg",
-            "layout_asset": "cornell-pages.jpg",
             "description": "Cue, Main Notes, and Summary — the classic Cornell system on recycled cream paper."
           }
         },
         {
           "type": "notebook",
           "settings": {
-            "handle": "math-notebook",
+            "handle": "arzive-math-notebook",
             "title": "Green Math Notebook",
             "color_name": "Forest green",
             "color_hex": "#1a2e26",
             "cover_asset": "notebook-green.jpg",
-            "layout_asset": "math-pages.jpg",
             "description": "Grid for Example and Practice Questions, with Formulas and Explanations beside."
           }
         }

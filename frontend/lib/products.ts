@@ -16,7 +16,7 @@ export type Product = {
 const cornellHandle =
   process.env.NEXT_PUBLIC_SHOPIFY_CORNELL_HANDLE?.trim() || "cornell-notebook";
 const mathHandle =
-  process.env.NEXT_PUBLIC_SHOPIFY_MATH_HANDLE?.trim() || "math-notebook";
+  process.env.NEXT_PUBLIC_SHOPIFY_MATH_HANDLE?.trim() || "arzive-math-notebook";
 
 export const products: Product[] = [
   {

@@ -2,15 +2,17 @@
   <div class="arzive-shell">
     <p class="arzive-kicker">{{ collection.title | default: 'Shop' }}</p>
     <h1 class="arzive-shop__title">Notebooks</h1>
+    <p class="arzive-shop__intro">
+      Cream Cornell for structured notes. Forest-green Math for problem-solving. One notebook, one photograph — nothing pasted together.
+    </p>
+
     <div class="arzive-shop__grid">
       {% for product in collection.products %}
         {% assign cover = 'notebook-cream.jpg' %}
-        {% assign layout = 'cornell-pages.jpg' %}
         {% assign color_name = 'Cream' %}
         {% assign color_hex = '#f3efe6' %}
-        {% if product.handle == 'math-notebook' %}
+        {% if product.handle contains 'math' %}
           {% assign cover = 'notebook-green.jpg' %}
-          {% assign layout = 'math-pages.jpg' %}
           {% assign color_name = 'Forest green' %}
           {% assign color_hex = '#1a2e26' %}
         {% endif %}
@@ -21,13 +23,25 @@
           color_name: color_name,
           color_hex: color_hex,
           cover_asset: cover,
-          layout_asset: layout,
           description_fallback: product.description | strip_html | truncate: 200
         %}
       {% else %}
-        {% comment %} Fallback when collection empty — show known handles {% endcomment %}
-        {% render 'product-card', handle: 'cornell-notebook', title_fallback: 'Cream Cornell Notebook', color_name: 'Cream', color_hex: '#f3efe6', cover_asset: 'notebook-cream.jpg', layout_asset: 'cornell-pages.jpg', description_fallback: 'Structured Cornell notebook.' %}
-        {% render 'product-card', handle: 'math-notebook', title_fallback: 'Green Math Notebook', color_name: 'Forest green', color_hex: '#1a2e26', cover_asset: 'notebook-green.jpg', layout_asset: 'math-pages.jpg', description_fallback: 'Math problem-solving notebook.' %}
+        {% render 'product-card',
+          handle: 'cornell-notebook',
+          title_fallback: 'Cream Cornell Notebook',
+          color_name: 'Cream',
+          color_hex: '#f3efe6',
+          cover_asset: 'notebook-cream.jpg',
+          description_fallback: 'Cue, Main Notes, and Summary — the classic Cornell system on recycled cream paper.'
+        %}
+        {% render 'product-card',
+          handle: 'arzive-math-notebook',
+          title_fallback: 'Green Math Notebook',
+          color_name: 'Forest green',
+          color_hex: '#1a2e26',
+          cover_asset: 'notebook-green.jpg',
+          description_fallback: 'Grid for Example and Practice Questions, with Formulas and Explanations beside.'
+        %}
       {% endfor %}
     </div>
   </div>

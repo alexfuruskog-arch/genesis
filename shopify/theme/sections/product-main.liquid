@@ -1,27 +1,44 @@
+{%- liquid
+  assign is_math = false
+  if product.handle contains 'math'
+    assign is_math = true
+  endif
+
+  if is_math
+    assign cover_file = 'notebook-green.jpg'
+    assign kicker = 'Forest green · Mathematical clarity'
+  else
+    assign cover_file = 'notebook-cream.jpg'
+    assign kicker = 'Cream · Structured thinking'
+  endif
+-%}
+
 <section class="arzive-product">
   <div class="arzive-shell arzive-product__grid">
-    <div class="arzive-product__gallery">
-      {% if product.media.size > 0 %}
-        {% for media in product.media %}
-          <figure class="arzive-product__figure">
-            {{ media | image_url: width: 1400 | image_tag: class: 'arzive-product__img', loading: 'lazy', alt: media.alt | default: product.title }}
-          </figure>
-        {% endfor %}
-      {% else %}
-        {% if product.handle == 'math-notebook' %}
-          <img class="arzive-product__img" src="{{ 'math-pages.jpg' | asset_url }}" alt="{{ product.title | escape }}" width="1000" height="1250">
-          <img class="arzive-product__img" src="{{ 'notebook-green.jpg' | asset_url }}" alt="{{ product.title | escape }} cover" width="1000" height="1250">
-        {% else %}
-          <img class="arzive-product__img" src="{{ 'cornell-pages.jpg' | asset_url }}" alt="{{ product.title | escape }}" width="1000" height="1250">
-          <img class="arzive-product__img" src="{{ 'notebook-cream.jpg' | asset_url }}" alt="{{ product.title | escape }} cover" width="1000" height="1250">
-        {% endif %}
+    <div class="arzive-product__visual">
+      <figure class="arzive-product__hero">
+        <img
+          class="arzive-product__img"
+          src="{{ cover_file | asset_url }}"
+          alt="{{ product.title | escape }}"
+          width="1400"
+          height="1750"
+        >
+      </figure>
+      {% comment %} Secondary media only if Admin uploaded distinct photos — never glued side-by-side {% endcomment %}
+      {% if product.media.size > 1 %}
+        <ul class="arzive-product__thumbs">
+          {% for media in product.media limit: 4 %}
+            <li>
+              {{ media | image_url: width: 600 | image_tag: loading: 'lazy', alt: media.alt | default: product.title }}
+            </li>
+          {% endfor %}
+        </ul>
       {% endif %}
     </div>
 
     <div class="arzive-product__info">
-      <p class="arzive-kicker">
-        {% if product.handle == 'math-notebook' %}Forest green · Mathematical clarity{% else %}Cream · Structured thinking{% endif %}
-      </p>
+      <p class="arzive-kicker">{{ kicker }}</p>
       <h1 class="arzive-product__title">{{ product.title }}</h1>
       <p class="arzive-product__price">{{ product.selected_or_first_available_variant.price | money }}</p>
       <div class="arzive-product__desc rte">{{ product.description }}</div>

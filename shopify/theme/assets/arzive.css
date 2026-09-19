@@ -1,4 +1,4 @@
-/* ARZIVE Shopify theme — matches Next.js brand UI */
+/* ARZIVE Shopify theme — premium stationery, one photo per product */
 *,
 *::before,
 *::after {
@@ -50,6 +50,26 @@ img {
   min-height: 50vh;
 }
 
+@keyframes arzive-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes arzive-soft-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 /* Header */
 .arzive-header {
   z-index: 40;
@@ -66,7 +86,7 @@ img {
   background: rgba(243, 238, 228, 0.95);
   color: var(--forest);
   border-bottom: 1px solid rgba(26, 46, 38, 0.1);
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(10px);
 }
 
 .arzive-header__grid {
@@ -74,7 +94,7 @@ img {
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
   gap: 0.5rem;
-  padding: 1.25rem 0;
+  padding: 1.35rem 0;
 }
 
 .arzive-header__left,
@@ -91,8 +111,8 @@ img {
 
 .arzive-wordmark {
   font-family: "Cormorant Garamond", Georgia, serif;
-  font-size: 1.35rem;
-  letter-spacing: 0.32em;
+  font-size: 1.45rem;
+  letter-spacing: 0.34em;
   font-weight: 500;
   text-align: center;
 }
@@ -119,8 +139,8 @@ img {
 
 @media (min-width: 640px) {
   .arzive-wordmark {
-    font-size: 1.65rem;
-    letter-spacing: 0.36em;
+    font-size: 1.75rem;
+    letter-spacing: 0.38em;
   }
   .arzive-header__left,
   .arzive-header__right {
@@ -169,7 +189,7 @@ img {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.9rem 1.45rem;
+  padding: 0.95rem 1.55rem;
   font-size: 0.68rem;
   letter-spacing: 0.18em;
   text-transform: uppercase;
@@ -177,7 +197,7 @@ img {
   border: 0;
   border-radius: 0;
   cursor: pointer;
-  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+  transition: background 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
 }
 
 .arzive-btn--solid {
@@ -201,12 +221,6 @@ img {
   background: rgba(243, 238, 228, 0.06);
 }
 
-.arzive-btn--ghost-dark {
-  border: 1px solid rgba(26, 46, 38, 0.25);
-  color: var(--forest);
-  background: transparent;
-}
-
 .arzive-btn--ink {
   background: var(--forest);
   color: var(--cream);
@@ -221,66 +235,71 @@ img {
   cursor: not-allowed;
 }
 
-/* Hero + index */
+/* Hero + index forest plane */
 .template-index .arzive-main,
 .template-page .arzive-main {
-  background: var(--forest);
+  background:
+    radial-gradient(ellipse 80% 55% at 15% 0%, rgba(243, 238, 228, 0.07), transparent 55%),
+    linear-gradient(165deg, var(--forest) 0%, var(--forest-deep) 100%);
   color: var(--cream);
 }
 
 .arzive-hero {
-  padding: 3.5rem 0 4rem;
+  padding: 4rem 0 3.5rem;
 }
 
 .arzive-hero__inner {
-  max-width: 48rem;
+  max-width: 46rem;
+  animation: arzive-fade-up 0.7s ease both;
 }
 
 .arzive-hero__eyebrow,
 .arzive-kicker {
   font-family: "Cormorant Garamond", Georgia, serif;
-  font-size: 0.95rem;
-  letter-spacing: 0.28em;
+  font-size: 1rem;
+  letter-spacing: 0.3em;
   text-transform: uppercase;
-  opacity: 0.85;
+  opacity: 0.88;
   margin: 0;
 }
 
 .arzive-kicker {
   font-size: 0.68rem;
   letter-spacing: 0.22em;
-  color: rgba(26, 46, 38, 0.5);
+  color: rgba(26, 46, 38, 0.48);
   font-family: "Source Sans 3", system-ui, sans-serif;
 }
 
 .arzive-hero__title {
-  margin: 1.25rem 0 0;
+  margin: 1.35rem 0 0;
   font-family: "Cormorant Garamond", Georgia, serif;
   font-weight: 500;
-  font-size: clamp(2.35rem, 5vw, 3.5rem);
-  line-height: 1.12;
+  font-size: clamp(2.45rem, 5.2vw, 3.65rem);
+  line-height: 1.1;
   letter-spacing: 0.01em;
 }
 
 .arzive-hero__text {
-  margin: 1.5rem 0 0;
-  max-width: 36rem;
+  margin: 1.6rem 0 0;
+  max-width: 34rem;
   font-weight: 300;
-  font-size: 1.05rem;
+  font-size: 1.08rem;
   line-height: 1.75;
   color: rgba(243, 238, 228, 0.72);
+  animation: arzive-fade-up 0.75s ease 0.08s both;
 }
 
 .arzive-hero__actions {
-  margin-top: 2.25rem;
+  margin-top: 2.4rem;
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
+  animation: arzive-fade-up 0.75s ease 0.14s both;
 }
 
-/* Product tabs on homepage */
+/* Product tabs — single editorial cover */
 .arzive-products {
-  padding: 0 0 5rem;
+  padding: 0 0 5.5rem;
 }
 
 .arzive-tabs {
@@ -297,8 +316,9 @@ img {
   font-size: 0.7rem;
   letter-spacing: 0.24em;
   text-transform: uppercase;
-  padding: 0 0 0.5rem;
+  padding: 0 0 0.55rem;
   cursor: pointer;
+  transition: color 0.2s ease, border-color 0.2s ease;
 }
 
 .arzive-tab.is-active {
@@ -307,7 +327,7 @@ img {
 }
 
 .arzive-tab-panel {
-  margin-top: 2rem;
+  margin-top: 2.25rem;
 }
 
 .arzive-tab-panel[hidden] {
@@ -317,31 +337,32 @@ img {
 .arzive-showcase {
   display: grid;
   gap: 2rem;
+  align-items: end;
+  animation: arzive-soft-in 0.55s ease both;
 }
 
 @media (min-width: 900px) {
   .arzive-showcase {
-    grid-template-columns: 1.35fr 1fr;
-    gap: 3rem;
-    align-items: end;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+    gap: 3.25rem;
   }
 }
 
-.arzive-showcase__gallery {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
+.arzive-showcase__figure {
+  margin: 0;
+  overflow: hidden;
+  background: rgba(36, 63, 53, 0.4);
 }
 
-.arzive-showcase__figure,
-.arzive-showcase__img,
-.arzive-card__img,
-.arzive-card__cover,
-.arzive-product__img {
+.arzive-showcase__img {
   width: 100%;
   aspect-ratio: 4 / 5;
   object-fit: cover;
-  background: rgba(36, 63, 53, 0.35);
+  transition: transform 0.8s ease;
+}
+
+.arzive-showcase__figure:hover .arzive-showcase__img {
+  transform: scale(1.03);
 }
 
 .arzive-showcase__color {
@@ -353,23 +374,24 @@ img {
 }
 
 .arzive-showcase__title {
-  margin: 0.5rem 0 0;
+  margin: 0.55rem 0 0;
   font-family: "Cormorant Garamond", Georgia, serif;
   font-weight: 500;
-  font-size: 1.75rem;
-  letter-spacing: 0.06em;
+  font-size: clamp(1.85rem, 3vw, 2.35rem);
+  letter-spacing: 0.05em;
 }
 
 .arzive-showcase__text,
 .arzive-showcase__price {
-  margin: 0.75rem 0 0;
-  font-size: 0.95rem;
-  line-height: 1.6;
-  color: rgba(243, 238, 228, 0.65);
+  margin: 0.85rem 0 0;
+  font-size: 0.98rem;
+  line-height: 1.65;
+  font-weight: 300;
+  color: rgba(243, 238, 228, 0.68);
 }
 
 .arzive-showcase .arzive-btn {
-  margin-top: 1.5rem;
+  margin-top: 1.65rem;
 }
 
 /* Shop / collection cream surfaces */
@@ -377,7 +399,9 @@ img {
 .template-product .arzive-main,
 .template-cart .arzive-main,
 .template-list-collections .arzive-main {
-  background: var(--cream);
+  background:
+    radial-gradient(ellipse 70% 40% at 85% 0%, rgba(26, 46, 38, 0.045), transparent 50%),
+    var(--cream);
   color: var(--forest);
 }
 
@@ -385,39 +409,62 @@ img {
 .arzive-collection,
 .arzive-cart,
 .arzive-product {
-  padding: 3.5rem 0 5rem;
+  padding: 3.75rem 0 5.5rem;
 }
 
 .arzive-shop__title {
-  margin: 0.75rem 0 0;
+  margin: 0.85rem 0 0;
   font-family: "Cormorant Garamond", Georgia, serif;
   font-weight: 500;
-  font-size: clamp(2.2rem, 4vw, 3rem);
+  font-size: clamp(2.35rem, 4.2vw, 3.15rem);
   letter-spacing: 0.03em;
 }
 
 .arzive-shop__intro {
-  margin: 1rem 0 0;
-  max-width: 40rem;
+  margin: 1.1rem 0 0;
+  max-width: 38rem;
   font-weight: 300;
   line-height: 1.7;
-  color: rgba(26, 46, 38, 0.7);
+  color: rgba(26, 46, 38, 0.68);
 }
 
 .arzive-shop__grid {
-  margin-top: 3.5rem;
+  margin-top: 3.75rem;
   display: grid;
-  gap: 4rem;
+  gap: 4.5rem;
+}
+
+@media (min-width: 900px) {
+  .arzive-shop__grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem 2.5rem;
+  }
+}
+
+/* Single-photo cards — no glued diptych */
+.arzive-card {
+  animation: arzive-fade-up 0.65s ease both;
 }
 
 .arzive-card__media {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.75rem;
+  display: block;
+  overflow: hidden;
+  background: var(--cream-soft);
+}
+
+.arzive-card__img {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  transition: transform 0.8s ease;
+}
+
+.arzive-card__media:hover .arzive-card__img {
+  transform: scale(1.03);
 }
 
 .arzive-card__body {
-  margin-top: 1.5rem;
+  margin-top: 1.6rem;
 }
 
 .arzive-card__meta {
@@ -438,10 +485,10 @@ img {
 }
 
 .arzive-card__title {
-  margin: 0.75rem 0 0;
+  margin: 0.85rem 0 0;
   font-family: "Cormorant Garamond", Georgia, serif;
   font-weight: 500;
-  font-size: 2rem;
+  font-size: clamp(1.75rem, 2.5vw, 2.15rem);
   letter-spacing: 0.04em;
 }
 
@@ -468,59 +515,82 @@ img {
   margin: 0;
   font-family: "Cormorant Garamond", Georgia, serif;
   font-weight: 500;
-  font-size: 1.75rem;
+  font-size: 1.85rem;
   letter-spacing: 0.04em;
 }
 
 .arzive-shop__study p {
-  margin: 0.75rem 0 0;
+  margin: 0.85rem 0 0;
   max-width: 36rem;
   font-weight: 300;
   color: rgba(26, 46, 38, 0.7);
-  line-height: 1.6;
+  line-height: 1.65;
 }
 
 .arzive-shop__study .arzive-btn {
   margin-top: 1.5rem;
 }
 
-/* Product page */
+/* Product page — one hero, optional separate thumbs */
 .arzive-product__grid {
   display: grid;
-  gap: 2.5rem;
+  gap: 2.75rem;
 }
 
 @media (min-width: 900px) {
   .arzive-product__grid {
-    grid-template-columns: 1.2fr 1fr;
-    gap: 3rem;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+    gap: 3.5rem;
     align-items: start;
   }
 }
 
-.arzive-product__gallery {
+.arzive-product__hero {
+  margin: 0;
+  overflow: hidden;
+  background: var(--cream-soft);
+}
+
+.arzive-product__img {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+}
+
+.arzive-product__thumbs {
+  list-style: none;
+  margin: 0.85rem 0 0;
+  padding: 0;
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.75rem;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.65rem;
+}
+
+.arzive-product__thumbs img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  background: var(--cream-soft);
 }
 
 .arzive-product__title {
   margin: 0.75rem 0 0;
   font-family: "Cormorant Garamond", Georgia, serif;
   font-weight: 500;
-  font-size: clamp(2rem, 4vw, 2.75rem);
+  font-size: clamp(2.1rem, 4vw, 2.85rem);
   letter-spacing: 0.04em;
 }
 
 .arzive-product__price {
   margin: 1rem 0 0;
-  font-size: 1.1rem;
+  font-size: 1.15rem;
+  font-weight: 400;
 }
 
 .arzive-product__desc {
-  margin-top: 1.25rem;
+  margin-top: 1.35rem;
   font-weight: 300;
-  line-height: 1.7;
+  line-height: 1.75;
   color: rgba(26, 46, 38, 0.75);
 }
 
@@ -617,24 +687,25 @@ img {
 .arzive-footer {
   background: var(--forest-deep);
   color: rgba(243, 238, 228, 0.75);
-  padding: 2.5rem 0;
+  padding: 2.75rem 0;
 }
 
 .arzive-footer__brand {
   margin: 0;
   font-family: "Cormorant Garamond", Georgia, serif;
-  letter-spacing: 0.28em;
+  letter-spacing: 0.32em;
+  font-size: 1.15rem;
   color: var(--cream);
 }
 
 .arzive-footer__copy {
-  margin: 0.75rem 0 0;
+  margin: 0.85rem 0 0;
   font-size: 0.85rem;
   font-weight: 300;
 }
 
 .arzive-footer__links {
-  margin-top: 1.25rem;
+  margin-top: 1.35rem;
   display: flex;
   flex-wrap: wrap;
   gap: 1.25rem;

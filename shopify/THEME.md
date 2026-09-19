@@ -1,52 +1,47 @@
 # Ladda upp ARZIVE-temat till Shopify
 
-Temat ligger i `shopify/theme/`. Det är ett **Online Store 2.0**-tema (JSON-mallar + sektioner) som speglar Next.js-designen: mörkgrön hero, cream-typografi, ARZIVE-wordmark, SHOP + STUDY WITH ARZIVE, Cream Cornell + Green Math.
+Temat: `shopify/theme/` → zip `shopify/arzive-theme.zip`.  
+Butik: `sexb4g-xw.myshopify.com`. Live math-handle: **`arzive-math-notebook`**.
 
-Study-appen (konto, skanning, AI) stannar i Next.js. Temat länkar dit via **Theme settings → Study with Arzive URL**.
+Design: mörkgrön hero, cream typografi, ARZIVE-wordmark, **SHOP + STUDY WITH ARZIVE**, **en** stark produktbild per notebook (inga limmade diptyker).
 
 ## 1) Skapa zip
-
-Från repo-roten:
 
 ```bash
 ./shopify/pack-theme.sh
 ```
 
-Filen skapas som `shopify/arzive-theme.zip` (innehållet är `layout/`, `templates/`, `sections/`, … i zip-roten — korrekt för Shopify).
+## 2) Ladda upp / byt tema
 
-## 2) Ladda upp i Admin
+1. Shopify Admin → **Online Store → Themes**
+2. **Add theme → Upload zip file**
+3. Välj `arzive-theme.zip`
+4. **… → Publish**
 
-1. Öppna **Shopify Admin**.
-2. Gå till **Online Store → Themes**.
-3. Klicka **Add theme** (eller **Lägg till tema**).
-4. Välj **Upload zip file** / **Ladda upp zip-fil**.
-5. Välj `shopify/arzive-theme.zip`.
-6. Vänta tills uppladdningen är klar.
+Om du redan har ARZIVE publicerat: ladda upp den nya zip:en och publicera den (eller Replace theme).
 
-## 3) Koppla Study-URL
+## 3) Theme settings
 
-1. På det nya temat: **Customize** / **Anpassa**.
-2. Öppna **Theme settings** (kugghjulet) → **Brand & Study**.
-3. Sätt **Study with Arzive URL** till din Next.js-app, t.ex.  
-   `https://DIN-RENDER-URL/study` eller `http://127.0.0.1:43123/study` (lokalt).
-4. Sätt **Account URL** till `…/account` om du vill (annars ersätts `/study` → `/account` automatiskt i headern om du bara sätter Study-URL).
-5. Under **Homepage products**: välj dina produkter **Cream Cornell Notebook** (`cornell-notebook`) och **Green Math Notebook** (`math-notebook`) om de inte plockas upp via handle.
+**Customize → Theme settings (kugghjul):**
 
-## 4) Publicera
+1. **Study with Arzive URL** → din Next.js `/study`
+2. **Homepage products** → välj Cream Cornell + **Green Math** (`arzive-math-notebook`)
 
-1. I **Online Store → Themes**, hitta **ARZIVE**.
-2. Klicka **… → Publish** / **Publicera**.
-3. Bekräfta. Butikens startsida är nu ARZIVE-designen.
+## 4) Viktigt — byt ut limmade produktbilder i Admin
 
-## 5) Snabbkoll efter publicering
+Temat visar nu **tema-assets** (`notebook-cream.jpg` / `notebook-green.jpg`) som huvudbild, så butiken ser bra ut även om Admin har en collage.
 
-- Startsida: mörkgrön hero + Cornell/Math-flikar  
-- `/collections/all` eller Shop: två notebook-kort  
-- `/products/cornell-notebook` och `/products/math-notebook`: produkt + add to cart  
-- **Study with Arzive** i menyn: öppnar Next.js (inte en Shopify-sida)
+Byt ändå ut den dåliga Admin-bilden så produktgalleriet/CDN inte visar limningen:
 
-## Tips
+1. Admin → **Products**
+2. Öppna **Math Notebook** (`arzive-math-notebook`)
+3. Under **Media**: ta bort bilden som är **grön pärm + cream spiral limmade i samma rektangel**
+4. Ladda upp en enda cover: använd `shopify/theme/assets/notebook-green.jpg` (eller motsvarande studio-foto)
+5. Gör samma för Cornell-produkten om den har en limmad collage → ersätt med `notebook-cream.jpg`
 
-- Produktbilder: temat har fallback-bilder i `assets/`. Lägg gärna samma bilder på produkterna i Admin så produkt-sidan använder Shopify CDN.
-- Om handles skiljer dig från `cornell-notebook` / `math-notebook`: välj produkterna manuellt i temat (Customize → Product tabs / Theme settings).
-- Next.js (`frontend/`) behålls för Study. Sätt gärna `NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN` dit om du fortfarande vill ha köplänkar från Study-appen tillbaka till Shopify.
+## 5) Snabbkoll
+
+- Startsida: en cover per flik (Cornell / Math) — inte två bilder sida vid sida  
+- `/collections/all`: två kort, **en** foto vardera  
+- `/products/arzive-math-notebook`: en hero-cover  
+- **Study with Arzive** i nav → Next.js

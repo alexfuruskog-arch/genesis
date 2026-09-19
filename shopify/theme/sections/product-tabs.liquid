@@ -6,13 +6,34 @@
   if cornell == blank
     assign cornell = all_products['cornell-notebook']
   endif
+  if cornell == blank
+    assign cornell = all_products['arzive-cornell-notebook']
+  endif
+  if cornell == blank
+    assign cornell = all_products['cream-cornell-notebook']
+  endif
 
   assign math = section.settings.product_math
   if math == blank and settings.product_math != blank
     assign math = settings.product_math
   endif
   if math == blank
+    assign math = all_products['arzive-math-notebook']
+  endif
+  if math == blank
     assign math = all_products['math-notebook']
+  endif
+  if math == blank
+    assign math = all_products['green-math-notebook']
+  endif
+
+  assign cornell_handle = 'cornell-notebook'
+  if cornell != blank
+    assign cornell_handle = cornell.handle
+  endif
+  assign math_handle = 'arzive-math-notebook'
+  if math != blank
+    assign math_handle = math.handle
   endif
 -%}
 
@@ -40,11 +61,25 @@
     </div>
 
     <div class="arzive-tab-panel is-active" data-panel="cornell" role="tabpanel">
-      {% render 'product-showcase', product: cornell, fallback_handle: 'cornell-notebook', color_name: 'Cream', layout_asset: 'cornell-pages.jpg', cover_asset: 'notebook-cream.jpg', fallback_title: 'Cream Cornell Notebook', fallback_text: 'Cue, Main Notes, and Summary — the classic Cornell system on recycled cream paper, spiral-bound for lectures and revision.' %}
+      {% render 'product-showcase',
+        product: cornell,
+        fallback_handle: cornell_handle,
+        color_name: 'Cream',
+        cover_asset: 'notebook-cream.jpg',
+        fallback_title: 'Cream Cornell Notebook',
+        fallback_text: 'Cue, Main Notes, and Summary — the classic Cornell system on recycled cream paper, spiral-bound for lectures and revision.'
+      %}
     </div>
 
     <div class="arzive-tab-panel" data-panel="math" role="tabpanel" hidden>
-      {% render 'product-showcase', product: math, fallback_handle: 'math-notebook', color_name: 'Forest green', layout_asset: 'math-pages.jpg', cover_asset: 'notebook-green.jpg', fallback_title: 'Green Math Notebook', fallback_text: 'Grid for Example and Practice Questions, with Formulas and Explanations beside — built for problem sets that need room to think.' %}
+      {% render 'product-showcase',
+        product: math,
+        fallback_handle: math_handle,
+        color_name: 'Forest green',
+        cover_asset: 'notebook-green.jpg',
+        fallback_title: 'Green Math Notebook',
+        fallback_text: 'Grid for Example and Practice Questions, with Formulas and Explanations beside — built for problem sets that need room to think.'
+      %}
     </div>
   </div>
 </section>
