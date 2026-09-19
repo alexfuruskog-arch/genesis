@@ -1,31 +1,40 @@
 import type { Metadata } from "next";
-import { Fraunces, Source_Sans_3 } from "next/font/google";
+import { Libre_Baskerville, Source_Sans_3 } from "next/font/google";
+
+import { SiteNav } from "@/components/SiteNav";
+import { AuthProvider } from "@/lib/auth";
 
 import "./globals.css";
 
-const display = Fraunces({
-  variable: "--font-fraunces",
+const display = Libre_Baskerville({
+  variable: "--font-display",
   subsets: ["latin", "latin-ext"],
+  weight: ["400", "700"],
 });
 
-const sans = Source_Sans_3({
-  variable: "--font-source",
+const body = Source_Sans_3({
+  variable: "--font-body",
   subsets: ["latin", "latin-ext"],
 });
 
 export const metadata: Metadata = {
-  title: "Plugga — anteckningar blir quiz",
+  title: "ARZIVE — notebooks & Study with Arzive",
   description:
-    "Ladda upp föreläsningsanteckningar och få studiefrågor. Svensk MVP för AI-plugg.",
+    "Research-backed notebooks and Study with Arzive: scan notes, generate practice exams and flashcards.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
-      lang="sv"
-      className={`${display.variable} ${sans.variable} h-full antialiased`}
+      lang="en"
+      className={`${display.variable} ${body.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-paper text-ink">{children}</body>
+      <body className="min-h-full flex flex-col bg-cream text-ink">
+        <AuthProvider>
+          <SiteNav />
+          <div className="flex-1">{children}</div>
+        </AuthProvider>
+      </body>
     </html>
   );
 }

@@ -1,8 +1,17 @@
-# Plugga
+# ARZIVE
 
-Swedish product-hacker MVP: upload study notes, extract text, retrieve chunks, generate a quiz. Backend is FastAPI. Frontend is Next.js. Postgres/auth is Supabase. Commerce hooks into Shopify. Deploy target is Render.
+One brand site: notebooks in the shop, **Study with Arzive** as the logged-in study surface. Not two separate websites.
 
-Local run does **not** require secrets. Missing Supabase, LLM, or Shopify credentials fall back to memory store, mock questions, and mock catalog/checkout.
+| Layer | Role |
+| --- | --- |
+| **Next.js** (`frontend/`) | Brand storefront + Study with Arzive + account |
+| **Shopify** | Source of truth for products and checkout (buy links / Storefront API / theme import later) |
+| **FastAPI** (`backend/`) | Upload scans, retrieval, quiz & flashcards, Shopify connect hooks |
+| **Supabase** | Auth + scanned notes when keys are set; otherwise local memory + MVP email/password |
+
+Nav: **SHOP** · **STUDY WITH ARZIVE** · centered **ARZIVE** · **ACCOUNT** · bag.
+
+Local run does **not** require secrets. Missing Supabase, LLM, or Shopify credentials fall back to memory store, mock study output, and placeholder buy links.
 
 ## Run locally
 
@@ -31,6 +40,12 @@ npm run dev
 
 Open [http://127.0.0.1:43123](http://127.0.0.1:43123). The UI calls `/backend/*`; Next.js rewrites that to FastAPI (`API_PROXY_TARGET` or `NEXT_PUBLIC_API_URL`, default `http://127.0.0.1:48721`).
 
+## Architecture (why one site)
+
+- **Shop** deep-links to Shopify product pages when `NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN` is set (handles: `cornell-notebook`, `math-notebook`).
+- **Study with Arzive** is `/study` on the same origin — scan uploads, multi-note selection, practice exam or flashcards.
+- Later: import the Shopify theme into this Next app or use Hydrogen/Storefront API; still one ARZIVE brand.
+
 ## Environment variables
 
 ### Backend (`backend/.env`)
@@ -43,8 +58,8 @@ Open [http://127.0.0.1:43123](http://127.0.0.1:43123). The UI calls `/backend/*`
 | `SUPABASE_SERVICE_ROLE_KEY` | Preferred server key for inserts after auth |
 | `LLM_PROVIDER` | `auto`, `openai`, `anthropic`, or `mock` |
 | `LLM_MODEL` | Optional model override |
-| `OPENAI_API_KEY` | Quiz generation + embeddings |
-| `ANTHROPIC_API_KEY` | Quiz generation |
+| `OPENAI_API_KEY` | Study generation + embeddings |
+| `ANTHROPIC_API_KEY` | Study generation |
 | `SHOPIFY_STORE_URL` | `your-shop.myshopify.com` |
 | `SHOPIFY_CLIENT_ID` / `SHOPIFY_CLIENT_SECRET` | Custom app OAuth |
 | `SHOPIFY_ADMIN_API_TOKEN` | Admin API (customers, products, draft orders) |
@@ -59,11 +74,9 @@ Open [http://127.0.0.1:43123](http://127.0.0.1:43123). The UI calls `/backend/*`
 | `NEXT_PUBLIC_API_URL` | Fallback API origin used by that rewrite |
 | `NEXT_PUBLIC_SUPABASE_URL` | Public Supabase URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Public anon key |
-| `NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN` | Public shop domain |
+| `NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN` | Public shop domain for buy links |
 | `NEXT_PUBLIC_SHOPIFY_STOREFRONT_ACCESS_TOKEN` | Storefront API (later checkout UI) |
 | `NEXT_PUBLIC_SHOPIFY_API_KEY` | Public Shopify app key |
-
-Without Supabase keys the API stores documents, chunks, quiz sessions, and Shopify links in memory. Without LLM keys it returns mock questions derived from the uploaded text. Without a Shopify Admin token it returns mock products and a draft-order placeholder.
 
 ## Apply the SQL in Supabase
 
@@ -71,18 +84,21 @@ Without Supabase keys the API stores documents, chunks, quiz sessions, and Shopi
 2. Open **SQL Editor**.
 3. Paste and run [`supabase/schema.sql`](supabase/schema.sql).
 
-The script enables **pgvector**, creates `profiles` (linked to `auth.users`), `documents`, `document_chunks` (hnsw embeddings), `quiz_sessions`, and `shopify_customers`, turns on **RLS** so users only see their own rows, adds `match_document_chunks`, and creates a private `documents` storage bucket.
-
-Then set the backend Supabase env vars (service role on the API, anon key on both API and frontend). Auth is JWT-ready: send `Authorization: Bearer <supabase access token>`. Locally, requests without a token use the `local-dev-user` fallback (or `X-User-Id`).
+Auth is JWT-ready: send `Authorization: Bearer <supabase access token>`. Without Supabase, use **Account** sign-up (local profiles) or `X-User-Id`.
 
 ## API
 
 | Method | Path | What it does |
-| --- | --- | --- |
+| --- | --- |
 | `GET` | `/health` | Liveness + which integrations are live vs mock |
 | `GET` | `/hello` | Short hello payload |
-| `POST` | `/upload-document` | Multipart file → storage + `documents` + chunking |
-| `POST` | `/generate-quiz` | `{ document_id, question_count? }` → retrieval + LLM JSON questions |
+| `POST` | `/auth/signup` | Local email/password account |
+| `POST` | `/auth/login` | Local session token |
+| `POST` | `/auth/logout` | Clear local session |
+| `GET` | `/auth/me` | Current user |
+| `POST` | `/upload-document` | Multipart file → storage + chunks |
+| `GET` | `/documents` | List scans for the current user |
+| `POST` | `/generate-quiz` or `/generate-study` | `{ document_ids[], output_type: quiz\|flashcards\|ovningstenta, question_count? }` |
 | `GET` | `/shopify/status` | Connected shop + linked customer |
 | `POST` | `/shopify/connect` | OAuth start **or** Admin API token install |
 | `POST` | `/shopify/disconnect` | Clears the saved shop install |
@@ -92,35 +108,32 @@ Then set the backend Supabase env vars (service role on the API, anon key on bot
 | `POST` | `/shopify/customers/link` | App user ↔ Shopify customer |
 | `GET` | `/shopify/products` | Live Admin product list when connected |
 | `POST` | `/shopify/checkout` | Draft order + `invoice_url` |
-| `POST` | `/shopify/webhooks/{topic}` | HMAC webhook stub (`customers/*`, `orders/paid`, uninstall) |
+| `POST` | `/shopify/webhooks/{topic}` | HMAC webhook stub |
 
-## Shopify notes
+## Pages
 
-Use the **Koppla Shopify** panel on the home page.
-
-**Custom app (fastest locally)**  
-In Shopify Admin → Settings → Apps and sales channels → Develop apps: create an app, enable Admin API scopes `read_customers`, `write_customers`, `read_products`, `write_draft_orders`, install it, copy the Admin API access token. Paste shop + token in Plugga.
-
-**OAuth app**  
-Set `SHOPIFY_CLIENT_ID` and `SHOPIFY_CLIENT_SECRET`. Redirect URL in the Shopify app must match `SHOPIFY_OAUTH_REDIRECT_URI` (default `http://127.0.0.1:43123/shopify/callback`). Click **Installera i Shopify**. The token is stored server-side (memory + `.local_shopify_install.json`, and `shopify_installs` when Supabase is on). It is never sent back to the browser.
-
-After connect you can link a customer email and create a draft-order checkout. Webhooks: `https://<api-host>/shopify/webhooks/customers/create` (and update / `orders/paid` / `app/uninstalled`). `app/uninstalled` clears the saved install.
+| Path | Purpose |
+| --- | --- |
+| `/` | Brand home — hero + Cornell / Math |
+| `/shop` | Two notebooks, Shopify buy links |
+| `/study` | Upload, multi-select, practice exam / flashcards |
+| `/account` | Sign in / up / out + optional Shopify merchant connect |
+| `/story` | Short brand story |
 
 ## Render notes
 
-[`render.yaml`](render.yaml) defines two web services: `plugga-api` (Python, `backend/`) and `plugga-web` (Node, `frontend/`).
+[`render.yaml`](render.yaml) defines two web services. Prefer renaming services to `arzive-api` / `arzive-web` when you create the real repo.
 
 1. Create a Blueprint from this repo, or two Web Services with those root dirs.
 2. Set `FRONTEND_ORIGIN` on the API to the Render frontend URL.
-3. Set `NEXT_PUBLIC_API_URL` on the frontend to the Render API URL **before** the frontend build (Next inlines `NEXT_PUBLIC_*`).
+3. Set `NEXT_PUBLIC_API_URL` and `NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN` on the frontend **before** build.
 4. Add the same Supabase / LLM / Shopify secrets you use locally.
-5. After deploy, update Shopify app URLs and webhook endpoints to the Render API host.
 
 ## Layout
 
 ```
 backend/          FastAPI app, routers, services, clients
-frontend/         Next.js App Router + Tailwind
+frontend/         Next.js App Router + Tailwind (ARZIVE brand)
 supabase/         schema.sql for the SQL Editor
 render.yaml       Render Blueprint
 ```

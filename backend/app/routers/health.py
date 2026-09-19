@@ -12,7 +12,7 @@ def health() -> dict:
     settings = get_settings()
     return {
         "status": "ok",
-        "service": "plugga-api",
+        "service": "arzive-api",
         "integrations": {
             "supabase": settings.supabase_enabled,
             "llm": llm_client.provider_name,
@@ -24,5 +24,5 @@ def health() -> dict:
 @router.get("/hello")
 def hello() -> dict:
     return {
-        "message": "Hej från Plugga. Ladda upp anteckningar och få quiz."
+        "message": "Hello from ARZIVE. Scan notebook pages and generate practice exams or flashcards."
     }

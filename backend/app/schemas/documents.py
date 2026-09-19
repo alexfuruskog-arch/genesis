@@ -18,3 +18,8 @@ class UploadDocumentResponse(DocumentResponse):
     store: str = Field(description="supabase or memory")
     extraction_mode: str = Field(description="extracted or stubbed")
     message: str
+
+
+class DocumentListResponse(BaseModel):
+    documents: list[DocumentResponse]
+    store: str

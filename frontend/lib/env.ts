@@ -15,4 +15,5 @@ export const publicConfig = {
   apiUrl,
   supabaseConfigured: Boolean(supabaseUrl && supabaseAnonKey),
   shopifyConfigured: Boolean(shopifyStoreDomain),
+  shopifyStoreDomain,
 };

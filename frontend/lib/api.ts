@@ -19,9 +19,9 @@ export type UploadedDocument = {
   extraction_status: string;
   chunk_count: number;
   created_at: string;
-  store: string;
-  extraction_mode: string;
-  message: string;
+  store?: string;
+  extraction_mode?: string;
+  message?: string;
 };
 
 export type QuizQuestion = {
@@ -32,16 +32,36 @@ export type QuizQuestion = {
   explanation: string;
 };
 
-export type QuizResponse = {
+export type Flashcard = {
+  id: string;
+  front: string;
+  back: string;
+};
+
+export type StudyResponse = {
   quiz_session_id: string;
-  document_id: string;
+  document_id: string | null;
+  document_ids: string[];
+  output_type: "quiz" | "flashcards";
   provider: string;
   retrieval: {
     mode: string;
     chunk_count: number;
+    document_count?: number;
   };
   questions: QuizQuestion[];
+  flashcards: Flashcard[];
   store: string;
+};
+
+export type QuizResponse = StudyResponse;
+
+export type AuthSession = {
+  id: string;
+  email: string;
+  source: string;
+  token: string;
+  message?: string | null;
 };
 
 export type ShopifyStatus = {
@@ -88,6 +108,10 @@ export type ShopifyCheckout = {
   linked_customer: Record<string, unknown> | null;
 };
 
+type RequestOptions = RequestInit & {
+  authHeaders?: Record<string, string>;
+};
+
 async function parseError(response: Response): Promise<string> {
   try {
     const body = await response.json();
@@ -97,77 +121,119 @@ async function parseError(response: Response): Promise<string> {
     }
     return JSON.stringify(body);
   } catch {
-    return response.statusText || "Något gick fel mot API:t.";
+    return response.statusText || "Something went wrong talking to the API.";
   }
 }
 
-export async function fetchHealth(): Promise<HealthResponse> {
-  const response = await fetch(`${apiUrl}/health`, { cache: "no-store" });
-  if (!response.ok) {
-    throw new Error(await parseError(response));
-  }
-  return response.json();
-}
-
-export async function uploadDocument(file: File): Promise<UploadedDocument> {
-  const body = new FormData();
-  body.append("file", file);
-  const response = await fetch(`${apiUrl}/upload-document`, {
-    method: "POST",
-    body,
+async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
+  const { authHeaders, headers, ...rest } = options;
+  const response = await fetch(`${apiUrl}${path}`, {
+    ...rest,
+    headers: {
+      ...(authHeaders || {}),
+      ...(headers || {}),
+    },
   });
   if (!response.ok) {
     throw new Error(await parseError(response));
   }
   return response.json();
+}
+
+export async function fetchHealth(): Promise<HealthResponse> {
+  return request("/health", { cache: "no-store" });
+}
+
+export async function uploadDocument(
+  file: File,
+  authHeaders?: Record<string, string>,
+): Promise<UploadedDocument> {
+  const body = new FormData();
+  body.append("file", file);
+  return request("/upload-document", {
+    method: "POST",
+    body,
+    authHeaders,
+  });
+}
+
+export async function listDocuments(
+  authHeaders?: Record<string, string>,
+): Promise<{ documents: UploadedDocument[]; store: string }> {
+  return request("/documents", { cache: "no-store", authHeaders });
+}
+
+export async function generateStudy(
+  input: {
+    documentIds: string[];
+    outputType: "quiz" | "flashcards";
+    questionCount?: number;
+  },
+  authHeaders?: Record<string, string>,
+): Promise<StudyResponse> {
+  return request("/generate-study", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    authHeaders,
+    body: JSON.stringify({
+      document_ids: input.documentIds,
+      output_type: input.outputType,
+      question_count: input.questionCount ?? 5,
+    }),
+  });
 }
 
 export async function generateQuiz(
   documentId: string,
   questionCount = 5,
-): Promise<QuizResponse> {
-  const response = await fetch(`${apiUrl}/generate-quiz`, {
+  authHeaders?: Record<string, string>,
+): Promise<StudyResponse> {
+  return generateStudy(
+    { documentIds: [documentId], outputType: "quiz", questionCount },
+    authHeaders,
+  );
+}
+
+export async function authSignup(email: string, password: string): Promise<AuthSession> {
+  return request("/auth/signup", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      document_id: documentId,
-      question_count: questionCount,
-    }),
+    body: JSON.stringify({ email, password }),
   });
-  if (!response.ok) {
-    throw new Error(await parseError(response));
-  }
-  return response.json();
+}
+
+export async function authLogin(email: string, password: string): Promise<AuthSession> {
+  return request("/auth/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password }),
+  });
+}
+
+export async function authLogout(token?: string): Promise<void> {
+  await request("/auth/logout", {
+    method: "POST",
+    authHeaders: token ? { Authorization: `Bearer ${token}` } : undefined,
+  });
 }
 
 export async function fetchShopifyStatus(): Promise<ShopifyStatus> {
-  const response = await fetch(`${apiUrl}/shopify/status`, { cache: "no-store" });
-  if (!response.ok) {
-    throw new Error(await parseError(response));
-  }
-  return response.json();
+  return request("/shopify/status", { cache: "no-store" });
 }
 
 export async function connectShopifyShop(input: {
   shop: string;
   admin_api_token?: string;
 }): Promise<ShopifyConnectResult> {
-  const response = await fetch(`${apiUrl}/shopify/connect`, {
+  return request("/shopify/connect", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(input),
   });
-  if (!response.ok) {
-    throw new Error(await parseError(response));
-  }
-  return response.json();
 }
 
 export async function disconnectShopifyShop(): Promise<void> {
-  const response = await fetch(`${apiUrl}/shopify/disconnect`, { method: "POST" });
-  if (!response.ok) {
-    throw new Error(await parseError(response));
-  }
+  await request("/shopify/disconnect", { method: "POST" });
 }
 
 export async function completeShopifyOAuth(
@@ -180,23 +246,17 @@ export async function completeShopifyOAuth(
   search = "",
 ): Promise<ShopifyConnectResult> {
   const qs = search.startsWith("?") ? search : search ? `?${search}` : "";
-  const response = await fetch(`${apiUrl}/shopify/oauth/complete${qs}`, {
+  return request(`/shopify/oauth/complete${qs}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(input),
   });
-  if (!response.ok) {
-    throw new Error(await parseError(response));
-  }
-  return response.json();
 }
 
 export async function fetchShopifyProducts(): Promise<ShopifyProduct[]> {
-  const response = await fetch(`${apiUrl}/shopify/products`, { cache: "no-store" });
-  if (!response.ok) {
-    throw new Error(await parseError(response));
-  }
-  const body = await response.json();
+  const body = await request<{ products: ShopifyProduct[] }>("/shopify/products", {
+    cache: "no-store",
+  });
   return body.products ?? [];
 }
 
@@ -204,27 +264,20 @@ export async function linkShopifyCustomer(input: {
   email: string;
   display_name?: string;
 }): Promise<void> {
-  const response = await fetch(`${apiUrl}/shopify/customers/link`, {
+  await request("/shopify/customers/link", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(input),
   });
-  if (!response.ok) {
-    throw new Error(await parseError(response));
-  }
 }
 
 export async function createShopifyCheckout(
   variantId: string,
   quantity = 1,
 ): Promise<ShopifyCheckout> {
-  const response = await fetch(`${apiUrl}/shopify/checkout`, {
+  return request("/shopify/checkout", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ variant_id: variantId, quantity }),
   });
-  if (!response.ok) {
-    throw new Error(await parseError(response));
-  }
-  return response.json();
 }

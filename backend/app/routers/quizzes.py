@@ -13,11 +13,12 @@ def generate_quiz(
     user: CurrentUser = Depends(get_current_user),
 ) -> GenerateQuizResponse:
     try:
-        result = document_service.generate_quiz(
+        result = document_service.generate_study(
             user=user,
-            document_id=str(payload.document_id),
+            document_ids=payload.resolved_document_ids,
             question_count=payload.question_count,
             topic=payload.topic,
+            output_type=payload.resolved_output_type,
         )
     except KeyError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
@@ -26,3 +27,12 @@ def generate_quiz(
     except Exception as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
     return GenerateQuizResponse(**result)
+
+
+@router.post("/generate-study", response_model=GenerateQuizResponse)
+def generate_study(
+    payload: GenerateQuizRequest,
+    user: CurrentUser = Depends(get_current_user),
+) -> GenerateQuizResponse:
+    """Alias for /generate-quiz — supports quiz (övningstenta) and flashcards."""
+    return generate_quiz(payload, user)

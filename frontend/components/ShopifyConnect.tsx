@@ -15,7 +15,7 @@ import {
 
 type Props = {
   disabled?: boolean;
-  onStatus: (status: ShopifyStatus | null) => void;
+  onStatus?: (status: ShopifyStatus | null) => void;
 };
 
 export function ShopifyConnect({ disabled, onStatus }: Props) {
@@ -34,7 +34,7 @@ export function ShopifyConnect({ disabled, onStatus }: Props) {
   async function refresh() {
     const next = await fetchShopifyStatus();
     setStatus(next);
-    onStatus(next);
+    onStatus?.(next);
     if (next.shop_domain) setShop(next.shop_domain.replace(".myshopify.com", ""));
     if (!next.has_oauth_app) setShowToken(true);
     if (next.connected) {

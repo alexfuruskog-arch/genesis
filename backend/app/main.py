@@ -2,14 +2,14 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
-from app.routers import documents, health, quizzes, shopify
+from app.routers import auth, documents, health, quizzes, shopify
 
 settings = get_settings()
 
 app = FastAPI(
     title=settings.app_name,
     version="0.1.0",
-    description="Plugga — ladda upp anteckningar och generera studiequiz.",
+    description="ARZIVE — notebooks in the shop, Study with Arzive for scanned notes and AI practice.",
 )
 
 app.add_middleware(
@@ -27,6 +27,7 @@ app.add_middleware(
 )
 
 app.include_router(health.router)
+app.include_router(auth.router)
 app.include_router(documents.router)
 app.include_router(quizzes.router)
 app.include_router(shopify.router)

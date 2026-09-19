@@ -13,7 +13,7 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    app_name: str = "Plugga API"
+    app_name: str = "ARZIVE API"
     frontend_origin: str = "http://127.0.0.1:43123"
 
     supabase_url: str | None = None

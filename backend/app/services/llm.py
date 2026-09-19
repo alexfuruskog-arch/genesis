@@ -5,17 +5,26 @@ import re
 import httpx
 
 from app.config import get_settings
-from app.schemas.quizzes import QuizQuestion
+from app.schemas.quizzes import Flashcard, QuizQuestion
 
-QUIZ_JSON_INSTRUCTIONS = """Du är en svensk studiecoach. Skapa quizfrågor utifrån källtexten.
-Svara ENDAST med giltig JSON på formen:
+QUIZ_JSON_INSTRUCTIONS = """You are a study coach for ARZIVE. Create practice-exam questions from the source notes.
+Reply ONLY with valid JSON shaped like:
 {"questions":[{"id":"q1","question":"...","choices":["A","B","C","D"],"correct_index":0,"explanation":"..."}]}
-Regler:
-- Frågorna ska vara på svenska.
-- Exakt fyra svarsalternativ.
-- correct_index är 0-baserat.
-- Förklara kort varför rätt svar stämmer, med stöd i texten.
-- Hitta inte på fakta som saknas i källtexten.
+Rules:
+- Questions in English unless the notes are clearly in another language.
+- Exactly four answer choices.
+- correct_index is 0-based.
+- Explain briefly why the correct answer fits, grounded in the notes.
+- Do not invent facts missing from the source text.
+"""
+
+FLASHCARD_JSON_INSTRUCTIONS = """You are a study coach for ARZIVE. Create flashcards from the source notes.
+Reply ONLY with valid JSON shaped like:
+{"flashcards":[{"id":"c1","front":"...","back":"..."}]}
+Rules:
+- Front is a short prompt or term; back is the answer or explanation.
+- Stay faithful to the notes; do not invent facts.
+- Prefer English unless the notes are clearly in another language.
 """
 
 
@@ -47,12 +56,39 @@ class LLMClient:
     ) -> list[QuizQuestion]:
         provider = self.provider_name
         if provider == "openai":
-            raw = self._openai_chat(source_text, question_count, topic)
+            raw = self._openai_chat(
+                QUIZ_JSON_INSTRUCTIONS,
+                self._quiz_user_prompt(source_text, question_count, topic),
+            )
             return _parse_questions(raw, question_count, source_text)
         if provider == "anthropic":
-            raw = self._anthropic_chat(source_text, question_count, topic)
+            raw = self._anthropic_chat(
+                QUIZ_JSON_INSTRUCTIONS,
+                self._quiz_user_prompt(source_text, question_count, topic),
+            )
             return _parse_questions(raw, question_count, source_text)
         return _mock_questions(source_text, question_count)
+
+    def generate_flashcards(
+        self,
+        source_text: str,
+        card_count: int,
+        topic: str | None = None,
+    ) -> list[Flashcard]:
+        provider = self.provider_name
+        if provider == "openai":
+            raw = self._openai_chat(
+                FLASHCARD_JSON_INSTRUCTIONS,
+                self._flashcard_user_prompt(source_text, card_count, topic),
+            )
+            return _parse_flashcards(raw, card_count, source_text)
+        if provider == "anthropic":
+            raw = self._anthropic_chat(
+                FLASHCARD_JSON_INSTRUCTIONS,
+                self._flashcard_user_prompt(source_text, card_count, topic),
+            )
+            return _parse_flashcards(raw, card_count, source_text)
+        return _mock_flashcards(source_text, card_count)
 
     def embed(self, texts: list[str]) -> list[list[float]] | None:
         if not texts or not self.settings.openai_api_key:
@@ -77,14 +113,17 @@ class LLMClient:
         except Exception:
             return None
 
-    def _user_prompt(self, source_text: str, question_count: int, topic: str | None) -> str:
-        focus = f"\nFokusera på: {topic}" if topic else ""
+    def _quiz_user_prompt(self, source_text: str, question_count: int, topic: str | None) -> str:
+        focus = f"\nFocus on: {topic}" if topic else ""
         clipped = source_text[:12000]
-        return (
-            f"Skapa {question_count} quizfrågor.{focus}\n\nKälltext:\n{clipped}"
-        )
+        return f"Create {question_count} practice-exam questions.{focus}\n\nSource notes:\n{clipped}"
 
-    def _openai_chat(self, source_text: str, question_count: int, topic: str | None) -> str:
+    def _flashcard_user_prompt(self, source_text: str, card_count: int, topic: str | None) -> str:
+        focus = f"\nFocus on: {topic}" if topic else ""
+        clipped = source_text[:12000]
+        return f"Create {card_count} flashcards.{focus}\n\nSource notes:\n{clipped}"
+
+    def _openai_chat(self, system: str, user: str) -> str:
         model = self.settings.llm_model or "gpt-4.1-mini"
         with httpx.Client(timeout=45.0) as http:
             response = http.post(
@@ -98,18 +137,15 @@ class LLMClient:
                     "temperature": 0.2,
                     "response_format": {"type": "json_object"},
                     "messages": [
-                        {"role": "system", "content": QUIZ_JSON_INSTRUCTIONS},
-                        {
-                            "role": "user",
-                            "content": self._user_prompt(source_text, question_count, topic),
-                        },
+                        {"role": "system", "content": system},
+                        {"role": "user", "content": user},
                     ],
                 },
             )
         response.raise_for_status()
         return response.json()["choices"][0]["message"]["content"]
 
-    def _anthropic_chat(self, source_text: str, question_count: int, topic: str | None) -> str:
+    def _anthropic_chat(self, system: str, user: str) -> str:
         model = self.settings.llm_model or "claude-sonnet-4-5"
         with httpx.Client(timeout=45.0) as http:
             response = http.post(
@@ -123,13 +159,8 @@ class LLMClient:
                     "model": model,
                     "max_tokens": 2000,
                     "temperature": 0.2,
-                    "system": QUIZ_JSON_INSTRUCTIONS,
-                    "messages": [
-                        {
-                            "role": "user",
-                            "content": self._user_prompt(source_text, question_count, topic),
-                        }
-                    ],
+                    "system": system,
+                    "messages": [{"role": "user", "content": user}],
                 },
             )
         response.raise_for_status()
@@ -162,6 +193,30 @@ def _parse_questions(raw: str, question_count: int, source_text: str) -> list[Qu
     return _mock_questions(source_text, question_count)
 
 
+def _parse_flashcards(raw: str, card_count: int, source_text: str) -> list[Flashcard]:
+    try:
+        payload = json.loads(_extract_json(raw))
+        items = payload.get("flashcards") or payload
+        cards: list[Flashcard] = []
+        for index, item in enumerate(items[:card_count], start=1):
+            front = str(item.get("front") or "").strip()
+            back = str(item.get("back") or "").strip()
+            if not front or not back:
+                continue
+            cards.append(
+                Flashcard(
+                    id=str(item.get("id") or f"c{index}"),
+                    front=front,
+                    back=back,
+                )
+            )
+        if cards:
+            return cards
+    except Exception:
+        pass
+    return _mock_flashcards(source_text, card_count)
+
+
 def _extract_json(raw: str) -> str:
     raw = raw.strip()
     if raw.startswith("{") or raw.startswith("["):
@@ -176,7 +231,7 @@ def _mock_questions(source_text: str, question_count: int) -> list[QuizQuestion]
     snippets = [part.strip() for part in re.split(r"[.\n]+", source_text) if len(part.strip()) > 24]
     if not snippets:
         snippets = [
-            "Ladda upp anteckningar så kan Plugga göra frågor av innehållet.",
+            "Upload notebook scans so ARZIVE can turn them into practice questions.",
         ]
     questions: list[QuizQuestion] = []
     for index in range(question_count):
@@ -184,21 +239,38 @@ def _mock_questions(source_text: str, question_count: int) -> list[QuizQuestion]
         questions.append(
             QuizQuestion(
                 id=f"q{index + 1}",
-                question=f"Vad stämmer bäst utifrån anteckningarna kring: «{snippet}»?",
+                question=f"Based on your notes, which statement best matches: “{snippet}”?",
                 choices=[
-                    snippet[:90] or "Påståendet i texten",
-                    "Detta nämns inte i materialet",
-                    "Motsatsen till vad texten säger",
-                    "Enbart en definition utan sammanhang",
+                    snippet[:90] or "The claim in the notes",
+                    "This is not mentioned in the material",
+                    "The opposite of what the notes say",
+                    "Only a definition without context",
                 ],
                 correct_index=0,
                 explanation=(
-                    "Mock-läge: första alternativet speglar utdraget. "
-                    "Sätt OPENAI_API_KEY eller ANTHROPIC_API_KEY för riktiga frågor."
+                    "Mock mode: the first choice mirrors the excerpt. "
+                    "Set OPENAI_API_KEY or ANTHROPIC_API_KEY for live questions."
                 ),
             )
         )
     return questions
+
+
+def _mock_flashcards(source_text: str, card_count: int) -> list[Flashcard]:
+    snippets = [part.strip() for part in re.split(r"[.\n]+", source_text) if len(part.strip()) > 18]
+    if not snippets:
+        snippets = ["ARZIVE turns scanned notebook pages into study tools."]
+    cards: list[Flashcard] = []
+    for index in range(card_count):
+        snippet = snippets[index % len(snippets)][:160]
+        cards.append(
+            Flashcard(
+                id=f"c{index + 1}",
+                front=f"Recall from your notes ({index + 1})",
+                back=snippet,
+            )
+        )
+    return cards
 
 
 llm_client = LLMClient()

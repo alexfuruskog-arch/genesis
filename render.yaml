@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: plugga-api
+    name: arzive-api
     runtime: python
     rootDir: backend
     buildCommand: pip install -r requirements.txt
@@ -34,7 +34,7 @@ services:
         value: "2025-01"
 
   - type: web
-    name: plugga-web
+    name: arzive-web
     runtime: node
     rootDir: frontend
     buildCommand: npm install && npm run build

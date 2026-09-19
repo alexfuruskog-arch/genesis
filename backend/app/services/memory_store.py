@@ -23,6 +23,9 @@ class MemoryStore:
         self.shopify_installs: dict[str, dict[str, Any]] = {}
         self.oauth_states: dict[str, dict[str, Any]] = {}
         self.webhooks: list[dict[str, Any]] = []
+        self.profiles: dict[str, dict[str, Any]] = {}
+        self.profiles_by_email: dict[str, str] = {}
+        self.sessions: dict[str, str] = {}
 
     def create_document(self, row: dict[str, Any]) -> dict[str, Any]:
         with self._lock:
@@ -34,6 +37,38 @@ class MemoryStore:
         if not doc or doc["user_id"] != user_id:
             return None
         return doc
+
+    def list_documents(self, user_id: str) -> list[dict[str, Any]]:
+        rows = [doc for doc in self.documents.values() if doc["user_id"] == user_id]
+        return sorted(rows, key=lambda item: item.get("created_at") or "", reverse=True)
+
+    def create_profile(self, row: dict[str, Any]) -> dict[str, Any]:
+        with self._lock:
+            self.profiles[row["id"]] = row
+            self.profiles_by_email[row["email"]] = row["id"]
+            return row
+
+    def get_profile(self, user_id: str) -> dict[str, Any] | None:
+        return self.profiles.get(user_id)
+
+    def get_profile_by_email(self, email: str) -> dict[str, Any] | None:
+        user_id = self.profiles_by_email.get(email)
+        if not user_id:
+            return None
+        return self.profiles.get(user_id)
+
+    def create_session(self, user_id: str) -> str:
+        token = str(uuid4())
+        with self._lock:
+            self.sessions[token] = user_id
+        return token
+
+    def get_session_user(self, token: str) -> str | None:
+        return self.sessions.get(token)
+
+    def clear_session(self, token: str) -> None:
+        with self._lock:
+            self.sessions.pop(token, None)
 
     def save_chunks(self, rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
         with self._lock:

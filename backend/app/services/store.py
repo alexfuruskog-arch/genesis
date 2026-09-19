@@ -56,6 +56,38 @@ class DataStore:
         data = response.data or []
         return data[0] if data else None
 
+    def list_documents(self, user_id: str) -> list[dict[str, Any]]:
+        client = get_supabase_client()
+        if not client:
+            return memory_store.list_documents(user_id)
+        response = (
+            client.table("documents")
+            .select("*")
+            .eq("user_id", user_id)
+            .order("created_at", desc=True)
+            .execute()
+        )
+        return response.data or []
+
+    def create_profile(self, row: dict[str, Any]) -> dict[str, Any]:
+        # Local profiles stay in memory; Supabase Auth owns real accounts.
+        return memory_store.create_profile(row)
+
+    def get_profile(self, user_id: str) -> dict[str, Any] | None:
+        return memory_store.get_profile(user_id)
+
+    def get_profile_by_email(self, email: str) -> dict[str, Any] | None:
+        return memory_store.get_profile_by_email(email)
+
+    def create_session(self, user_id: str) -> str:
+        return memory_store.create_session(user_id)
+
+    def get_session_user(self, token: str) -> str | None:
+        return memory_store.get_session_user(token)
+
+    def clear_session(self, token: str) -> None:
+        memory_store.clear_session(token)
+
     def save_chunks(self, rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
         client = get_supabase_client()
         if not client:

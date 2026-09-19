@@ -11,7 +11,7 @@ export default function ShopifyCallbackPage() {
     <Suspense
       fallback={
         <main className="mx-auto flex min-h-full max-w-lg items-center justify-center px-4">
-          <p className="text-sm text-ink/70">Kopplar Shopify…</p>
+          <p className="text-sm text-forest/70">Connecting Shopify…</p>
         </main>
       }
     >
@@ -35,11 +35,11 @@ function CallbackBody() {
     let cancelled = false;
     completeShopifyOAuth({ shop, code, state, hmac }, window.location.search)
       .then(() => {
-        if (!cancelled) router.replace("/?shopify=connected");
+        if (!cancelled) router.replace("/account?shopify=connected");
       })
       .catch((err: unknown) => {
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : "OAuth-callback misslyckades.");
+          setError(err instanceof Error ? err.message : "OAuth callback failed.");
         }
       });
     return () => {
@@ -48,25 +48,25 @@ function CallbackBody() {
   }, [shop, code, state, hmac, router]);
 
   const message = missing
-    ? "Shopify returnerade ingen shop/code."
+    ? "Shopify did not return a shop/code."
     : error;
 
   return (
     <main className="mx-auto flex min-h-full max-w-lg flex-col justify-center gap-3 px-4 py-16">
-      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-copper">
-        Plugga
-      </p>
-      <h1 className="text-2xl font-semibold">Kopplar Shopify</h1>
+      <p className="font-display text-sm tracking-[0.28em] text-forest">ARZIVE</p>
+      <h1 className="font-display text-2xl tracking-[0.04em]">Connecting Shopify</h1>
       {message ? (
         <div className="space-y-3">
-          <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-800">{message}</p>
-          <Link href="/" className="text-sm font-medium text-copper">
-            Tillbaka till startsidan
+          <p className="border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
+            {message}
+          </p>
+          <Link href="/account" className="text-sm font-medium text-forest underline">
+            Back to account
           </Link>
         </div>
       ) : (
-        <p className="text-sm text-ink/70">
-          Byter kod mot access token och sparar butikskopplingen…
+        <p className="text-sm text-forest/70">
+          Exchanging the code for an access token and saving the shop connection…
         </p>
       )}
     </main>

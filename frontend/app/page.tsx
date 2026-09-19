@@ -1,235 +1,124 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { useState } from "react";
 
-import { DocumentUpload } from "@/components/DocumentUpload";
-import { QuizBoard } from "@/components/QuizBoard";
-import { ShopifyConnect } from "@/components/ShopifyConnect";
-import {
-  fetchHealth,
-  fetchShopifyStatus,
-  generateQuiz,
-  type HealthResponse,
-  type QuizResponse,
-  type ShopifyStatus,
-  type UploadedDocument,
-} from "@/lib/api";
-import { publicConfig } from "@/lib/env";
+import { products, shopifyProductUrl, type Product } from "@/lib/products";
+import { publicConfig, shopifyStoreDomain } from "@/lib/env";
 
-export default function Home() {
-  const [health, setHealth] = useState<HealthResponse | null>(null);
-  const [shopify, setShopify] = useState<ShopifyStatus | null>(null);
-  const [backendError, setBackendError] = useState<string | null>(null);
-  const [document, setDocument] = useState<UploadedDocument | null>(null);
-  const [quiz, setQuiz] = useState<QuizResponse | null>(null);
-  const [quizLoading, setQuizLoading] = useState(false);
-  const [quizError, setQuizError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      try {
-        const [healthResult, shopifyResult] = await Promise.all([
-          fetchHealth(),
-          fetchShopifyStatus().catch(() => null),
-        ]);
-        if (cancelled) return;
-        setHealth(healthResult);
-        setShopify(shopifyResult);
-        setBackendError(null);
-      } catch (err) {
-        if (cancelled) return;
-        setBackendError(
-          err instanceof Error
-            ? err.message
-            : "Kunde inte nå backend. Starta FastAPI på port 48721.",
-        );
-      }
-    }
-    void load();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  async function onGenerate() {
-    if (!document) return;
-    setQuizLoading(true);
-    setQuizError(null);
-    try {
-      const result = await generateQuiz(document.id);
-      setQuiz(result);
-    } catch (err) {
-      setQuizError(err instanceof Error ? err.message : "Kunde inte skapa quiz.");
-    } finally {
-      setQuizLoading(false);
-    }
-  }
+export default function HomePage() {
+  const [active, setActive] = useState<"cornell" | "math">("cornell");
+  const product = products.find((item) => item.id === active) ?? products[0];
 
   return (
-    <div className="flex min-h-full flex-col">
-      <header className="border-b border-ink/8 bg-white/80 backdrop-blur">
-        <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-copper">
-              Plugga
-            </p>
-            <p className="text-sm text-ink/70">Från anteckningar till quiz</p>
-          </div>
-          <StatusPills
-            health={health}
-            backendError={backendError}
-            shopify={shopify}
-          />
-        </div>
-      </header>
-
-      <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-4 py-8 sm:px-6 sm:py-12">
-        <section className="max-w-2xl">
-          <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-            Plugga på det du faktiskt läste.
+    <main>
+      <section className="relative overflow-hidden bg-forest text-cream">
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.07]"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle at 20% 20%, #f3eee4 0.8px, transparent 1px), radial-gradient(circle at 80% 60%, #f3eee4 0.7px, transparent 1px)",
+            backgroundSize: "28px 28px, 36px 36px",
+          }}
+        />
+        <div className="relative mx-auto flex min-h-[78vh] max-w-4xl flex-col items-center justify-center px-6 py-20 text-center sm:py-28">
+          <p className="animate-soft-in font-display text-sm tracking-[0.35em] text-cream/80">
+            ARZIVE
+          </p>
+          <h1 className="animate-fade-up mt-6 max-w-3xl font-display text-[2.15rem] leading-[1.15] text-cream sm:text-5xl sm:leading-[1.12]">
+            We believe every student deserves the tools to succeed.
           </h1>
-          <p className="mt-3 text-base leading-7 text-ink/75 sm:text-lg">
-            Ladda upp föreläsningsanteckningar. Plugga plockar ut texten, lägger
-            den i sökbara chunkar och gör studiefrågor du kan svara på direkt —
-            i mobilen mellan lektioner eller vid skrivbordet innan tenta.
+          <p className="animate-fade-up-delay mt-6 max-w-2xl text-base leading-7 text-cream/75 sm:text-lg">
+            Two research-backed notebooks. One for structured thinking, one for
+            mathematical clarity — crafted from recycled materials that feel as
+            considered as the systems inside.
           </p>
-        </section>
-
-        {backendError ? (
-          <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900">
-            {backendError}
+          <div className="animate-fade-up-delay mt-10 flex flex-wrap items-center justify-center gap-3">
+            <Link href="/shop" className="btn-solid">
+              Shop notebooks
+            </Link>
+            <Link href="/story" className="btn-ghost">
+              Our story
+            </Link>
+            <Link
+              href="/study"
+              className="btn-ghost border-cream/30 text-cream/90"
+            >
+              Study with Arzive
+            </Link>
           </div>
+        </div>
+      </section>
+
+      <section className="bg-forest pb-20 pt-6 text-cream">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6">
+          <div className="flex items-center justify-center gap-10">
+            {products.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => setActive(item.id as "cornell" | "math")}
+                className={`pb-2 text-xs tracking-[0.22em] uppercase transition ${
+                  active === item.id
+                    ? "border-b border-cream text-cream"
+                    : "border-b border-transparent text-cream/55 hover:text-cream/80"
+                }`}
+              >
+                {item.id === "cornell" ? "Cornell" : "Math"}
+              </button>
+            ))}
+          </div>
+
+          <ProductShowcase product={product} />
+        </div>
+      </section>
+    </main>
+  );
+}
+
+function ProductShowcase({ product }: { product: Product }) {
+  const buyUrl = shopifyProductUrl(product.shopifyHandle, shopifyStoreDomain);
+  return (
+    <div className="mt-10 grid gap-6 md:grid-cols-2">
+      <figure className="overflow-hidden bg-forest-mid/40">
+        <Image
+          src={product.layoutImage}
+          alt={`${product.name} page layout`}
+          width={1024}
+          height={1024}
+          className="h-full w-full object-cover transition duration-700 hover:scale-[1.02]"
+          priority
+        />
+      </figure>
+      <figure className="overflow-hidden bg-forest-mid/40">
+        <Image
+          src={product.coverImage}
+          alt={`${product.name} cover`}
+          width={1024}
+          height={1024}
+          className="h-full w-full object-cover transition duration-700 hover:scale-[1.02]"
+          priority
+        />
+      </figure>
+      <div className="md:col-span-2 flex flex-col items-center gap-4 pt-4 text-center">
+        <h2 className="font-display text-2xl tracking-[0.08em]">{product.name}</h2>
+        <p className="max-w-xl text-sm leading-6 text-cream/70">{product.description}</p>
+        {buyUrl ? (
+          <a href={buyUrl} target="_blank" rel="noreferrer" className="btn-solid">
+            Buy on Shopify
+          </a>
+        ) : (
+          <Link href="/shop" className="btn-solid">
+            View in shop
+          </Link>
+        )}
+        {!publicConfig.shopifyConfigured ? (
+          <p className="text-xs text-cream/45">
+            Set NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN for live product links.
+          </p>
         ) : null}
-
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-          <div className="space-y-6">
-            <section className="rounded-3xl border border-ink/8 bg-white p-5 shadow-sm sm:p-6">
-              <h2 className="text-lg font-semibold">1. Ladda upp</h2>
-              <p className="mt-1 mb-4 text-sm text-ink/65">
-                Filen sparas mot Supabase när nycklarna finns, annars lokalt i
-                backend så att du kan utveckla utan hemligheter.
-              </p>
-              <DocumentUpload
-                disabled={Boolean(backendError)}
-                onUploaded={(next) => {
-                  setDocument(next);
-                  setQuiz(null);
-                  setQuizError(null);
-                }}
-              />
-            </section>
-
-            <section className="rounded-3xl border border-ink/8 bg-white p-5 shadow-sm sm:p-6">
-              <h2 className="text-lg font-semibold">Dokument</h2>
-              {document ? (
-                <dl className="mt-3 space-y-2 text-sm">
-                  <Row label="Fil" value={document.filename} />
-                  <Row label="Status" value={document.extraction_status} />
-                  <Row label="Chunkar" value={String(document.chunk_count)} />
-                  <Row
-                    label="Extraktion"
-                    value={
-                      document.extraction_mode === "extracted"
-                        ? "Text utläst"
-                        : "Stub — flödet är kopplat"
-                    }
-                  />
-                  <Row label="Lagring" value={document.store} />
-                </dl>
-              ) : (
-                <p className="mt-3 text-sm text-ink/60">
-                  Inget dokument valt. När något är uppladdat visas sökväg,
-                  chunkar och hur texten extraherades.
-                </p>
-              )}
-            </section>
-          </div>
-
-          <div className="space-y-6">
-            <section className="rounded-3xl border border-ink/8 bg-white p-5 shadow-sm sm:p-6">
-              <QuizBoard
-                quiz={quiz}
-                loading={quizLoading}
-                error={quizError}
-                canGenerate={Boolean(document) && !backendError}
-                onGenerate={onGenerate}
-              />
-            </section>
-            <ShopifyConnect disabled={Boolean(backendError)} onStatus={setShopify} />
-          </div>
-        </div>
-      </main>
-
-      <footer className="border-t border-ink/8 bg-white/60">
-        <div className="mx-auto flex w-full max-w-6xl flex-col gap-2 px-4 py-5 text-xs text-ink/60 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-          <p>
-            Commerce via Shopify
-            {shopify?.connected
-              ? ` · kopplad (${shopify.shop_domain})`
-              : " · inte kopplad ännu"}.
-          </p>
-          <p>
-            Frontend-nycklar: Supabase{" "}
-            {publicConfig.supabaseConfigured ? "satta" : "saknas"}, Shopify-domän{" "}
-            {publicConfig.shopifyConfigured ? "satt" : "saknas"}.
-          </p>
-        </div>
-      </footer>
+      </div>
     </div>
-  );
-}
-
-function Row({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex justify-between gap-4">
-      <dt className="text-ink/55">{label}</dt>
-      <dd className="text-right font-medium">{value}</dd>
-    </div>
-  );
-}
-
-function StatusPills({
-  health,
-  backendError,
-  shopify,
-}: {
-  health: HealthResponse | null;
-  backendError: string | null;
-  shopify: ShopifyStatus | null;
-}) {
-  const items = [
-    {
-      label: backendError ? "API nere" : "API",
-      ok: Boolean(health) && !backendError,
-    },
-    {
-      label: health?.integrations.supabase ? "Supabase" : "Minne",
-      ok: true,
-    },
-    {
-      label: `LLM ${health?.integrations.llm ?? "…"}`,
-      ok: Boolean(health),
-    },
-    {
-      label: shopify?.connected
-        ? `Shopify ${shopify.shop_domain ?? "live"}`
-        : "Shopify",
-      ok: Boolean(shopify?.connected),
-    },
-  ];
-  return (
-    <ul className="hidden flex-wrap gap-2 md:flex">
-      {items.map((item) => (
-        <li
-          key={item.label}
-          className={`rounded-full px-2.5 py-1 text-xs font-medium ${
-            item.ok ? "bg-emerald-50 text-emerald-800" : "bg-red-50 text-red-800"
-          }`}
-        >
-          {item.label}
-        </li>
-      ))}
-    </ul>
   );
 }
