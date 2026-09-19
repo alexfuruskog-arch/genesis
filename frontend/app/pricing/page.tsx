@@ -15,7 +15,7 @@ const plans = [
       "3 chats per week (practice exam or flashcards)",
       "Up to 5 scans saved under your account",
       "Cream Cornell & Green Math tagging",
-      "Local library always · cloud when Supabase is connected",
+      "Private library · cloud when Supabase is connected",
     ],
   },
   {

@@ -211,7 +211,11 @@ export default function StudyPage() {
               )}
               {health ? (
                 <span>
-                  {cloudEnabled ? "Cloud library" : "Local library"} · {health.integrations.llm}
+                  {cloudEnabled ? "Cloud library" : "Private library"}
+                  {health.integrations.llm &&
+                  health.integrations.llm !== "mock"
+                    ? ` · ${health.integrations.llm}`
+                    : " · ready"}
                 </span>
               ) : null}
             </div>
