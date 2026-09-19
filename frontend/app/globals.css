@@ -1,13 +1,13 @@
 @import "tailwindcss";
 
 :root {
-  --forest: #1a2e26;
-  --forest-deep: #13231d;
-  --forest-mid: #243f35;
-  --cream: #f3eee4;
-  --cream-soft: #ebe4d6;
-  --ink: #1a2e26;
-  --muted: rgba(243, 238, 228, 0.72);
+  --forest: #0b2421;
+  --forest-deep: #061614;
+  --forest-mid: #143530;
+  --cream: #f5f5f0;
+  --cream-soft: #ebe6dc;
+  --ink: #0b2421;
+  --muted: rgba(11, 36, 33, 0.68);
 }
 
 @theme inline {
@@ -30,6 +30,7 @@ body {
   background: var(--cream);
   color: var(--ink);
   font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
 }
 
 h1,
@@ -44,7 +45,7 @@ h3,
 @keyframes fade-up {
   from {
     opacity: 0;
-    transform: translateY(16px);
+    transform: translateY(14px);
   }
   to {
     opacity: 1;
@@ -62,40 +63,50 @@ h3,
 }
 
 .animate-fade-up {
-  animation: fade-up 0.85s ease-out both;
+  animation: fade-up 0.75s ease-out both;
 }
 
 .animate-fade-up-delay {
-  animation: fade-up 0.95s ease-out 0.12s both;
+  animation: fade-up 0.85s ease-out 0.1s both;
 }
 
 .animate-soft-in {
-  animation: soft-in 0.9s ease-out both;
+  animation: soft-in 0.8s ease-out both;
+}
+
+.arzive-announce {
+  background: var(--cream);
+  color: var(--forest);
+  text-align: center;
+  font-size: 0.62rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  padding: 0.55rem 1rem;
+  border-bottom: 1px solid rgba(11, 36, 33, 0.08);
 }
 
 .nav-link {
-  font-size: 0.68rem;
-  letter-spacing: 0.2em;
+  font-size: 0.65rem;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--cream);
   font-weight: 400;
   transition: opacity 0.2s ease;
   white-space: nowrap;
 }
 
 .nav-link:hover {
-  opacity: 0.7;
+  opacity: 0.65;
 }
 
 .btn-solid {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.9rem 1.45rem;
+  padding: 0.85rem 1.35rem;
   background: var(--cream);
   color: var(--forest);
-  font-size: 0.68rem;
-  letter-spacing: 0.18em;
+  font-size: 0.65rem;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   font-weight: 500;
   border-radius: 0;
@@ -111,11 +122,11 @@ h3,
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.9rem 1.45rem;
-  border: 1px solid rgba(243, 238, 228, 0.5);
+  padding: 0.85rem 1.35rem;
+  border: 1px solid rgba(245, 245, 240, 0.5);
   color: var(--cream);
-  font-size: 0.68rem;
-  letter-spacing: 0.18em;
+  font-size: 0.65rem;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   font-weight: 500;
   border-radius: 0;
@@ -124,18 +135,18 @@ h3,
 
 .btn-ghost:hover {
   border-color: var(--cream);
-  background: rgba(243, 238, 228, 0.06);
+  background: rgba(245, 245, 240, 0.06);
 }
 
 .btn-ink {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.9rem 1.45rem;
+  padding: 0.85rem 1.35rem;
   background: var(--forest);
   color: var(--cream);
-  font-size: 0.68rem;
-  letter-spacing: 0.18em;
+  font-size: 0.65rem;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   font-weight: 500;
   border-radius: 0;
@@ -151,4 +162,36 @@ h3,
   opacity: 0.55;
   cursor: not-allowed;
   transform: none;
+}
+
+.study-panel {
+  background: #f0ebe3;
+  padding: 1.5rem 1.35rem;
+}
+
+@media (min-width: 640px) {
+  .study-panel {
+    padding: 1.75rem 1.65rem;
+  }
+}
+
+.study-label {
+  font-size: 0.62rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(11, 36, 33, 0.5);
+}
+
+.study-input {
+  width: 100%;
+  border: 0;
+  border-bottom: 1px solid rgba(11, 36, 33, 0.3);
+  background: transparent;
+  padding: 0.65rem 0;
+  color: var(--forest);
+  outline: none;
+}
+
+.study-input:focus {
+  border-bottom-color: var(--forest);
 }

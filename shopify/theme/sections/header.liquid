@@ -1,6 +1,7 @@
 {%- liquid
   assign study_url = settings.study_app_url | default: 'https://study.arzive.com/study'
   assign account_url = settings.account_app_url | default: study_url | replace: '/study', '/account'
+  assign pricing_url = study_url | replace: '/study', '/pricing'
   assign story_url = pages['our-story'].url | default: '/pages/our-story'
 -%}
 
@@ -14,23 +15,27 @@
   <div class="arzive-shell arzive-header__grid">
     <nav class="arzive-header__left" aria-label="Primary">
       <a class="arzive-nav-link" href="{{ routes.all_products_collection_url }}">
-        <span class="arzive-nav-link__full">Shop all</span>
+        <span class="arzive-nav-link__full">Shop</span>
         <span class="arzive-nav-link__short">Shop</span>
       </a>
-      <a class="arzive-nav-link" href="{{ story_url }}">
-        <span class="arzive-nav-link__full">Why Arzive</span>
-        <span class="arzive-nav-link__short">Story</span>
+      <a class="arzive-nav-link" href="{{ study_url }}" rel="noopener">
+        <span class="arzive-nav-link__full">Study with Arzive</span>
+        <span class="arzive-nav-link__short">Study</span>
       </a>
     </nav>
 
     <a class="arzive-wordmark" href="{{ routes.root_url }}">ARZIVE</a>
 
     <div class="arzive-header__right">
-      <a class="arzive-nav-link" href="{{ study_url }}" rel="noopener">
-        <span class="arzive-nav-link__full">Study with Arzive</span>
-        <span class="arzive-nav-link__short">Study</span>
+      <a class="arzive-nav-link" href="{{ pricing_url }}" rel="noopener">
+        <span class="arzive-nav-link__full">Pricing</span>
+        <span class="arzive-nav-link__short">Plans</span>
       </a>
-      <a class="arzive-nav-link" href="{{ account_url }}" rel="noopener">Log in</a>
+      <a class="arzive-nav-link arzive-nav-link--hide-sm" href="{{ story_url }}">
+        <span class="arzive-nav-link__full">Our story</span>
+        <span class="arzive-nav-link__short">Story</span>
+      </a>
+      <a class="arzive-nav-link" href="{{ account_url }}" rel="noopener">Account</a>
       <a class="arzive-bag" href="{{ routes.cart_url }}" aria-label="Cart">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <path d="M7 8.5h10l-.85 11.2a1 1 0 0 1-1 .9H8.85a1 1 0 0 1-1-.9L7 8.5Z" stroke="currentColor" stroke-width="1.25" stroke-linejoin="round"/>

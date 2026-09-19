@@ -13,7 +13,18 @@ import {
   type UploadedDocument,
 } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
-import { publicConfig } from "@/lib/env";
+import {
+  canScan,
+  canStartStudySession,
+  FREE_SCAN_CAP,
+  FREE_SESSION_CAP,
+  getPlan,
+  getScanCount,
+  getWeeklySessionsUsed,
+  recordScan,
+  recordStudySession,
+  type PlanId,
+} from "@/lib/plan";
 
 type NotebookModel = "math" | "cornell";
 
@@ -37,8 +48,19 @@ export default function StudyPage() {
   const [outputType, setOutputType] = useState<"quiz" | "flashcards">("quiz");
   const [flipped, setFlipped] = useState<Record<string, boolean>>({});
   const [answers, setAnswers] = useState<Record<string, number>>({});
+  const [plan, setPlanState] = useState<PlanId>("free");
+  const [sessionsUsed, setSessionsUsed] = useState(0);
+  const [scansUsed, setScansUsed] = useState(0);
 
   const signedIn = Boolean(user?.email);
+  const sessionGate = canStartStudySession(plan);
+  const scanGate = canScan(plan);
+
+  useEffect(() => {
+    setPlanState(getPlan());
+    setSessionsUsed(getWeeklySessionsUsed());
+    setScansUsed(getScanCount());
+  }, []);
 
   const refresh = useCallback(async () => {
     setListLoading(true);
@@ -73,7 +95,14 @@ export default function StudyPage() {
   async function onUpload(fileList: FileList | null) {
     if (!fileList?.length) return;
     if (!signedIn) {
-      setUploadError("Sign in on Account first — scans are saved under your customer account.");
+      setUploadError("Sign in on Account first — scans are saved under your account.");
+      return;
+    }
+    const gate = canScan(plan, fileList.length);
+    if (!gate.ok) {
+      setUploadError(
+        `Free plan allows ${FREE_SCAN_CAP} scans. You’ve used ${gate.used}. Upgrade to Standard ($12/mo) for unlimited.`,
+      );
       return;
     }
     setUploadBusy(true);
@@ -82,17 +111,16 @@ export default function StudyPage() {
     try {
       const uploaded: UploadedDocument[] = [];
       for (const file of Array.from(fileList)) {
-        uploaded.push(
-          await uploadDocument(file, authHeaders, notebookModel),
-        );
+        uploaded.push(await uploadDocument(file, authHeaders, notebookModel));
       }
       setDocuments((current) => [...uploaded, ...current]);
       setSelected((current) => [...uploaded.map((doc) => doc.id), ...current]);
+      setScansUsed(recordScan(uploaded.length));
       const backend = uploaded[0]?.storage_backend;
       setUploadNotice(
         backend === "supabase"
           ? `${uploaded.length} scan(s) saved to your cloud library.`
-          : `${uploaded.length} scan(s) saved locally (Supabase keys missing — cloud path is ready when configured).`,
+          : `${uploaded.length} scan(s) saved locally under your account.`,
       );
     } catch (err) {
       setUploadError(err instanceof Error ? err.message : "Upload failed.");
@@ -112,6 +140,13 @@ export default function StudyPage() {
       setGenerateError("Select at least one scan.");
       return;
     }
+    const gate = canStartStudySession(plan);
+    if (!gate.ok) {
+      setGenerateError(
+        `Free plan: ${FREE_SESSION_CAP} Study sessions per week. You’ve used ${gate.used}. Upgrade to Standard — $12/month — for unlimited practice.`,
+      );
+      return;
+    }
     setGenerateBusy(true);
     setGenerateError(null);
     setAnswers({});
@@ -121,6 +156,7 @@ export default function StudyPage() {
         { documentIds: selected, outputType },
         authHeaders,
       );
+      setSessionsUsed(recordStudySession());
       setResult(study);
     } catch (err) {
       setGenerateError(err instanceof Error ? err.message : "Generation failed.");
@@ -131,69 +167,126 @@ export default function StudyPage() {
 
   return (
     <main className="bg-cream">
-      <section className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-xs tracking-[0.22em] uppercase text-forest/55">
-              Study with Arzive
-            </p>
-            <h1 className="mt-3 font-display text-4xl tracking-[0.04em] text-forest">
-              Scan to your account
-            </h1>
-            <p className="mt-3 max-w-xl text-sm leading-6 text-forest/70">
-              Photograph or upload pages from your Cream Cornell or Green Math
-              notebook. Files are stored under your customer account (Supabase
-              Storage + RLS when keys are set) and listed only for you.
-            </p>
-          </div>
-          <div className="text-xs text-forest/55">
+      <section className="bg-forest text-cream">
+        <div className="mx-auto max-w-6xl px-5 py-14 sm:px-8 sm:py-16 lg:px-10">
+          <p className="animate-soft-in font-display text-[0.95rem] tracking-[0.28em] text-cream/85">
+            Study with Arzive
+          </p>
+          <h1 className="animate-fade-up mt-4 max-w-2xl font-display text-[2.35rem] leading-[1.12] tracking-[0.01em] sm:text-[3rem]">
+            Read once. Recall hard. Remember longer.
+          </h1>
+          <p className="animate-fade-up-delay mt-5 max-w-xl text-[0.98rem] font-light leading-7 text-cream/72 sm:text-lg">
+            Capture Cream Cornell or Green Math pages, then force active recall with
+            practice exams and flashcards — the fast study loop, ARZIVE-designed.
+          </p>
+          <div className="mt-8 flex flex-wrap items-center gap-4 text-[0.62rem] uppercase tracking-[0.16em] text-cream/55">
             {signedIn ? (
-              <p>
-                Signed in as <span className="text-forest">{user?.email}</span>
-              </p>
+              <span>Signed in · {user?.email}</span>
             ) : (
-              <p>
-                <Link href="/account" className="underline underline-offset-2">
-                  Create an account / sign in
-                </Link>{" "}
-                to save scans to your library.
-              </p>
+              <Link href="/account" className="underline underline-offset-4 text-cream/80">
+                Log in to save scans
+              </Link>
             )}
+            <span>
+              Plan · {plan}
+              {plan === "free"
+                ? ` · ${sessionsUsed}/${FREE_SESSION_CAP} sessions this week · ${scansUsed}/${FREE_SCAN_CAP} scans`
+                : " · unlimited"}
+            </span>
             {health ? (
-              <p className="mt-1">
-                API ok · LLM {health.integrations.llm} ·{" "}
-                {cloudEnabled ? "cloud ready" : "local fallback"}
-                {publicConfig.supabaseConfigured ? " · Supabase client set" : ""}
-              </p>
+              <span>
+                {cloudEnabled ? "Cloud library" : "Local library"} · {health.integrations.llm}
+              </span>
             ) : null}
           </div>
         </div>
+      </section>
 
+      <section className="mx-auto max-w-6xl px-5 py-12 sm:px-8 sm:py-16 lg:px-10">
         {!signedIn ? (
-          <div className="mt-8 border border-forest/15 bg-cream-soft px-4 py-4 text-sm text-forest/80">
-            Scans belong to a customer account.{" "}
-            <Link href="/account" className="font-medium underline underline-offset-2">
-              Sign in or sign up
-            </Link>{" "}
-            before uploading — then only you will see them.
+          <div className="mb-10 study-panel animate-soft-in">
+            <p className="study-label">Account required</p>
+            <p className="mt-3 max-w-xl font-light leading-7 text-forest/75">
+              Scans belong to your ARZIVE account — the same place you manage Study.
+            </p>
+            <Link href="/account" className="btn-ink mt-5 inline-flex">
+              Log in / create account
+            </Link>
+          </div>
+        ) : null}
+
+        {signedIn && plan === "free" && !sessionGate.ok ? (
+          <div className="mb-10 animate-soft-in border border-forest/15 bg-[#f0ebe3] px-5 py-7 sm:px-8">
+            <p className="text-[0.62rem] uppercase tracking-[0.18em] text-forest/50">
+              Free plan · weekly gate
+            </p>
+            <h2 className="mt-3 font-display text-2xl tracking-[0.02em] text-forest sm:text-3xl">
+              You&apos;ve used your {FREE_SESSION_CAP} Study sessions this week.
+            </h2>
+            <p className="mt-3 max-w-xl text-sm font-light leading-7 text-forest/70">
+              Free is honest about its limits. Standard unlocks unlimited practice
+              exams and flashcards for $12/month — or save with Annual.
+            </p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Link href="/account?plan=standard" className="btn-ink">
+                Upgrade to Standard · $12
+              </Link>
+              <Link
+                href="/pricing"
+                className="border border-forest/25 px-4 py-2.5 text-[0.62rem] uppercase tracking-[0.14em] text-forest"
+              >
+                Compare plans
+              </Link>
+            </div>
+          </div>
+        ) : null}
+
+        {signedIn && plan === "free" && sessionGate.ok && !scanGate.ok ? (
+          <div className="mb-10 animate-soft-in border border-forest/15 bg-[#f0ebe3] px-5 py-7 sm:px-8">
+            <p className="text-[0.62rem] uppercase tracking-[0.18em] text-forest/50">
+              Free plan · scan limit
+            </p>
+            <h2 className="mt-3 font-display text-2xl tracking-[0.02em] text-forest sm:text-3xl">
+              {FREE_SCAN_CAP} scans used — library is full on Free.
+            </h2>
+            <p className="mt-3 max-w-xl text-sm font-light leading-7 text-forest/70">
+              You can still practice from notes already in your library (
+              {sessionGate.remaining} session
+              {sessionGate.remaining === 1 ? "" : "s"} left this week). Upgrade for
+              unlimited captures.
+            </p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Link href="/account?plan=standard" className="btn-ink">
+                Unlock unlimited scans
+              </Link>
+              <Link
+                href="/pricing"
+                className="border border-forest/25 px-4 py-2.5 text-[0.62rem] uppercase tracking-[0.14em] text-forest"
+              >
+                See Pricing
+              </Link>
+            </div>
           </div>
         ) : null}
 
         {backendError ? (
-          <div className="mt-8 border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-900">
+          <div className="mb-8 border border-red-800/20 bg-red-50 px-4 py-3 text-sm text-red-900">
             {backendError}
           </div>
         ) : null}
 
-        <div className="mt-10 grid gap-8 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
-          <div className="space-y-6">
-            <section className="border border-forest/10 bg-white/50 p-5 sm:p-6">
-              <h2 className="font-display text-xl tracking-[0.04em]">1. Scan notes</h2>
-              <p className="mt-2 text-sm text-forest/65">
-                Use the camera on your phone, or upload photos / PDF / TXT.
+        <div className="grid gap-8 lg:grid-cols-2 lg:gap-10">
+          <div className="space-y-8">
+            <section className="study-panel">
+              <p className="study-label">01 · Scan</p>
+              <h2 className="mt-3 font-display text-2xl tracking-[0.03em] text-forest">
+                Capture a page
+              </h2>
+              <p className="mt-2 text-sm font-light leading-6 text-forest/70">
+                Tag the notebook model, then open the camera or upload a photo / PDF.
               </p>
 
-              <div className="mt-4 flex flex-wrap gap-2">
+              <div className="mt-5 flex flex-wrap gap-2">
                 {(
                   [
                     { id: "cornell" as const, label: "Cream Cornell" },
@@ -204,10 +297,10 @@ export default function StudyPage() {
                     key={option.id}
                     type="button"
                     onClick={() => setNotebookModel(option.id)}
-                    className={`px-3 py-2 text-xs tracking-[0.14em] uppercase ${
+                    className={`px-3 py-2 text-[0.62rem] tracking-[0.14em] uppercase transition ${
                       notebookModel === option.id
                         ? "bg-forest text-cream"
-                        : "border border-forest/20 text-forest"
+                        : "border border-forest/20 text-forest hover:border-forest/40"
                     }`}
                   >
                     {option.label}
@@ -215,22 +308,40 @@ export default function StudyPage() {
                 ))}
               </div>
 
-              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              <div className="mt-5 grid gap-3 sm:grid-cols-2">
                 <button
                   type="button"
-                  disabled={!signedIn || Boolean(backendError) || uploadBusy}
+                  disabled={
+                    !signedIn ||
+                    Boolean(backendError) ||
+                    uploadBusy ||
+                    !scanGate.ok
+                  }
                   onClick={() => cameraRef.current?.click()}
-                  className="border border-dashed border-forest/25 bg-cream-soft/60 px-4 py-8 text-center text-sm font-medium text-forest transition hover:border-forest/45 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="bg-cream px-4 py-10 text-center text-[0.65rem] tracking-[0.16em] uppercase text-forest transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-45"
                 >
-                  {uploadBusy ? "Uploading…" : "Open camera"}
+                  {uploadBusy
+                    ? "Uploading…"
+                    : !scanGate.ok
+                      ? "Scan limit reached"
+                      : "Open camera"}
                 </button>
                 <button
                   type="button"
-                  disabled={!signedIn || Boolean(backendError) || uploadBusy}
+                  disabled={
+                    !signedIn ||
+                    Boolean(backendError) ||
+                    uploadBusy ||
+                    !scanGate.ok
+                  }
                   onClick={() => fileRef.current?.click()}
-                  className="border border-dashed border-forest/25 bg-cream-soft/60 px-4 py-8 text-center text-sm font-medium text-forest transition hover:border-forest/45 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="bg-cream px-4 py-10 text-center text-[0.65rem] tracking-[0.16em] uppercase text-forest transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-45"
                 >
-                  {uploadBusy ? "Uploading…" : "Upload files"}
+                  {uploadBusy
+                    ? "Uploading…"
+                    : !scanGate.ok
+                      ? "Scan limit reached"
+                      : "Upload files"}
                 </button>
               </div>
               <input
@@ -239,7 +350,9 @@ export default function StudyPage() {
                 accept="image/*"
                 capture="environment"
                 className="sr-only"
-                disabled={!signedIn || Boolean(backendError) || uploadBusy}
+                disabled={
+                  !signedIn || Boolean(backendError) || uploadBusy || !scanGate.ok
+                }
                 onChange={(event) => {
                   void onUpload(event.target.files);
                   event.target.value = "";
@@ -251,59 +364,55 @@ export default function StudyPage() {
                 multiple
                 accept=".txt,.md,.pdf,image/*,text/plain,application/pdf"
                 className="sr-only"
-                disabled={!signedIn || Boolean(backendError) || uploadBusy}
+                disabled={
+                  !signedIn || Boolean(backendError) || uploadBusy || !scanGate.ok
+                }
                 onChange={(event) => {
                   void onUpload(event.target.files);
                   event.target.value = "";
                 }}
               />
-              <p className="mt-3 text-xs text-forest/55">
-                .jpg .png .heic .pdf .txt · max 10 MB · tagged as{" "}
+              <p className="mt-4 text-xs font-light text-forest/55">
+                .jpg .png .pdf .txt · max 10 MB · tagged as{" "}
                 {notebookModel === "cornell" ? "Cream Cornell" : "Green Math"}
               </p>
-              {uploadError ? (
-                <p className="mt-3 text-sm text-red-800">{uploadError}</p>
-              ) : null}
-              {uploadNotice ? (
-                <p className="mt-3 text-sm text-forest/75">{uploadNotice}</p>
-              ) : null}
+              {uploadError ? <p className="mt-3 text-sm text-red-800">{uploadError}</p> : null}
+              {uploadNotice ? <p className="mt-3 text-sm text-forest/75">{uploadNotice}</p> : null}
             </section>
 
-            <section className="border border-forest/10 bg-white/50 p-5 sm:p-6">
-              <div className="flex items-center justify-between gap-3">
-                <h2 className="font-display text-xl tracking-[0.04em]">
-                  2. Your library
-                </h2>
+            <section className="study-panel">
+              <div className="flex items-end justify-between gap-3">
+                <div>
+                  <p className="study-label">02 · Library</p>
+                  <h2 className="mt-3 font-display text-2xl tracking-[0.03em] text-forest">
+                    Your scans
+                  </h2>
+                </div>
                 <button
                   type="button"
                   onClick={() => void refresh()}
-                  className="text-xs tracking-[0.14em] uppercase text-forest/60 hover:text-forest"
+                  className="text-[0.62rem] tracking-[0.14em] uppercase text-forest/55 hover:text-forest"
                 >
                   Refresh
                 </button>
               </div>
-              <p className="mt-2 text-sm text-forest/60">
-                Only scans for this account. RLS on Supabase keeps other users out.
-              </p>
 
               {listLoading ? (
-                <p className="mt-6 text-sm text-forest/60">Loading scans…</p>
+                <p className="mt-8 text-sm font-light text-forest/60">Loading…</p>
               ) : null}
 
               {!listLoading && documents.length === 0 ? (
-                <div className="mt-6 border border-dashed border-forest/20 px-4 py-8 text-center">
-                  <p className="font-medium text-forest">No scans yet</p>
-                  <p className="mt-1 text-sm text-forest/60">
-                    Scan a notebook page to build your cloud library.
+                <div className="mt-8 bg-cream px-4 py-10 text-center">
+                  <p className="font-display text-xl text-forest">No scans yet</p>
+                  <p className="mt-2 text-sm font-light text-forest/60">
+                    Capture a Cornell or Math page to begin.
                   </p>
                 </div>
               ) : null}
 
-              <ul className="mt-4 space-y-2">
+              <ul className="mt-5 space-y-2">
                 {documents.map((doc) => {
                   const checked = selected.includes(doc.id);
-                  const cloud =
-                    doc.storage_backend === "supabase" ? "Cloud" : "Local";
                   const model =
                     doc.notebook_model === "math"
                       ? "Green Math"
@@ -313,26 +422,23 @@ export default function StudyPage() {
                   return (
                     <li key={doc.id}>
                       <label
-                        className={`flex cursor-pointer items-start gap-3 border px-3 py-3 text-sm transition ${
-                          checked
-                            ? "border-forest bg-cream-soft"
-                            : "border-forest/10 bg-white hover:border-forest/25"
+                        className={`flex cursor-pointer items-start gap-3 px-3 py-3 text-sm transition ${
+                          checked ? "bg-forest text-cream" : "bg-cream hover:bg-white"
                         }`}
                       >
                         <input
                           type="checkbox"
                           checked={checked}
                           onChange={() => toggleDoc(doc.id)}
-                          className="mt-1"
+                          className="mt-1 accent-current"
                         />
                         <span className="min-w-0 flex-1">
-                          <span className="block truncate font-medium text-forest">
-                            {doc.filename}
-                          </span>
-                          <span className="mt-0.5 block text-xs text-forest/55">
-                            {cloud}
-                            {model ? ` · ${model}` : ""} · {doc.chunk_count} chunks ·{" "}
-                            {new Date(doc.created_at).toLocaleString()}
+                          <span className="block truncate font-medium">{doc.filename}</span>
+                          <span
+                            className={`mt-0.5 block text-xs ${checked ? "text-cream/65" : "text-forest/55"}`}
+                          >
+                            {doc.storage_backend === "supabase" ? "Cloud" : "Local"}
+                            {model ? ` · ${model}` : ""} · {doc.chunk_count} chunks
                           </span>
                         </span>
                       </label>
@@ -343,21 +449,24 @@ export default function StudyPage() {
             </section>
           </div>
 
-          <div className="space-y-6">
-            <section className="border border-forest/10 bg-white/50 p-5 sm:p-6">
-              <h2 className="font-display text-xl tracking-[0.04em]">3. Generate</h2>
-              <p className="mt-2 text-sm text-forest/65">
-                Select a few scans, then ask for a practice exam or flashcards.
+          <div className="space-y-8">
+            <section className="study-panel">
+              <p className="study-label">03 · Practice</p>
+              <h2 className="mt-3 font-display text-2xl tracking-[0.03em] text-forest">
+                Generate from your notes
+              </h2>
+              <p className="mt-2 text-sm font-light leading-6 text-forest/70">
+                Select scans, then ask for a practice exam or flashcards.
               </p>
-              <p className="mt-1 text-sm text-forest/55">
-                Selected: {selected.length} note{selected.length === 1 ? "" : "s"}
+              <p className="mt-3 text-[0.62rem] uppercase tracking-[0.14em] text-forest/50">
+                Selected · {selected.length}
               </p>
 
-              <div className="mt-4 flex flex-wrap gap-2">
+              <div className="mt-5 flex flex-wrap gap-2">
                 <button
                   type="button"
                   onClick={() => setOutputType("quiz")}
-                  className={`px-3 py-2 text-xs tracking-[0.14em] uppercase ${
+                  className={`px-3 py-2 text-[0.62rem] tracking-[0.14em] uppercase ${
                     outputType === "quiz"
                       ? "bg-forest text-cream"
                       : "border border-forest/20 text-forest"
@@ -368,7 +477,7 @@ export default function StudyPage() {
                 <button
                   type="button"
                   onClick={() => setOutputType("flashcards")}
-                  className={`px-3 py-2 text-xs tracking-[0.14em] uppercase ${
+                  className={`px-3 py-2 text-[0.62rem] tracking-[0.14em] uppercase ${
                     outputType === "flashcards"
                       ? "bg-forest text-cream"
                       : "border border-forest/20 text-forest"
@@ -381,46 +490,56 @@ export default function StudyPage() {
               <button
                 type="button"
                 onClick={() => void onGenerate()}
-                disabled={Boolean(backendError) || generateBusy || selected.length === 0}
-                className="btn-ink mt-5"
+                disabled={
+                  Boolean(backendError) ||
+                  generateBusy ||
+                  selected.length === 0 ||
+                  !sessionGate.ok
+                }
+                className="btn-ink mt-6"
               >
                 {generateBusy
                   ? "Generating…"
-                  : outputType === "quiz"
-                    ? "Generate practice exam"
-                    : "Generate flashcards"}
+                  : !sessionGate.ok
+                    ? "Weekly limit reached"
+                    : outputType === "quiz"
+                      ? "Generate practice exam"
+                      : "Generate flashcards"}
               </button>
-
-              {generateError ? (
-                <p className="mt-3 text-sm text-red-800">{generateError}</p>
+              {plan === "free" && sessionGate.ok ? (
+                <p className="mt-3 text-xs font-light text-forest/55">
+                  {sessionGate.remaining} of {FREE_SESSION_CAP} Free sessions left this
+                  week.
+                </p>
               ) : null}
+              {generateError ? <p className="mt-3 text-sm text-red-800">{generateError}</p> : null}
             </section>
 
-            <section className="border border-forest/10 bg-white/50 p-5 sm:p-6">
-              <h2 className="font-display text-xl tracking-[0.04em]">Results</h2>
+            <section className="study-panel min-h-[20rem]">
+              <p className="study-label">Results</p>
+              <h2 className="mt-3 font-display text-2xl tracking-[0.03em] text-forest">
+                Your session
+              </h2>
 
               {generateBusy ? (
-                <div className="mt-6 border border-dashed border-forest/20 px-4 py-10 text-center text-sm text-forest/65">
-                  Retrieving your chunks and asking the model…
+                <div className="mt-8 bg-cream px-4 py-12 text-center text-sm font-light text-forest/65">
+                  Retrieving your notes…
                 </div>
               ) : null}
 
               {!generateBusy && !result && !generateError ? (
-                <div className="mt-6 border border-dashed border-forest/20 px-4 py-10 text-center">
-                  <p className="font-medium text-forest">Nothing generated yet</p>
-                  <p className="mt-1 text-sm text-forest/60">
-                    Pick scans and choose practice exam or flashcards. Without an
-                    LLM key you still get mock output.
+                <div className="mt-8 bg-cream px-4 py-12 text-center">
+                  <p className="font-display text-xl text-forest">Nothing generated yet</p>
+                  <p className="mt-2 text-sm font-light text-forest/60">
+                    Pick scans and generate a practice exam or flashcards.
                   </p>
                 </div>
               ) : null}
 
               {result && !generateBusy ? (
-                <div className="mt-4 space-y-4">
-                  <p className="text-xs uppercase tracking-wide text-forest/50">
-                    {result.output_type} · {result.provider} ·{" "}
-                    {result.retrieval.chunk_count} chunks ·{" "}
-                    {result.document_ids.length} notes · {result.store}
+                <div className="mt-6 space-y-4">
+                  <p className="text-[0.62rem] uppercase tracking-[0.14em] text-forest/50">
+                    {result.output_type} · {result.provider} · {result.document_ids.length} notes
                   </p>
 
                   {result.output_type === "quiz" ? (
@@ -429,25 +548,17 @@ export default function StudyPage() {
                         const selectedAnswer = answers[question.id];
                         const revealed = selectedAnswer !== undefined;
                         return (
-                          <li
-                            key={question.id}
-                            className="border border-forest/10 bg-cream/40 p-4"
-                          >
+                          <li key={question.id} className="bg-cream p-4">
                             <p className="text-sm font-medium text-forest">
                               {index + 1}. {question.question}
                             </p>
                             <ul className="mt-3 space-y-2">
                               {question.choices.map((choice, choiceIndex) => {
                                 const isSelected = selectedAnswer === choiceIndex;
-                                const isCorrect =
-                                  question.correct_index === choiceIndex;
-                                let tone =
-                                  "border-forest/15 bg-white hover:border-forest/35";
-                                if (revealed && isCorrect) {
-                                  tone = "border-emerald-700 bg-emerald-50";
-                                } else if (revealed && isSelected) {
-                                  tone = "border-red-400 bg-red-50";
-                                }
+                                const isCorrect = question.correct_index === choiceIndex;
+                                let tone = "bg-white hover:bg-cream-soft";
+                                if (revealed && isCorrect) tone = "bg-forest text-cream";
+                                else if (revealed && isSelected) tone = "bg-red-50 text-red-900";
                                 return (
                                   <li key={choiceIndex}>
                                     <button
@@ -458,7 +569,7 @@ export default function StudyPage() {
                                           [question.id]: choiceIndex,
                                         }))
                                       }
-                                      className={`w-full border px-3 py-2 text-left text-sm ${tone}`}
+                                      className={`w-full px-3 py-2.5 text-left text-sm ${tone}`}
                                     >
                                       {choice}
                                     </button>
@@ -467,7 +578,7 @@ export default function StudyPage() {
                               })}
                             </ul>
                             {revealed ? (
-                              <p className="mt-3 text-sm text-forest/70">
+                              <p className="mt-3 text-sm font-light text-forest/70">
                                 {question.explanation}
                               </p>
                             ) : null}
@@ -489,9 +600,9 @@ export default function StudyPage() {
                                   [card.id]: !current[card.id],
                                 }))
                               }
-                              className="w-full border border-forest/15 bg-cream/50 px-4 py-5 text-left transition hover:border-forest/35"
+                              className="w-full bg-cream px-4 py-5 text-left transition hover:bg-white"
                             >
-                              <p className="text-xs tracking-[0.14em] uppercase text-forest/45">
+                              <p className="text-[0.62rem] tracking-[0.14em] uppercase text-forest/45">
                                 {isFlipped ? "Back" : "Front"} · tap to flip
                               </p>
                               <p className="mt-2 text-sm leading-6 text-forest">
