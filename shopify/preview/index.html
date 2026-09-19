@@ -300,6 +300,9 @@
       document.querySelectorAll("[data-go]").forEach((btn) =>
         btn.addEventListener("click", () => go(btn.getAttribute("data-go")))
       );
+      const params = new URLSearchParams(location.search);
+      if (params.get("view")) go(params.get("view"));
+
     </script>
   </body>
 </html>
