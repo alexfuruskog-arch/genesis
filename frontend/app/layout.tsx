@@ -1,20 +1,21 @@
 import type { Metadata } from "next";
-import { Libre_Baskerville, Source_Sans_3 } from "next/font/google";
+import { Cormorant_Garamond, Source_Sans_3 } from "next/font/google";
 
 import { SiteNav } from "@/components/SiteNav";
 import { AuthProvider } from "@/lib/auth";
 
 import "./globals.css";
 
-const display = Libre_Baskerville({
+const display = Cormorant_Garamond({
   variable: "--font-display",
   subsets: ["latin", "latin-ext"],
-  weight: ["400", "700"],
+  weight: ["400", "500", "600"],
 });
 
 const body = Source_Sans_3({
   variable: "--font-body",
   subsets: ["latin", "latin-ext"],
+  weight: ["300", "400", "500", "600"],
 });
 
 export const metadata: Metadata = {
@@ -29,7 +30,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${display.variable} ${body.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-cream text-ink">
+      <body className="flex min-h-full flex-col bg-cream text-ink">
         <AuthProvider>
           <SiteNav />
           <div className="flex-1">{children}</div>

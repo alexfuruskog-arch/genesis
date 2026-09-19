@@ -4,121 +4,113 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 
-import { products, shopifyProductUrl, type Product } from "@/lib/products";
-import { publicConfig, shopifyStoreDomain } from "@/lib/env";
+import { products, shopifyProductUrl } from "@/lib/products";
+import { shopifyStoreDomain } from "@/lib/env";
+
+type Tab = "cornell" | "math";
+
+const gallery = {
+  cornell: [
+    { src: "/products/cornell-pages.jpg", alt: "Cornell notebook open pages" },
+    { src: "/products/notebook-green.jpg", alt: "ARZIVE green notebook cover" },
+    { src: "/products/notebook-cream.jpg", alt: "ARZIVE cream notebook cover" },
+  ],
+  math: [
+    { src: "/products/math-pages.jpg", alt: "Math notebook open pages" },
+    { src: "/products/notebook-green.jpg", alt: "ARZIVE green notebook cover" },
+    { src: "/products/notebook-cream.jpg", alt: "ARZIVE cream notebook cover" },
+  ],
+} as const;
 
 export default function HomePage() {
-  const [active, setActive] = useState<"cornell" | "math">("cornell");
+  const [active, setActive] = useState<Tab>("cornell");
   const product = products.find((item) => item.id === active) ?? products[0];
+  const buyUrl = shopifyProductUrl(product.shopifyHandle, shopifyStoreDomain);
+  const images = gallery[active];
 
   return (
-    <main>
-      <section className="relative overflow-hidden bg-forest text-cream">
-        <div
-          className="pointer-events-none absolute inset-0 opacity-[0.07]"
-          style={{
-            backgroundImage:
-              "radial-gradient(circle at 20% 20%, #f3eee4 0.8px, transparent 1px), radial-gradient(circle at 80% 60%, #f3eee4 0.7px, transparent 1px)",
-            backgroundSize: "28px 28px, 36px 36px",
-          }}
-        />
-        <div className="relative mx-auto flex min-h-[78vh] max-w-4xl flex-col items-center justify-center px-6 py-20 text-center sm:py-28">
-          <p className="animate-soft-in font-display text-sm tracking-[0.35em] text-cream/80">
+    <main className="bg-forest text-cream">
+      <section className="mx-auto max-w-6xl px-5 pb-16 pt-14 sm:px-8 sm:pb-20 sm:pt-20 lg:px-10">
+        <div className="max-w-3xl animate-soft-in">
+          <p className="font-display text-[0.95rem] tracking-[0.28em] text-cream/85 sm:text-base">
             ARZIVE
           </p>
-          <h1 className="animate-fade-up mt-6 max-w-3xl font-display text-[2.15rem] leading-[1.15] text-cream sm:text-5xl sm:leading-[1.12]">
+          <h1 className="animate-fade-up mt-5 font-display text-[2.35rem] leading-[1.12] tracking-[0.01em] text-cream sm:text-[3.15rem] sm:leading-[1.1] lg:text-[3.5rem]">
             We believe every student deserves the tools to succeed.
           </h1>
-          <p className="animate-fade-up-delay mt-6 max-w-2xl text-base leading-7 text-cream/75 sm:text-lg">
+          <p className="animate-fade-up-delay mt-6 max-w-xl text-[0.98rem] font-light leading-7 text-cream/72 sm:text-lg sm:leading-8">
             Two research-backed notebooks. One for structured thinking, one for
             mathematical clarity — crafted from recycled materials that feel as
             considered as the systems inside.
           </p>
-          <div className="animate-fade-up-delay mt-10 flex flex-wrap items-center justify-center gap-3">
+          <div className="animate-fade-up-delay mt-9 flex flex-wrap gap-3">
             <Link href="/shop" className="btn-solid">
               Shop notebooks
             </Link>
             <Link href="/story" className="btn-ghost">
               Our story
             </Link>
-            <Link
-              href="/study"
-              className="btn-ghost border-cream/30 text-cream/90"
-            >
-              Study with Arzive
-            </Link>
           </div>
         </div>
       </section>
 
-      <section className="bg-forest pb-20 pt-6 text-cream">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <div className="flex items-center justify-center gap-10">
-            {products.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => setActive(item.id as "cornell" | "math")}
-                className={`pb-2 text-xs tracking-[0.22em] uppercase transition ${
-                  active === item.id
-                    ? "border-b border-cream text-cream"
-                    : "border-b border-transparent text-cream/55 hover:text-cream/80"
-                }`}
-              >
-                {item.id === "cornell" ? "Cornell" : "Math"}
-              </button>
-            ))}
-          </div>
+      <section className="mx-auto max-w-6xl px-5 pb-20 sm:px-8 lg:px-10">
+        <div className="flex items-center gap-8 sm:gap-10">
+          {(["cornell", "math"] as const).map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              onClick={() => setActive(tab)}
+              className={`pb-2 text-[0.7rem] tracking-[0.24em] uppercase transition ${
+                active === tab
+                  ? "border-b border-cream text-cream"
+                  : "border-b border-transparent text-cream/45 hover:text-cream/75"
+              }`}
+            >
+              {tab === "cornell" ? "Cornell" : "Math"}
+            </button>
+          ))}
+        </div>
 
-          <ProductShowcase product={product} />
+        <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-3 sm:gap-5">
+          {images.map((image, index) => (
+            <figure
+              key={`${active}-${image.src}`}
+              className="animate-soft-in overflow-hidden bg-forest-mid/35"
+              style={{ animationDelay: `${index * 80}ms` }}
+            >
+              <Image
+                src={image.src}
+                alt={image.alt}
+                width={1024}
+                height={1024}
+                className="aspect-[4/5] w-full object-cover transition duration-700 ease-out hover:scale-[1.03]"
+                priority={index === 0}
+              />
+            </figure>
+          ))}
+        </div>
+
+        <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div className="max-w-lg">
+            <h2 className="font-display text-2xl tracking-[0.06em] text-cream">
+              {product.name}
+            </h2>
+            <p className="mt-2 text-sm leading-6 text-cream/65">
+              {product.description}
+            </p>
+          </div>
+          {buyUrl ? (
+            <a href={buyUrl} target="_blank" rel="noreferrer" className="btn-solid w-fit">
+              Shop notebooks
+            </a>
+          ) : (
+            <Link href="/shop" className="btn-solid w-fit">
+              Shop notebooks
+            </Link>
+          )}
         </div>
       </section>
     </main>
-  );
-}
-
-function ProductShowcase({ product }: { product: Product }) {
-  const buyUrl = shopifyProductUrl(product.shopifyHandle, shopifyStoreDomain);
-  return (
-    <div className="mt-10 grid gap-6 md:grid-cols-2">
-      <figure className="overflow-hidden bg-forest-mid/40">
-        <Image
-          src={product.layoutImage}
-          alt={`${product.name} page layout`}
-          width={1024}
-          height={1024}
-          className="h-full w-full object-cover transition duration-700 hover:scale-[1.02]"
-          priority
-        />
-      </figure>
-      <figure className="overflow-hidden bg-forest-mid/40">
-        <Image
-          src={product.coverImage}
-          alt={`${product.name} cover`}
-          width={1024}
-          height={1024}
-          className="h-full w-full object-cover transition duration-700 hover:scale-[1.02]"
-          priority
-        />
-      </figure>
-      <div className="md:col-span-2 flex flex-col items-center gap-4 pt-4 text-center">
-        <h2 className="font-display text-2xl tracking-[0.08em]">{product.name}</h2>
-        <p className="max-w-xl text-sm leading-6 text-cream/70">{product.description}</p>
-        {buyUrl ? (
-          <a href={buyUrl} target="_blank" rel="noreferrer" className="btn-solid">
-            Buy on Shopify
-          </a>
-        ) : (
-          <Link href="/shop" className="btn-solid">
-            View in shop
-          </Link>
-        )}
-        {!publicConfig.shopifyConfigured ? (
-          <p className="text-xs text-cream/45">
-            Set NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN for live product links.
-          </p>
-        ) : null}
-      </div>
-    </div>
   );
 }
