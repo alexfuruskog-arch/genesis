@@ -44,6 +44,7 @@ Open [http://127.0.0.1:43123](http://127.0.0.1:43123). The UI calls `/backend/*`
 
 - **Shop** deep-links to Shopify product pages when `NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN` is set (handles: `cornell-notebook`, `math-notebook` — see [`shopify/products.md`](shopify/products.md)).
 - **Study with Arzive** is `/study` on the same origin — camera/upload scans under your account, multi-note selection, practice exam or flashcards. Files land in Supabase Storage with RLS when configured.
+- **Pricing** (`/pricing`): Free (3 Study sessions/week, 5 scans), Standard **$12/mo**, Annual **$96/yr**, Scholar **$29/mo**. Free limits are enforced in the Study UI.
 - Later: import the Shopify theme into this Next app or use Hydrogen/Storefront API; still one ARZIVE brand.
 
 ## Environment variables

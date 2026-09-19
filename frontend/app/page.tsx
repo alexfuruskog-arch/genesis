@@ -120,74 +120,48 @@ export default function HomePage() {
             Start with the right system
           </h2>
         </div>
-        <div className="mt-10 grid gap-5 md:grid-cols-3">
-          <article className="flex flex-col bg-[#f0ebe3] p-5">
-            <div className="relative aspect-square overflow-hidden bg-cream">
+        <div className="mt-10 grid gap-5 md:grid-cols-2">
+          <article className="flex flex-col">
+            <div className="relative aspect-[4/5] overflow-hidden bg-cream-soft">
               <Image
                 src="/products/notebook-cream.jpg"
                 alt="Cream Cornell"
                 fill
                 className="object-cover"
-                sizes="33vw"
+                sizes="(max-width: 768px) 100vw, 50vw"
               />
             </div>
-            <p className="mt-4 text-[0.58rem] font-semibold uppercase tracking-[0.16em] text-[#8a6b3d]">
-              New
+            <p className="mt-5 text-[0.58rem] font-semibold uppercase tracking-[0.16em] text-[#8a6b3d]">
+              Cream Cornell
             </p>
-            <h3 className="mt-2 font-display text-xl">{cornell.name}</h3>
-            <p className="mt-2 flex-1 text-sm font-light leading-6 text-forest/70">
+            <h3 className="mt-2 font-display text-2xl">{cornell.name}</h3>
+            <p className="mt-2 max-w-sm text-sm font-light leading-6 text-forest/70">
               {cornell.description}
             </p>
             <a href={cornellUrl} className="btn-ink mt-5 self-start">
               Shop Cornell
             </a>
           </article>
-          <article className="flex flex-col bg-[#f0ebe3] p-5">
-            <div className="relative aspect-square overflow-hidden bg-cream">
+          <article className="flex flex-col">
+            <div className="relative aspect-[4/5] overflow-hidden bg-forest">
               <Image
                 src="/products/notebook-green.jpg"
                 alt="Green Math"
                 fill
                 className="object-cover"
-                sizes="33vw"
+                sizes="(max-width: 768px) 100vw, 50vw"
               />
             </div>
-            <p className="mt-4 text-[0.58rem] font-semibold uppercase tracking-[0.16em] text-[#8a6b3d]">
-              New
+            <p className="mt-5 text-[0.58rem] font-semibold uppercase tracking-[0.16em] text-[#8a6b3d]">
+              Green Math
             </p>
-            <h3 className="mt-2 font-display text-xl">{math.name}</h3>
-            <p className="mt-2 flex-1 text-sm font-light leading-6 text-forest/70">
+            <h3 className="mt-2 font-display text-2xl">{math.name}</h3>
+            <p className="mt-2 max-w-sm text-sm font-light leading-6 text-forest/70">
               {math.description}
             </p>
             <a href={mathUrl} className="btn-ink mt-5 self-start">
               Shop Math
             </a>
-          </article>
-          <article className="flex flex-col bg-[#f0ebe3] p-5">
-            <div className="relative aspect-square overflow-hidden bg-cream">
-              <Image
-                src="/products/notebook-cream.jpg"
-                alt="Study with Arzive"
-                fill
-                className="object-cover opacity-90"
-                sizes="33vw"
-              />
-              <div className="absolute inset-0 bg-forest/55" />
-              <p className="absolute inset-0 grid place-items-center px-4 text-center font-display text-2xl text-cream">
-                Study with Arzive
-              </p>
-            </div>
-            <p className="mt-4 text-[0.58rem] font-semibold uppercase tracking-[0.16em] text-[#8a6b3d]">
-              Digital
-            </p>
-            <h3 className="mt-2 font-display text-xl">From page to practice</h3>
-            <p className="mt-2 flex-1 text-sm font-light leading-6 text-forest/70">
-              Scan notebook pages under your account. Generate practice exams and
-              flashcards that force active recall — not passive rereading.
-            </p>
-            <Link href="/pricing" className="btn-ink mt-5 self-start">
-              See Study plans
-            </Link>
           </article>
         </div>
       </section>

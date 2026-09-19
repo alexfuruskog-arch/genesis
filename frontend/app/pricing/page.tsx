@@ -167,9 +167,9 @@ export default function PricingPage() {
           <div>
             <h3 className="font-display text-xl tracking-[0.02em]">Checkout</h3>
             <p className="mt-3 text-sm font-light leading-7 text-forest/68">
-              Plans attach to your ARZIVE account. Shopify subscriptions can
-              replace this flow when Storefront billing is connected; until then
-              paid tiers unlock unlimited Study locally for development.
+              Choose a plan on Account. Paid tiers unlock unlimited chats and
+              scans immediately. Shopify subscription billing can take over when
+              you connect Storefront — the product experience is ready either way.
             </p>
           </div>
         </div>
