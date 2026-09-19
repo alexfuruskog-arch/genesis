@@ -14,7 +14,7 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env
-uvicorn app.main:app --host 127.0.0.1 --port 48721 --reload
+uvicorn app.main:app --host 0.0.0.0 --port 48721 --reload
 ```
 
 - Health: `GET http://127.0.0.1:48721/health`
@@ -29,7 +29,7 @@ npm install
 npm run dev
 ```
 
-Open [http://127.0.0.1:43123](http://127.0.0.1:43123). The UI talks to the API via `NEXT_PUBLIC_API_URL`.
+Open [http://127.0.0.1:43123](http://127.0.0.1:43123). The UI calls `/backend/*`; Next.js rewrites that to FastAPI (`API_PROXY_TARGET` or `NEXT_PUBLIC_API_URL`, default `http://127.0.0.1:48721`).
 
 ## Environment variables
 
@@ -55,7 +55,8 @@ Open [http://127.0.0.1:43123](http://127.0.0.1:43123). The UI talks to the API v
 
 | Variable | Purpose |
 | --- | --- |
-| `NEXT_PUBLIC_API_URL` | FastAPI base URL |
+| `API_PROXY_TARGET` | FastAPI origin for the `/backend` rewrite (server-side) |
+| `NEXT_PUBLIC_API_URL` | Fallback API origin used by that rewrite |
 | `NEXT_PUBLIC_SUPABASE_URL` | Public Supabase URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Public anon key |
 | `NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN` | Public shop domain |

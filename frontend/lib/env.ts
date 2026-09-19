@@ -1,5 +1,6 @@
-export const apiUrl =
-  process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:48721";
+// Same-origin proxy (next.config.ts rewrites /backend → FastAPI) so Preview
+// and Desktop work even when the page is not opened on 127.0.0.1.
+export const apiUrl = "/backend";
 
 export const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 export const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
