@@ -1,0 +1,24 @@
+<section class="arzive-story" id="story">
+  <div class="arzive-shell arzive-story__inner">
+    <p class="arzive-hero__eyebrow">ARZIVE</p>
+    <h1 class="arzive-hero__title">{{ page.title | default: settings.story_heading | default: 'Our story' }}</h1>
+    <div class="arzive-story__body rte">
+      {% if page.content != blank %}
+        {{ page.content }}
+      {% else %}
+        <p>{{ settings.story_body }}</p>
+      {% endif %}
+    </div>
+    <div class="arzive-hero__actions">
+      <a class="arzive-btn arzive-btn--solid" href="{{ routes.all_products_collection_url }}">Shop notebooks</a>
+      <a class="arzive-btn arzive-btn--ghost" href="{{ settings.study_app_url | default: 'https://study.arzive.com/study' }}" rel="noopener">Study with Arzive</a>
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Story",
+  "settings": []
+}
+{% endschema %}

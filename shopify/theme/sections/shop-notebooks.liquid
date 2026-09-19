@@ -1,0 +1,107 @@
+<section class="arzive-shop">
+  <div class="arzive-shell">
+    <p class="arzive-kicker">Shop</p>
+    <h1 class="arzive-shop__title">{{ section.settings.heading | default: 'Two notebook models' }}</h1>
+    <p class="arzive-shop__intro">
+      {{ section.settings.intro | default: 'Cream Cornell for structured notes. Green Math for problem-solving. Checkout here — then scan pages in Study with Arzive under your account.' }}
+    </p>
+
+    <div class="arzive-shop__grid">
+      {% for block in section.blocks %}
+        {% assign product = block.settings.product %}
+        {% if product == blank and block.settings.handle != blank %}
+          {% assign product = all_products[block.settings.handle] %}
+        {% endif %}
+        <div class="arzive-shop__item" {{ block.shopify_attributes }}>
+          {% render 'product-card',
+            product: product,
+            handle: block.settings.handle,
+            title_fallback: block.settings.title,
+            color_name: block.settings.color_name,
+            color_hex: block.settings.color_hex,
+            cover_asset: block.settings.cover_asset,
+            layout_asset: block.settings.layout_asset,
+            description_fallback: block.settings.description
+          %}
+        </div>
+      {% endfor %}
+    </div>
+
+    <div class="arzive-shop__study">
+      <h2>Already writing in an ARZIVE notebook?</h2>
+      <p>Create an account in Study with Arzive, scan pages to your cloud library, then generate a practice exam or flashcards.</p>
+      <a class="arzive-btn arzive-btn--ink" href="{{ settings.study_app_url | default: 'https://study.arzive.com/study' }}" rel="noopener">
+        Study with Arzive
+      </a>
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Shop notebooks",
+  "tag": "section",
+  "class": "section-shop",
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Two notebook models"
+    },
+    {
+      "type": "textarea",
+      "id": "intro",
+      "label": "Intro",
+      "default": "Cream Cornell for structured notes. Green Math for problem-solving. Checkout here — then scan pages in Study with Arzive under your account."
+    }
+  ],
+  "blocks": [
+    {
+      "type": "notebook",
+      "name": "Notebook",
+      "settings": [
+        { "type": "product", "id": "product", "label": "Product" },
+        { "type": "text", "id": "handle", "label": "Fallback handle", "default": "cornell-notebook" },
+        { "type": "text", "id": "title", "label": "Fallback title", "default": "Cream Cornell Notebook" },
+        { "type": "text", "id": "color_name", "label": "Color name", "default": "Cream" },
+        { "type": "color", "id": "color_hex", "label": "Swatch", "default": "#f3efe6" },
+        { "type": "text", "id": "cover_asset", "label": "Cover asset filename", "default": "notebook-cream.jpg" },
+        { "type": "text", "id": "layout_asset", "label": "Pages asset filename", "default": "cornell-pages.jpg" },
+        { "type": "textarea", "id": "description", "label": "Fallback description" }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "ARZIVE shop",
+      "blocks": [
+        {
+          "type": "notebook",
+          "settings": {
+            "handle": "cornell-notebook",
+            "title": "Cream Cornell Notebook",
+            "color_name": "Cream",
+            "color_hex": "#f3efe6",
+            "cover_asset": "notebook-cream.jpg",
+            "layout_asset": "cornell-pages.jpg",
+            "description": "Cue, Main Notes, and Summary — the classic Cornell system on recycled cream paper."
+          }
+        },
+        {
+          "type": "notebook",
+          "settings": {
+            "handle": "math-notebook",
+            "title": "Green Math Notebook",
+            "color_name": "Forest green",
+            "color_hex": "#1a2e26",
+            "cover_asset": "notebook-green.jpg",
+            "layout_asset": "math-pages.jpg",
+            "description": "Grid for Example and Practice Questions, with Formulas and Explanations beside."
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

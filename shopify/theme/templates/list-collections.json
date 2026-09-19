@@ -1,0 +1,39 @@
+{
+  "sections": {
+    "main": {
+      "type": "shop-notebooks",
+      "blocks": {
+        "cornell": {
+          "type": "notebook",
+          "settings": {
+            "handle": "cornell-notebook",
+            "title": "Cream Cornell Notebook",
+            "color_name": "Cream",
+            "color_hex": "#f3efe6",
+            "cover_asset": "notebook-cream.jpg",
+            "layout_asset": "cornell-pages.jpg",
+            "description": "Cue, Main Notes, and Summary — the classic Cornell system on recycled cream paper, spiral-bound for lectures and revision."
+          }
+        },
+        "math": {
+          "type": "notebook",
+          "settings": {
+            "handle": "math-notebook",
+            "title": "Green Math Notebook",
+            "color_name": "Forest green",
+            "color_hex": "#1a2e26",
+            "cover_asset": "notebook-green.jpg",
+            "layout_asset": "math-pages.jpg",
+            "description": "Grid for Example and Practice Questions, with Formulas and Explanations beside — built for problem sets that need room to think."
+          }
+        }
+      },
+      "block_order": ["cornell", "math"],
+      "settings": {
+        "heading": "Two notebook models",
+        "intro": "Cream Cornell for structured notes. Green Math for problem-solving. Checkout here — then scan pages in Study with Arzive under your account."
+      }
+    }
+  },
+  "order": ["main"]
+}

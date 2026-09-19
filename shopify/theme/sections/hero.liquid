@@ -1,0 +1,76 @@
+<section class="arzive-hero">
+  <div class="arzive-shell arzive-hero__inner">
+    <p class="arzive-hero__eyebrow">{{ section.settings.eyebrow | default: 'ARZIVE' }}</p>
+    <h1 class="arzive-hero__title">
+      {{ section.settings.heading | default: 'We believe every student deserves the tools to succeed.' }}
+    </h1>
+    <p class="arzive-hero__text">
+      {{ section.settings.text | default: 'Two research-backed notebooks. One for structured thinking, one for mathematical clarity — crafted from recycled materials that feel as considered as the systems inside.' }}
+    </p>
+    <div class="arzive-hero__actions">
+      <a class="arzive-btn arzive-btn--solid" href="{{ section.settings.primary_link | default: routes.all_products_collection_url }}">
+        {{ section.settings.primary_label | default: 'Shop notebooks' }}
+      </a>
+      {% if section.settings.secondary_label != blank %}
+        <a class="arzive-btn arzive-btn--ghost" href="{{ section.settings.secondary_link | default: pages['our-story'].url | default: '#story' }}">
+          {{ section.settings.secondary_label }}
+        </a>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Hero",
+  "tag": "section",
+  "class": "section-hero",
+  "settings": [
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow",
+      "default": "ARZIVE"
+    },
+    {
+      "type": "textarea",
+      "id": "heading",
+      "label": "Heading",
+      "default": "We believe every student deserves the tools to succeed."
+    },
+    {
+      "type": "textarea",
+      "id": "text",
+      "label": "Supporting text",
+      "default": "Two research-backed notebooks. One for structured thinking, one for mathematical clarity — crafted from recycled materials that feel as considered as the systems inside."
+    },
+    {
+      "type": "text",
+      "id": "primary_label",
+      "label": "Primary button label",
+      "default": "Shop notebooks"
+    },
+    {
+      "type": "url",
+      "id": "primary_link",
+      "label": "Primary button link"
+    },
+    {
+      "type": "text",
+      "id": "secondary_label",
+      "label": "Secondary button label",
+      "default": "Our story"
+    },
+    {
+      "type": "url",
+      "id": "secondary_link",
+      "label": "Secondary button link"
+    }
+  ],
+  "presets": [
+    {
+      "name": "ARZIVE hero"
+    }
+  ]
+}
+{% endschema %}

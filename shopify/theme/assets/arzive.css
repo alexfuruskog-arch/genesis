@@ -1,0 +1,648 @@
+/* ARZIVE Shopify theme — matches Next.js brand UI */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body.arzive-body {
+  margin: 0;
+  min-height: 100%;
+  background: var(--cream);
+  color: var(--forest);
+  font-family: "Source Sans 3", system-ui, sans-serif;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+.arzive-shell {
+  width: min(72rem, calc(100% - 2.5rem));
+  margin-inline: auto;
+}
+
+@media (min-width: 640px) {
+  .arzive-shell {
+    width: min(72rem, calc(100% - 4rem));
+  }
+}
+
+@media (min-width: 1024px) {
+  .arzive-shell {
+    width: min(72rem, calc(100% - 5rem));
+  }
+}
+
+.arzive-main {
+  min-height: 50vh;
+}
+
+/* Header */
+.arzive-header {
+  z-index: 40;
+}
+
+.arzive-header--forest {
+  background: var(--forest);
+  color: var(--cream);
+}
+
+.arzive-header--cream {
+  position: sticky;
+  top: 0;
+  background: rgba(243, 238, 228, 0.95);
+  color: var(--forest);
+  border-bottom: 1px solid rgba(26, 46, 38, 0.1);
+  backdrop-filter: blur(8px);
+}
+
+.arzive-header__grid {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1.25rem 0;
+}
+
+.arzive-header__left,
+.arzive-header__right {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  min-width: 0;
+}
+
+.arzive-header__right {
+  justify-content: flex-end;
+}
+
+.arzive-wordmark {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 1.35rem;
+  letter-spacing: 0.32em;
+  font-weight: 500;
+  text-align: center;
+}
+
+.arzive-nav-link {
+  font-size: 0.68rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transition: opacity 0.2s ease;
+}
+
+.arzive-nav-link:hover {
+  opacity: 0.7;
+}
+
+.arzive-nav-link__short {
+  display: inline;
+}
+
+.arzive-nav-link__full {
+  display: none;
+}
+
+@media (min-width: 640px) {
+  .arzive-wordmark {
+    font-size: 1.65rem;
+    letter-spacing: 0.36em;
+  }
+  .arzive-header__left,
+  .arzive-header__right {
+    gap: 2rem;
+  }
+  .arzive-nav-link__short {
+    display: none;
+  }
+  .arzive-nav-link__full {
+    display: inline;
+  }
+}
+
+.arzive-bag {
+  position: relative;
+  display: inline-flex;
+  transition: opacity 0.2s ease;
+}
+
+.arzive-bag:hover {
+  opacity: 0.7;
+}
+
+.arzive-bag__count {
+  position: absolute;
+  top: -0.45rem;
+  right: -0.55rem;
+  min-width: 1rem;
+  height: 1rem;
+  border-radius: 999px;
+  background: var(--cream);
+  color: var(--forest);
+  font-size: 0.6rem;
+  display: grid;
+  place-items: center;
+  padding: 0 0.2rem;
+}
+
+.arzive-header--cream .arzive-bag__count {
+  background: var(--forest);
+  color: var(--cream);
+}
+
+/* Buttons */
+.arzive-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.9rem 1.45rem;
+  font-size: 0.68rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-weight: 500;
+  border: 0;
+  border-radius: 0;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.arzive-btn--solid {
+  background: var(--cream);
+  color: var(--forest);
+}
+
+.arzive-btn--solid:hover {
+  background: #fffdf8;
+  transform: translateY(-1px);
+}
+
+.arzive-btn--ghost {
+  border: 1px solid rgba(243, 238, 228, 0.5);
+  color: var(--cream);
+  background: transparent;
+}
+
+.arzive-btn--ghost:hover {
+  border-color: var(--cream);
+  background: rgba(243, 238, 228, 0.06);
+}
+
+.arzive-btn--ghost-dark {
+  border: 1px solid rgba(26, 46, 38, 0.25);
+  color: var(--forest);
+  background: transparent;
+}
+
+.arzive-btn--ink {
+  background: var(--forest);
+  color: var(--cream);
+}
+
+.arzive-btn--ink:hover {
+  background: var(--forest-mid);
+}
+
+.arzive-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Hero + index */
+.template-index .arzive-main,
+.template-page .arzive-main {
+  background: var(--forest);
+  color: var(--cream);
+}
+
+.arzive-hero {
+  padding: 3.5rem 0 4rem;
+}
+
+.arzive-hero__inner {
+  max-width: 48rem;
+}
+
+.arzive-hero__eyebrow,
+.arzive-kicker {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 0.95rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  opacity: 0.85;
+  margin: 0;
+}
+
+.arzive-kicker {
+  font-size: 0.68rem;
+  letter-spacing: 0.22em;
+  color: rgba(26, 46, 38, 0.5);
+  font-family: "Source Sans 3", system-ui, sans-serif;
+}
+
+.arzive-hero__title {
+  margin: 1.25rem 0 0;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-weight: 500;
+  font-size: clamp(2.35rem, 5vw, 3.5rem);
+  line-height: 1.12;
+  letter-spacing: 0.01em;
+}
+
+.arzive-hero__text {
+  margin: 1.5rem 0 0;
+  max-width: 36rem;
+  font-weight: 300;
+  font-size: 1.05rem;
+  line-height: 1.75;
+  color: rgba(243, 238, 228, 0.72);
+}
+
+.arzive-hero__actions {
+  margin-top: 2.25rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+/* Product tabs on homepage */
+.arzive-products {
+  padding: 0 0 5rem;
+}
+
+.arzive-tabs {
+  display: flex;
+  gap: 2rem;
+}
+
+.arzive-tab {
+  appearance: none;
+  background: none;
+  border: 0;
+  border-bottom: 1px solid transparent;
+  color: rgba(243, 238, 228, 0.45);
+  font-size: 0.7rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  padding: 0 0 0.5rem;
+  cursor: pointer;
+}
+
+.arzive-tab.is-active {
+  color: var(--cream);
+  border-bottom-color: var(--cream);
+}
+
+.arzive-tab-panel {
+  margin-top: 2rem;
+}
+
+.arzive-tab-panel[hidden] {
+  display: none;
+}
+
+.arzive-showcase {
+  display: grid;
+  gap: 2rem;
+}
+
+@media (min-width: 900px) {
+  .arzive-showcase {
+    grid-template-columns: 1.35fr 1fr;
+    gap: 3rem;
+    align-items: end;
+  }
+}
+
+.arzive-showcase__gallery {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.arzive-showcase__figure,
+.arzive-showcase__img,
+.arzive-card__img,
+.arzive-card__cover,
+.arzive-product__img {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  background: rgba(36, 63, 53, 0.35);
+}
+
+.arzive-showcase__color {
+  margin: 0;
+  font-size: 0.68rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(243, 238, 228, 0.5);
+}
+
+.arzive-showcase__title {
+  margin: 0.5rem 0 0;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-weight: 500;
+  font-size: 1.75rem;
+  letter-spacing: 0.06em;
+}
+
+.arzive-showcase__text,
+.arzive-showcase__price {
+  margin: 0.75rem 0 0;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: rgba(243, 238, 228, 0.65);
+}
+
+.arzive-showcase .arzive-btn {
+  margin-top: 1.5rem;
+}
+
+/* Shop / collection cream surfaces */
+.template-collection .arzive-main,
+.template-product .arzive-main,
+.template-cart .arzive-main,
+.template-list-collections .arzive-main {
+  background: var(--cream);
+  color: var(--forest);
+}
+
+.arzive-shop,
+.arzive-collection,
+.arzive-cart,
+.arzive-product {
+  padding: 3.5rem 0 5rem;
+}
+
+.arzive-shop__title {
+  margin: 0.75rem 0 0;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-weight: 500;
+  font-size: clamp(2.2rem, 4vw, 3rem);
+  letter-spacing: 0.03em;
+}
+
+.arzive-shop__intro {
+  margin: 1rem 0 0;
+  max-width: 40rem;
+  font-weight: 300;
+  line-height: 1.7;
+  color: rgba(26, 46, 38, 0.7);
+}
+
+.arzive-shop__grid {
+  margin-top: 3.5rem;
+  display: grid;
+  gap: 4rem;
+}
+
+.arzive-card__media {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.arzive-card__body {
+  margin-top: 1.5rem;
+}
+
+.arzive-card__meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.68rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(26, 46, 38, 0.45);
+}
+
+.arzive-swatch {
+  width: 1rem;
+  height: 1rem;
+  border-radius: 999px;
+  border: 1px solid rgba(26, 46, 38, 0.2);
+}
+
+.arzive-card__title {
+  margin: 0.75rem 0 0;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-weight: 500;
+  font-size: 2rem;
+  letter-spacing: 0.04em;
+}
+
+.arzive-card__text,
+.arzive-card__price {
+  margin: 1rem 0 0;
+  font-weight: 300;
+  line-height: 1.7;
+  color: rgba(26, 46, 38, 0.7);
+  font-size: 0.95rem;
+}
+
+.arzive-card .arzive-btn {
+  margin-top: 1.5rem;
+}
+
+.arzive-shop__study {
+  margin-top: 5rem;
+  padding-top: 3rem;
+  border-top: 1px solid rgba(26, 46, 38, 0.1);
+}
+
+.arzive-shop__study h2 {
+  margin: 0;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-weight: 500;
+  font-size: 1.75rem;
+  letter-spacing: 0.04em;
+}
+
+.arzive-shop__study p {
+  margin: 0.75rem 0 0;
+  max-width: 36rem;
+  font-weight: 300;
+  color: rgba(26, 46, 38, 0.7);
+  line-height: 1.6;
+}
+
+.arzive-shop__study .arzive-btn {
+  margin-top: 1.5rem;
+}
+
+/* Product page */
+.arzive-product__grid {
+  display: grid;
+  gap: 2.5rem;
+}
+
+@media (min-width: 900px) {
+  .arzive-product__grid {
+    grid-template-columns: 1.2fr 1fr;
+    gap: 3rem;
+    align-items: start;
+  }
+}
+
+.arzive-product__gallery {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.arzive-product__title {
+  margin: 0.75rem 0 0;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-weight: 500;
+  font-size: clamp(2rem, 4vw, 2.75rem);
+  letter-spacing: 0.04em;
+}
+
+.arzive-product__price {
+  margin: 1rem 0 0;
+  font-size: 1.1rem;
+}
+
+.arzive-product__desc {
+  margin-top: 1.25rem;
+  font-weight: 300;
+  line-height: 1.7;
+  color: rgba(26, 46, 38, 0.75);
+}
+
+.arzive-product__desc p {
+  margin: 0 0 0.75rem;
+}
+
+.arzive-field {
+  display: grid;
+  gap: 0.35rem;
+  margin: 1rem 0;
+  font-size: 0.85rem;
+}
+
+.arzive-field select {
+  padding: 0.7rem 0.8rem;
+  border: 1px solid rgba(26, 46, 38, 0.2);
+  background: #fff;
+  font: inherit;
+}
+
+.arzive-product form .arzive-btn {
+  margin-top: 0.5rem;
+  width: 100%;
+  max-width: 18rem;
+}
+
+.arzive-product__study {
+  margin-top: 1.5rem;
+  font-size: 0.9rem;
+  color: rgba(26, 46, 38, 0.65);
+}
+
+.arzive-product__study a {
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+/* Cart */
+.arzive-cart__list {
+  list-style: none;
+  margin: 2rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 1rem;
+}
+
+.arzive-cart__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+  padding: 1rem 0;
+  border-bottom: 1px solid rgba(26, 46, 38, 0.1);
+}
+
+.arzive-cart__row input {
+  width: 4rem;
+  padding: 0.4rem;
+}
+
+.arzive-cart__total {
+  margin-top: 1.5rem;
+  font-size: 1.1rem;
+}
+
+.arzive-cart__actions {
+  margin-top: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+/* Story */
+.arzive-story {
+  padding: 4rem 0 5rem;
+  background: var(--forest);
+  color: var(--cream);
+}
+
+.arzive-story__body {
+  margin-top: 1.5rem;
+  max-width: 36rem;
+  font-weight: 300;
+  line-height: 1.75;
+  color: rgba(243, 238, 228, 0.75);
+}
+
+.arzive-story .arzive-hero__actions {
+  margin-top: 2rem;
+}
+
+/* Footer */
+.arzive-footer {
+  background: var(--forest-deep);
+  color: rgba(243, 238, 228, 0.75);
+  padding: 2.5rem 0;
+}
+
+.arzive-footer__brand {
+  margin: 0;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  letter-spacing: 0.28em;
+  color: var(--cream);
+}
+
+.arzive-footer__copy {
+  margin: 0.75rem 0 0;
+  font-size: 0.85rem;
+  font-weight: 300;
+}
+
+.arzive-footer__links {
+  margin-top: 1.25rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  font-size: 0.68rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.arzive-footer__links a:hover {
+  color: var(--cream);
+}

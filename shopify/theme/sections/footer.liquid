@@ -1,0 +1,20 @@
+<footer class="arzive-footer">
+  <div class="arzive-shell arzive-footer__inner">
+    <p class="arzive-footer__brand">ARZIVE</p>
+    <p class="arzive-footer__copy">
+      Notebooks on Shopify · Study with Arzive for scanning and AI practice.
+    </p>
+    <div class="arzive-footer__links">
+      <a href="{{ routes.all_products_collection_url }}">Shop</a>
+      <a href="{{ settings.study_app_url | default: 'https://study.arzive.com/study' }}" rel="noopener">Study with Arzive</a>
+      <a href="{{ routes.cart_url }}">Cart</a>
+    </div>
+  </div>
+</footer>
+
+{% schema %}
+{
+  "name": "Footer",
+  "settings": []
+}
+{% endschema %}

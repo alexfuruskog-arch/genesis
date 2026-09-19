@@ -1,0 +1,63 @@
+<section class="arzive-product">
+  <div class="arzive-shell arzive-product__grid">
+    <div class="arzive-product__gallery">
+      {% if product.media.size > 0 %}
+        {% for media in product.media %}
+          <figure class="arzive-product__figure">
+            {{ media | image_url: width: 1400 | image_tag: class: 'arzive-product__img', loading: 'lazy', alt: media.alt | default: product.title }}
+          </figure>
+        {% endfor %}
+      {% else %}
+        {% if product.handle == 'math-notebook' %}
+          <img class="arzive-product__img" src="{{ 'math-pages.jpg' | asset_url }}" alt="{{ product.title | escape }}" width="1000" height="1250">
+          <img class="arzive-product__img" src="{{ 'notebook-green.jpg' | asset_url }}" alt="{{ product.title | escape }} cover" width="1000" height="1250">
+        {% else %}
+          <img class="arzive-product__img" src="{{ 'cornell-pages.jpg' | asset_url }}" alt="{{ product.title | escape }}" width="1000" height="1250">
+          <img class="arzive-product__img" src="{{ 'notebook-cream.jpg' | asset_url }}" alt="{{ product.title | escape }} cover" width="1000" height="1250">
+        {% endif %}
+      {% endif %}
+    </div>
+
+    <div class="arzive-product__info">
+      <p class="arzive-kicker">
+        {% if product.handle == 'math-notebook' %}Forest green · Mathematical clarity{% else %}Cream · Structured thinking{% endif %}
+      </p>
+      <h1 class="arzive-product__title">{{ product.title }}</h1>
+      <p class="arzive-product__price">{{ product.selected_or_first_available_variant.price | money }}</p>
+      <div class="arzive-product__desc rte">{{ product.description }}</div>
+
+      {% form 'product', product %}
+        <input type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}">
+        {% unless product.has_only_default_variant %}
+          {% for option in product.options_with_values %}
+            <label class="arzive-field">
+              <span>{{ option.name }}</span>
+              <select name="options[{{ option.name | escape }}]">
+                {% for value in option.values %}
+                  <option value="{{ value | escape }}"{% if option.selected_value == value %} selected{% endif %}>{{ value }}</option>
+                {% endfor %}
+              </select>
+            </label>
+          {% endfor %}
+        {% endunless %}
+        <button type="submit" class="arzive-btn arzive-btn--ink" name="add"{% unless product.selected_or_first_available_variant.available %} disabled{% endunless %}>
+          {% if product.selected_or_first_available_variant.available %}Add to cart{% else %}Sold out{% endif %}
+        </button>
+      {% endform %}
+
+      <p class="arzive-product__study">
+        After checkout, scan pages in
+        <a href="{{ settings.study_app_url | default: 'https://study.arzive.com/study' }}" rel="noopener">Study with Arzive</a>.
+      </p>
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Product main",
+  "tag": "section",
+  "class": "section-product-main",
+  "settings": []
+}
+{% endschema %}

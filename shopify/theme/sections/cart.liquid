@@ -1,0 +1,35 @@
+<section class="arzive-cart">
+  <div class="arzive-shell">
+    <h1 class="arzive-shop__title">Cart</h1>
+    {% if cart.item_count == 0 %}
+      <p class="arzive-shop__intro">Your cart is empty.</p>
+      <a class="arzive-btn arzive-btn--ink" href="{{ routes.all_products_collection_url }}">Shop notebooks</a>
+    {% else %}
+      <form action="{{ routes.cart_url }}" method="post">
+        <ul class="arzive-cart__list">
+          {% for item in cart.items %}
+            <li class="arzive-cart__row">
+              <div>
+                <a href="{{ item.url }}">{{ item.product.title }}</a>
+                <p>{{ item.final_line_price | money }}</p>
+              </div>
+              <input type="number" name="updates[]" value="{{ item.quantity }}" min="0" aria-label="Quantity">
+            </li>
+          {% endfor %}
+        </ul>
+        <p class="arzive-cart__total">Total {{ cart.total_price | money }}</p>
+        <div class="arzive-cart__actions">
+          <button type="submit" name="update" class="arzive-btn arzive-btn--ghost-dark">Update</button>
+          <button type="submit" name="checkout" class="arzive-btn arzive-btn--ink">Checkout</button>
+        </div>
+      </form>
+    {% endif %}
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Cart",
+  "settings": []
+}
+{% endschema %}

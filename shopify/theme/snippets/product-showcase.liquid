@@ -1,0 +1,42 @@
+{%- liquid
+  assign title = fallback_title
+  assign text = fallback_text
+  assign url = routes.all_products_collection_url
+  assign price = ''
+
+  if product != blank
+    assign title = product.title
+    if product.description != blank
+      assign text = product.description | strip_html | truncate: 220
+    endif
+    assign url = product.url
+    assign price = product.price | money
+  elsif fallback_handle != blank
+    assign url = '/products/' | append: fallback_handle
+  endif
+-%}
+
+<article class="arzive-showcase">
+  <div class="arzive-showcase__gallery">
+    <figure class="arzive-showcase__figure">
+      {% if product != blank and product.featured_media %}
+        {{ product.featured_media | image_url: width: 1200 | image_tag: class: 'arzive-showcase__img', loading: 'lazy' }}
+      {% else %}
+        <img class="arzive-showcase__img" src="{{ layout_asset | asset_url }}" alt="{{ title | escape }}" width="900" height="1125" loading="lazy">
+      {% endif %}
+    </figure>
+    <figure class="arzive-showcase__figure">
+      <img class="arzive-showcase__img" src="{{ cover_asset | asset_url }}" alt="{{ title | escape }} cover" width="900" height="1125" loading="lazy">
+    </figure>
+  </div>
+
+  <div class="arzive-showcase__copy">
+    <p class="arzive-showcase__color">{{ color_name }}</p>
+    <h2 class="arzive-showcase__title">{{ title }}</h2>
+    <p class="arzive-showcase__text">{{ text }}</p>
+    {% if price != blank %}
+      <p class="arzive-showcase__price">{{ price }}</p>
+    {% endif %}
+    <a class="arzive-btn arzive-btn--solid" href="{{ url }}">Shop notebooks</a>
+  </div>
+</article>

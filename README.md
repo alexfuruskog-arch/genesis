@@ -88,6 +88,17 @@ Open [http://127.0.0.1:43123](http://127.0.0.1:43123). The UI calls `/backend/*`
 
 Auth is JWT-ready: send `Authorization: Bearer <supabase access token>`. Without Supabase, use **Account** sign-up (local profiles). Scans are scoped by `user_id` and stored at `{user_id}/…` in the private `documents` bucket (RLS). Without Supabase keys the API keeps a local disk + memory fallback so Study still works.
 
+## Shopify Online Store theme
+
+Uploadable OS 2.0 theme (ARZIVE homepage + shop design):
+
+- Theme source: [`shopify/theme/`](shopify/theme/)
+- Upload guide (Swedish): [`shopify/THEME.md`](shopify/THEME.md)
+- Zip: run `./shopify/pack-theme.sh` → `shopify/arzive-theme.zip`
+- Admin: **Online Store → Themes → Add theme → Upload zip file**
+
+Study with Arzive stays on Next.js; set **Study with Arzive URL** in theme settings after upload.
+
 ## Shopify product paste
 
 Paste-ready titles, descriptions, handles, and CSV for **Cream Cornell Notebook** and **Green Math Notebook**:
@@ -144,8 +155,9 @@ Then set `NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN` so Shop buy buttons hit those produc
 
 ```
 backend/          FastAPI app, routers, services, clients
-frontend/         Next.js App Router + Tailwind (ARZIVE brand)
-shopify/          Paste-ready product copy + CSV for Admin
+frontend/         Next.js Study app + brand reference UI
+shopify/theme/    Online Store 2.0 theme (upload zip to Shopify)
+shopify/          products.csv/md + THEME.md + pack-theme.sh
 supabase/         schema.sql for the SQL Editor
 render.yaml       Render Blueprint
 ```

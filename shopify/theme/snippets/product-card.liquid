@@ -1,0 +1,53 @@
+{%- liquid
+  assign p = product
+  if p == blank and handle != blank
+    assign p = all_products[handle]
+  endif
+
+  assign title = title_fallback
+  assign text = description_fallback
+  assign url = routes.root_url
+  assign price = ''
+
+  if p != blank
+    assign title = p.title
+    if p.description != blank
+      assign text = p.description | strip_html | truncate: 240
+    endif
+    assign url = p.url
+    assign price = p.price | money
+  elsif handle != blank
+    assign url = '/products/' | append: handle
+  endif
+-%}
+
+<article class="arzive-card">
+  <div class="arzive-card__media">
+    <a href="{{ url }}">
+      {% if p != blank and p.featured_media %}
+        {{ p.featured_media | image_url: width: 1200 | image_tag: class: 'arzive-card__img', loading: 'lazy', alt: title }}
+      {% elsif layout_asset != blank %}
+        <img class="arzive-card__img" src="{{ layout_asset | asset_url }}" alt="{{ title | escape }}" width="800" height="1000" loading="lazy">
+      {% endif %}
+    </a>
+    {% if cover_asset != blank %}
+      <img class="arzive-card__cover" src="{{ cover_asset | asset_url }}" alt="{{ title | escape }} cover" width="800" height="1000" loading="lazy">
+    {% endif %}
+  </div>
+  <div class="arzive-card__body">
+    <div class="arzive-card__meta">
+      <span class="arzive-swatch" style="background:{{ color_hex | default: '#f3efe6' }}"></span>
+      <span>{{ color_name }}</span>
+    </div>
+    <h2 class="arzive-card__title">
+      <a href="{{ url }}">{{ title }}</a>
+    </h2>
+    {% if text != blank %}
+      <p class="arzive-card__text">{{ text }}</p>
+    {% endif %}
+    {% if price != blank %}
+      <p class="arzive-card__price">{{ price }}</p>
+    {% endif %}
+    <a class="arzive-btn arzive-btn--ink" href="{{ url }}">Buy {{ title | split: ' ' | last }}</a>
+  </div>
+</article>

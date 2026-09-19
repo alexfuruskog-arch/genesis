@@ -1,0 +1,73 @@
+[
+  {
+    "name": "theme_info",
+    "theme_name": "ARZIVE",
+    "theme_version": "1.0.0",
+    "theme_author": "ARZIVE",
+    "theme_documentation_url": "https://help.shopify.com",
+    "theme_support_url": "https://help.shopify.com"
+  },
+  {
+    "name": "Brand & Study",
+    "settings": [
+      {
+        "type": "text",
+        "id": "study_app_url",
+        "label": "Study with Arzive URL",
+        "default": "https://study.arzive.com/study",
+        "info": "Next.js Study app (account, scan, AI). Opens from the header."
+      },
+      {
+        "type": "text",
+        "id": "account_app_url",
+        "label": "Account URL",
+        "default": "https://study.arzive.com/account",
+        "info": "Next.js account page. Leave blank to use Shopify customer account."
+      },
+      {
+        "type": "text",
+        "id": "story_heading",
+        "label": "Story heading",
+        "default": "Our story"
+      },
+      {
+        "type": "textarea",
+        "id": "story_body",
+        "label": "Story body",
+        "default": "Two research-backed notebooks and Study with Arzive — scan your pages, then generate practice exams and flashcards."
+      }
+    ]
+  },
+  {
+    "name": "Homepage products",
+    "settings": [
+      {
+        "type": "product",
+        "id": "product_cornell",
+        "label": "Cream Cornell product"
+      },
+      {
+        "type": "product",
+        "id": "product_math",
+        "label": "Green Math product"
+      }
+    ]
+  },
+  {
+    "name": "Colors",
+    "settings": [
+      {
+        "type": "color",
+        "id": "color_forest",
+        "label": "Forest green",
+        "default": "#1a2e26"
+      },
+      {
+        "type": "color",
+        "id": "color_cream",
+        "label": "Cream",
+        "default": "#f3eee4"
+      }
+    ]
+  }
+]

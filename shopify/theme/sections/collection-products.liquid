@@ -1,0 +1,43 @@
+<section class="arzive-collection">
+  <div class="arzive-shell">
+    <p class="arzive-kicker">{{ collection.title | default: 'Shop' }}</p>
+    <h1 class="arzive-shop__title">Notebooks</h1>
+    <div class="arzive-shop__grid">
+      {% for product in collection.products %}
+        {% assign cover = 'notebook-cream.jpg' %}
+        {% assign layout = 'cornell-pages.jpg' %}
+        {% assign color_name = 'Cream' %}
+        {% assign color_hex = '#f3efe6' %}
+        {% if product.handle == 'math-notebook' %}
+          {% assign cover = 'notebook-green.jpg' %}
+          {% assign layout = 'math-pages.jpg' %}
+          {% assign color_name = 'Forest green' %}
+          {% assign color_hex = '#1a2e26' %}
+        {% endif %}
+        {% render 'product-card',
+          product: product,
+          handle: product.handle,
+          title_fallback: product.title,
+          color_name: color_name,
+          color_hex: color_hex,
+          cover_asset: cover,
+          layout_asset: layout,
+          description_fallback: product.description | strip_html | truncate: 200
+        %}
+      {% else %}
+        {% comment %} Fallback when collection empty — show known handles {% endcomment %}
+        {% render 'product-card', handle: 'cornell-notebook', title_fallback: 'Cream Cornell Notebook', color_name: 'Cream', color_hex: '#f3efe6', cover_asset: 'notebook-cream.jpg', layout_asset: 'cornell-pages.jpg', description_fallback: 'Structured Cornell notebook.' %}
+        {% render 'product-card', handle: 'math-notebook', title_fallback: 'Green Math Notebook', color_name: 'Forest green', color_hex: '#1a2e26', cover_asset: 'notebook-green.jpg', layout_asset: 'math-pages.jpg', description_fallback: 'Math problem-solving notebook.' %}
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Collection products",
+  "tag": "section",
+  "class": "section-collection",
+  "settings": []
+}
+{% endschema %}

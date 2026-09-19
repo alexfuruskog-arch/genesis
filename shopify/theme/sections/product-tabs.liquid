@@ -1,0 +1,75 @@
+{%- liquid
+  assign cornell = section.settings.product_cornell
+  if cornell == blank and settings.product_cornell != blank
+    assign cornell = settings.product_cornell
+  endif
+  if cornell == blank
+    assign cornell = all_products['cornell-notebook']
+  endif
+
+  assign math = section.settings.product_math
+  if math == blank and settings.product_math != blank
+    assign math = settings.product_math
+  endif
+  if math == blank
+    assign math = all_products['math-notebook']
+  endif
+-%}
+
+<section class="arzive-products" data-arzive-tabs>
+  <div class="arzive-shell">
+    <div class="arzive-tabs" role="tablist" aria-label="Notebook models">
+      <button
+        type="button"
+        class="arzive-tab is-active"
+        role="tab"
+        aria-selected="true"
+        data-tab="cornell"
+      >
+        Cornell · Cream
+      </button>
+      <button
+        type="button"
+        class="arzive-tab"
+        role="tab"
+        aria-selected="false"
+        data-tab="math"
+      >
+        Math · Green
+      </button>
+    </div>
+
+    <div class="arzive-tab-panel is-active" data-panel="cornell" role="tabpanel">
+      {% render 'product-showcase', product: cornell, fallback_handle: 'cornell-notebook', color_name: 'Cream', layout_asset: 'cornell-pages.jpg', cover_asset: 'notebook-cream.jpg', fallback_title: 'Cream Cornell Notebook', fallback_text: 'Cue, Main Notes, and Summary — the classic Cornell system on recycled cream paper, spiral-bound for lectures and revision.' %}
+    </div>
+
+    <div class="arzive-tab-panel" data-panel="math" role="tabpanel" hidden>
+      {% render 'product-showcase', product: math, fallback_handle: 'math-notebook', color_name: 'Forest green', layout_asset: 'math-pages.jpg', cover_asset: 'notebook-green.jpg', fallback_title: 'Green Math Notebook', fallback_text: 'Grid for Example and Practice Questions, with Formulas and Explanations beside — built for problem sets that need room to think.' %}
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Product tabs",
+  "tag": "section",
+  "class": "section-product-tabs",
+  "settings": [
+    {
+      "type": "product",
+      "id": "product_cornell",
+      "label": "Cream Cornell product"
+    },
+    {
+      "type": "product",
+      "id": "product_math",
+      "label": "Green Math product"
+    }
+  ],
+  "presets": [
+    {
+      "name": "ARZIVE product tabs"
+    }
+  ]
+}
+{% endschema %}

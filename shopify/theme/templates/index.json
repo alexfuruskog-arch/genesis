@@ -1,0 +1,19 @@
+{
+  "sections": {
+    "hero": {
+      "type": "hero",
+      "settings": {
+        "eyebrow": "ARZIVE",
+        "heading": "We believe every student deserves the tools to succeed.",
+        "text": "Two research-backed notebooks. One for structured thinking, one for mathematical clarity — crafted from recycled materials that feel as considered as the systems inside.",
+        "primary_label": "Shop notebooks",
+        "secondary_label": "Our story"
+      }
+    },
+    "product_tabs": {
+      "type": "product-tabs",
+      "settings": {}
+    }
+  },
+  "order": ["hero", "product_tabs"]
+}
