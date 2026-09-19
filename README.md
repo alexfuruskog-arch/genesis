@@ -142,14 +142,18 @@ Then set `NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN` so Shop buy buttons hit those produc
 | `/account` | Sign in / up / out + optional Shopify merchant connect |
 | `/story` | Short brand story |
 
-## Render notes
+## Render deploy
 
-[`render.yaml`](render.yaml) defines two web services. Prefer renaming services to `arzive-api` / `arzive-web` when you create the real repo.
+Blueprint: [`render.yaml`](render.yaml) → services **arzive-api** (FastAPI) + **arzive-web** (Next.js Study).
 
-1. Create a Blueprint from this repo, or two Web Services with those root dirs.
-2. Set `FRONTEND_ORIGIN` on the API to the Render frontend URL.
-3. Set `NEXT_PUBLIC_API_URL` and `NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN` on the frontend **before** build.
-4. Add the same Supabase / LLM / Shopify secrets you use locally.
+Full Swedish steps + env paste list: [`RENDER.md`](RENDER.md).
+
+1. **Create repo** in Cursor (GitHub) — required; Render cannot use the Origin temp remote.
+2. Render Dashboard → **New → Blueprint** → connect the GitHub repo → Apply.
+3. Cross-service URLs are wired automatically (`FRONTEND_ORIGIN`, `NEXT_PUBLIC_API_URL`, `API_PROXY_TARGET`).
+4. Paste Supabase / Shopify / LLM secrets in each service’s Environment (see RENDER.md).
+5. After web env changes: **Clear build cache & deploy** so `NEXT_PUBLIC_*` rebuild.
+6. Point the Shopify theme’s **Study with Arzive URL** at `https://<arzive-web>.onrender.com/study`.
 
 ## Layout
 
