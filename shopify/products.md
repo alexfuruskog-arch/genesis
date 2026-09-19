@@ -1,0 +1,88 @@
+# ARZIVE Shopify products (paste / import)
+
+Use these two products in Shopify Admin. Handles match the Next.js Shop buy links when `NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN` is set.
+
+Default product URLs:
+
+- `https://YOUR-STORE.myshopify.com/products/cornell-notebook`
+- `https://YOUR-STORE.myshopify.com/products/math-notebook`
+
+If your Admin handles differ, set:
+
+- `NEXT_PUBLIC_SHOPIFY_CORNELL_HANDLE`
+- `NEXT_PUBLIC_SHOPIFY_MATH_HANDLE`
+
+---
+
+## 1) Cream Cornell Notebook
+
+| Field | Value |
+| --- | --- |
+| **Title** | Cream Cornell Notebook |
+| **Handle / URL slug** | `cornell-notebook` |
+| **Vendor** | ARZIVE |
+| **Product type** | Notebook |
+| **Tags** | cornell, cream, study, notebook |
+| **Status** | Active |
+
+**Description (paste into Shopify):**
+
+```html
+<p>The Cream Cornell Notebook — structured thinking on recycled cream paper.</p>
+<p>Each page follows the classic Cornell system: <strong>Cues</strong>, <strong>Main Notes</strong>, and <strong>Summary</strong>. Spiral-bound for lectures and revision.</p>
+<p>After you write, open <em>Study with Arzive</em>, scan your pages to your account, and turn selected notes into a practice exam or flashcards.</p>
+<ul>
+  <li>Cover: cream</li>
+  <li>Layout: Cornell (Cues · Main Notes · Summary)</li>
+  <li>Binding: black spiral</li>
+</ul>
+```
+
+**Suggested variant:** Default Title / One size · set your price in Admin.
+
+---
+
+## 2) Green Math Notebook
+
+| Field | Value |
+| --- | --- |
+| **Title** | Green Math Notebook |
+| **Handle / URL slug** | `math-notebook` |
+| **Vendor** | ARZIVE |
+| **Product type** | Notebook |
+| **Tags** | math, green, study, notebook |
+| **Status** | Active |
+
+**Description (paste into Shopify):**
+
+```html
+<p>The Green Math Notebook — mathematical clarity in forest green.</p>
+<p>Pages are built for problem sets: a large <strong>Example and Practice Questions</strong> grid, plus <strong>Formulas</strong> and <strong>Explanations</strong> beside.</p>
+<p>Scan finished pages into Study with Arzive under your customer account to generate practice exams or flashcards from the notes you choose.</p>
+<ul>
+  <li>Cover: forest green</li>
+  <li>Layout: Math (Practice · Formulas · Explanations)</li>
+  <li>Binding: black spiral</li>
+</ul>
+```
+
+**Suggested variant:** Default Title / One size · set your price in Admin.
+
+---
+
+## CSV import
+
+Import [`products.csv`](products.csv) via Shopify Admin → Products → Import (adjust price/SKU as needed). Or create products manually with the titles/handles above if they already exist — just align the handles.
+
+## Wire the ARZIVE site
+
+In `frontend/.env.local`:
+
+```bash
+NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN=your-store.myshopify.com
+# optional overrides if Admin handles differ:
+# NEXT_PUBLIC_SHOPIFY_CORNELL_HANDLE=cornell-notebook
+# NEXT_PUBLIC_SHOPIFY_MATH_HANDLE=math-notebook
+```
+
+Shop buttons then open `/products/<handle>` on that domain.

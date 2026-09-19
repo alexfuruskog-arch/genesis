@@ -7,6 +7,10 @@ export const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
 
 export const shopifyStoreDomain =
   process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN ?? "";
+export const shopifyCornellHandle =
+  process.env.NEXT_PUBLIC_SHOPIFY_CORNELL_HANDLE ?? "cornell-notebook";
+export const shopifyMathHandle =
+  process.env.NEXT_PUBLIC_SHOPIFY_MATH_HANDLE ?? "math-notebook";
 export const shopifyStorefrontToken =
   process.env.NEXT_PUBLIC_SHOPIFY_STOREFRONT_ACCESS_TOKEN ?? "";
 export const shopifyApiKey = process.env.NEXT_PUBLIC_SHOPIFY_API_KEY ?? "";

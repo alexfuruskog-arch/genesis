@@ -12,13 +12,11 @@ type Tab = "cornell" | "math";
 const gallery = {
   cornell: [
     { src: "/products/cornell-pages.jpg", alt: "Cornell notebook open pages" },
-    { src: "/products/notebook-green.jpg", alt: "ARZIVE green notebook cover" },
-    { src: "/products/notebook-cream.jpg", alt: "ARZIVE cream notebook cover" },
+    { src: "/products/notebook-cream.jpg", alt: "Cream Cornell notebook cover" },
   ],
   math: [
     { src: "/products/math-pages.jpg", alt: "Math notebook open pages" },
-    { src: "/products/notebook-green.jpg", alt: "ARZIVE green notebook cover" },
-    { src: "/products/notebook-cream.jpg", alt: "ARZIVE cream notebook cover" },
+    { src: "/products/notebook-green.jpg", alt: "Green Math notebook cover" },
   ],
 } as const;
 
@@ -67,12 +65,13 @@ export default function HomePage() {
                   : "border-b border-transparent text-cream/45 hover:text-cream/75"
               }`}
             >
-              {tab === "cornell" ? "Cornell" : "Math"}
+              {tab === "cornell" ? "Cornell" : "Math"} ·{" "}
+              {tab === "cornell" ? "Cream" : "Green"}
             </button>
           ))}
         </div>
 
-        <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-3 sm:gap-5">
+        <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5">
           {images.map((image, index) => (
             <figure
               key={`${active}-${image.src}`}
@@ -93,7 +92,10 @@ export default function HomePage() {
 
         <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div className="max-w-lg">
-            <h2 className="font-display text-2xl tracking-[0.06em] text-cream">
+            <p className="text-[0.68rem] tracking-[0.2em] uppercase text-cream/50">
+              {product.colorName}
+            </p>
+            <h2 className="mt-2 font-display text-2xl tracking-[0.06em] text-cream">
               {product.name}
             </h2>
             <p className="mt-2 text-sm leading-6 text-cream/65">

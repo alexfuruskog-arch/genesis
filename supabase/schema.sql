@@ -43,8 +43,15 @@ create table if not exists public.documents (
   mime_type text,
   byte_size bigint,
   extraction_status text not null default 'pending',
+  storage_backend text not null default 'supabase',
+  notebook_model text,
   created_at timestamptz not null default now()
 );
+
+alter table public.documents
+  add column if not exists storage_backend text not null default 'supabase';
+alter table public.documents
+  add column if not exists notebook_model text;
 
 create index if not exists documents_user_id_idx on public.documents (user_id);
 

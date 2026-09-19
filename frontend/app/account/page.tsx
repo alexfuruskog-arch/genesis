@@ -44,8 +44,9 @@ export default function AccountPage() {
           {user?.email ? "Your ARZIVE account" : "Sign in"}
         </h1>
         <p className="mt-3 text-sm leading-6 text-forest/70">
-          Local MVP auth works without Supabase. When Supabase keys are set, the
-          API validates JWTs the same way — wire the frontend client later.
+          Your Study with Arzive library is private to this account. Scans go to
+          Supabase Storage under your user folder when keys are set; otherwise a
+          local fallback keeps the flow runnable.
         </p>
 
         {!ready ? (

@@ -19,6 +19,8 @@ export type UploadedDocument = {
   extraction_status: string;
   chunk_count: number;
   created_at: string;
+  storage_backend?: string | null;
+  notebook_model?: string | null;
   store?: string;
   extraction_mode?: string;
   message?: string;
@@ -147,9 +149,13 @@ export async function fetchHealth(): Promise<HealthResponse> {
 export async function uploadDocument(
   file: File,
   authHeaders?: Record<string, string>,
+  notebookModel?: "math" | "cornell" | null,
 ): Promise<UploadedDocument> {
   const body = new FormData();
   body.append("file", file);
+  if (notebookModel) {
+    body.append("notebook_model", notebookModel);
+  }
   return request("/upload-document", {
     method: "POST",
     body,
@@ -159,7 +165,11 @@ export async function uploadDocument(
 
 export async function listDocuments(
   authHeaders?: Record<string, string>,
-): Promise<{ documents: UploadedDocument[]; store: string }> {
+): Promise<{
+  documents: UploadedDocument[];
+  store: string;
+  cloud_enabled?: boolean;
+}> {
   return request("/documents", { cache: "no-store", authHeaders });
 }
 

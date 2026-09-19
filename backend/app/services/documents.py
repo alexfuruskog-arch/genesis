@@ -22,9 +22,11 @@ class DocumentService:
         filename: str,
         data: bytes,
         mime_type: str | None,
+        notebook_model: str | None = None,
     ) -> dict:
         document_id = str(uuid4())
         safe_name = Path(filename).name or "notes.txt"
+        # Path prefix = auth user id so Supabase storage RLS can scope by folder.
         storage_path = f"{user.id}/{document_id}_{safe_name}"
         stored_via = self._persist_bytes(storage_path, data, mime_type)
 
@@ -41,6 +43,8 @@ class DocumentService:
             "mime_type": mime_type,
             "byte_size": len(data),
             "extraction_status": "ready" if chunks else "empty",
+            "storage_backend": stored_via,
+            "notebook_model": notebook_model,
             "created_at": now,
         }
         store.create_document(document)
@@ -81,9 +85,15 @@ class DocumentService:
                 {
                     **document,
                     "chunk_count": len(chunks),
+                    "storage_backend": document.get("storage_backend")
+                    or ("supabase" if store.backend == "supabase" else "local"),
                 }
             )
-        return {"documents": enriched, "store": store.backend}
+        return {
+            "documents": enriched,
+            "store": store.backend,
+            "cloud_enabled": bool(get_supabase_client()),
+        }
 
     def generate_study(
         self,
