@@ -1,19 +1,52 @@
 {
   "sections": {
-    "hero": {
-      "type": "hero",
+    "hero_split": {
+      "type": "hero-split",
+      "settings": {}
+    },
+    "trust_bar": {
+      "type": "trust-bar",
+      "settings": {}
+    },
+    "philosophy": {
+      "type": "philosophy",
       "settings": {
-        "eyebrow": "ARZIVE",
-        "heading": "We believe every student deserves the tools to succeed.",
-        "text": "Two research-backed notebooks. One for structured thinking, one for mathematical clarity — crafted from recycled materials that feel as considered as the systems inside.",
-        "primary_label": "Shop notebooks",
-        "secondary_label": "Our story"
+        "forest": false,
+        "framed": false,
+        "label": "Arzive's philosophy",
+        "title": "We believe every student deserves the tools to succeed.",
+        "tagline": "The only notebook that teaches you how to study."
       }
     },
-    "product_tabs": {
-      "type": "product-tabs",
+    "bundles": {
+      "type": "product-bundles",
+      "settings": {}
+    },
+    "interiors": {
+      "type": "interiors-carousel",
+      "settings": {}
+    },
+    "sustain": {
+      "type": "sustainability",
+      "settings": {}
+    },
+    "choose": {
+      "type": "choose-arzive",
+      "settings": {}
+    },
+    "newsletter": {
+      "type": "newsletter",
       "settings": {}
     }
   },
-  "order": ["hero", "product_tabs"]
+  "order": [
+    "hero_split",
+    "trust_bar",
+    "philosophy",
+    "bundles",
+    "interiors",
+    "sustain",
+    "choose",
+    "newsletter"
+  ]
 }

@@ -1,0 +1,44 @@
+<section class="arzive-interiors" data-arzive-carousel>
+  <div class="arzive-shell">
+    <h2 class="arzive-interiors__title">
+      {{ section.settings.heading | default: "Don't know how to study? We got you." }}
+    </h2>
+  </div>
+  <div class="arzive-interiors__track-wrap">
+    <div class="arzive-interiors__track" data-carousel-track>
+      <figure class="arzive-interiors__slide">
+        <img src="{{ 'cornell-pages.jpg' | asset_url }}" alt="Cornell notebook interior pages" width="800" height="1000" loading="lazy">
+      </figure>
+      <figure class="arzive-interiors__slide">
+        <img src="{{ 'math-pages.jpg' | asset_url }}" alt="Math notebook interior pages" width="800" height="1000" loading="lazy">
+      </figure>
+      <figure class="arzive-interiors__slide">
+        <img src="{{ 'notebook-cream.jpg' | asset_url }}" alt="Cream Cornell cover" width="800" height="1000" loading="lazy">
+      </figure>
+      <figure class="arzive-interiors__slide">
+        <img src="{{ 'notebook-green.jpg' | asset_url }}" alt="Green Math cover" width="800" height="1000" loading="lazy">
+      </figure>
+    </div>
+    <div class="arzive-interiors__nav">
+      <button type="button" data-carousel-prev aria-label="Previous">←</button>
+      <button type="button" data-carousel-next aria-label="Next">→</button>
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Interiors carousel",
+  "tag": "section",
+  "class": "section-interiors",
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Don't know how to study? We got you."
+    }
+  ],
+  "presets": [{ "name": "ARZIVE interiors carousel" }]
+}
+{% endschema %}

@@ -1,0 +1,22 @@
+<section class="arzive-quote">
+  <p class="arzive-quote__mark">ARZIVE</p>
+  <p class="arzive-quote__text">
+    {{ section.settings.quote | default: 'The palest ink is better than the strongest memory.' }}
+  </p>
+  <p class="arzive-philosophy__tag" style="color:rgba(245,245,240,0.55)">
+    {{ section.settings.attribution | default: '— Chinese proverb' }}
+  </p>
+</section>
+
+{% schema %}
+{
+  "name": "Quote",
+  "tag": "section",
+  "class": "section-quote",
+  "settings": [
+    { "type": "textarea", "id": "quote", "label": "Quote", "default": "The palest ink is better than the strongest memory." },
+    { "type": "text", "id": "attribution", "label": "Attribution", "default": "— Chinese proverb" }
+  ],
+  "presets": [{ "name": "ARZIVE quote" }]
+}
+{% endschema %}

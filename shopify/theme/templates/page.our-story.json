@@ -1,0 +1,34 @@
+{
+  "sections": {
+    "philosophy": {
+      "type": "philosophy",
+      "settings": {
+        "forest": true,
+        "framed": true,
+        "label": "Arzive's philosophy",
+        "title": "We believe every student deserves the tools to succeed.",
+        "body": "Arzive creates thoughtfully designed notebooks that don't just hold your notes — they teach you how to study, learn smarter, and unlock your full potential.",
+        "tagline": "The only notebook that teaches you how to study."
+      }
+    },
+    "interiors": {
+      "type": "interiors-carousel",
+      "settings": {
+        "heading": "How everything started"
+      }
+    },
+    "sustain": {
+      "type": "sustainability",
+      "settings": {}
+    },
+    "choose": {
+      "type": "choose-arzive",
+      "settings": {}
+    },
+    "quote": {
+      "type": "quote",
+      "settings": {}
+    }
+  },
+  "order": ["philosophy", "interiors", "sustain", "choose", "quote"]
+}

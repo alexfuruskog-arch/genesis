@@ -1,0 +1,89 @@
+{%- liquid
+  assign cornell = section.settings.product_cornell
+  if cornell == blank
+    assign cornell = all_products['cornell-notebook']
+  endif
+  assign math = section.settings.product_math
+  if math == blank
+    assign math = all_products['arzive-math-notebook']
+  endif
+  if math == blank
+    assign math = all_products['math-notebook']
+  endif
+
+  assign cornell_url = '/products/cornell-notebook'
+  assign cornell_price = ''
+  if cornell != blank
+    assign cornell_url = cornell.url
+    assign cornell_price = cornell.price | money
+  endif
+
+  assign math_url = '/products/arzive-math-notebook'
+  assign math_price = ''
+  if math != blank
+    assign math_url = math.url
+    assign math_price = math.price | money
+  endif
+-%}
+
+<section class="arzive-bundles">
+  <div class="arzive-shell">
+    <div class="arzive-bundles__head">
+      <p class="arzive-bundles__label">{{ section.settings.label | default: 'Our notebooks' }}</p>
+      <h2 class="arzive-bundles__title">{{ section.settings.heading | default: 'Start with the right system' }}</h2>
+    </div>
+
+    <div class="arzive-bundles__grid">
+      <article class="arzive-bundle-card">
+        <a class="arzive-bundle-card__media" href="{{ routes.all_products_collection_url }}">
+          <img src="{{ 'bundle-cornell-math.jpg' | asset_url }}" alt="Cream Cornell and Green Math notebooks" width="900" height="900" loading="lazy">
+        </a>
+        <p class="arzive-bundle-card__tag">New</p>
+        <p class="arzive-bundle-card__stars" aria-label="5 stars">★★★★★</p>
+        <h3 class="arzive-bundle-card__title">Back-to-school pair</h3>
+        <p class="arzive-bundle-card__text">Cream Cornell + Green Math — structured notes and problem-solving in one start kit.</p>
+        <p class="arzive-bundle-card__price">Shop both</p>
+        <a class="arzive-btn arzive-btn--forest" href="{{ routes.all_products_collection_url }}">Shop pair</a>
+      </article>
+
+      <article class="arzive-bundle-card">
+        <a class="arzive-bundle-card__media" href="{{ cornell_url }}">
+          <img src="{{ 'notebook-cream.jpg' | asset_url }}" alt="Cream Cornell Notebook" width="900" height="900" loading="lazy">
+        </a>
+        <p class="arzive-bundle-card__tag">New</p>
+        <p class="arzive-bundle-card__stars" aria-label="5 stars">★★★★★</p>
+        <h3 class="arzive-bundle-card__title">{% if cornell != blank %}{{ cornell.title }}{% else %}The Cornell notebook{% endif %}</h3>
+        <p class="arzive-bundle-card__text">Cue, Main Notes, and Summary on recycled cream paper — spiral-bound for lectures and revision.</p>
+        {% if cornell_price != blank %}<p class="arzive-bundle-card__price">{{ cornell_price }}</p>{% endif %}
+        <a class="arzive-btn arzive-btn--forest" href="{{ cornell_url }}">Shop Cornell</a>
+      </article>
+
+      <article class="arzive-bundle-card">
+        <a class="arzive-bundle-card__media" href="{{ math_url }}">
+          <img src="{{ 'notebook-green.jpg' | asset_url }}" alt="Green Math Notebook" width="900" height="900" loading="lazy">
+        </a>
+        <p class="arzive-bundle-card__tag">New</p>
+        <p class="arzive-bundle-card__stars" aria-label="5 stars">★★★★★</p>
+        <h3 class="arzive-bundle-card__title">{% if math != blank %}{{ math.title }}{% else %}The Math study system{% endif %}</h3>
+        <p class="arzive-bundle-card__text">Grid for Example and Practice, with Formulas and Explanations beside — forest-green cover.</p>
+        {% if math_price != blank %}<p class="arzive-bundle-card__price">{{ math_price }}</p>{% endif %}
+        <a class="arzive-btn arzive-btn--forest" href="{{ math_url }}">Shop Math</a>
+      </article>
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Product bundles",
+  "tag": "section",
+  "class": "section-bundles",
+  "settings": [
+    { "type": "text", "id": "label", "label": "Label", "default": "Our notebooks" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Start with the right system" },
+    { "type": "product", "id": "product_cornell", "label": "Cornell product" },
+    { "type": "product", "id": "product_math", "label": "Math product" }
+  ],
+  "presets": [{ "name": "ARZIVE product bundles" }]
+}
+{% endschema %}

@@ -1,35 +1,91 @@
-<section class="arzive-cart">
+<section class="arzive-cart-page">
   <div class="arzive-shell">
-    <h1 class="arzive-shop__title">Cart</h1>
+    <p class="arzive-kicker">Checkout</p>
+    <h1>My cart</h1>
+    <p class="arzive-cart-cheer">You’re ready to level up! We’re cheering you on.</p>
+
     {% if cart.item_count == 0 %}
-      <p class="arzive-shop__intro">Your cart is empty.</p>
-      <a class="arzive-btn arzive-btn--ink" href="{{ routes.all_products_collection_url }}">Shop notebooks</a>
+      <p class="arzive-cart-ship">You are away from free shipping. + Free gift on every order.</p>
+      <div class="arzive-cart-empty">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M7 8.5h10l-.85 11.2a1 1 0 0 1-1 .9H8.85a1 1 0 0 1-1-.9L7 8.5Z" stroke="currentColor" stroke-width="1.2"/>
+          <path d="M9.2 8.5V7.4a2.8 2.8 0 0 1 5.6 0v1.1" stroke="currentColor" stroke-width="1.2"/>
+        </svg>
+        <p>Your cart is empty. Add some beautiful products from our collections.</p>
+        <a class="arzive-btn arzive-btn--forest" href="{{ routes.all_products_collection_url }}">Shop now</a>
+      </div>
     {% else %}
+      <p class="arzive-cart-ship">Free shipping progress updates as you add notebooks.</p>
       <form action="{{ routes.cart_url }}" method="post">
         <ul class="arzive-cart__list">
           {% for item in cart.items %}
             <li class="arzive-cart__row">
+              {% if item.image %}
+                {{ item.image | image_url: width: 200 | image_tag: alt: item.title }}
+              {% elsif item.product.handle contains 'math' %}
+                <img src="{{ 'notebook-green.jpg' | asset_url }}" alt="{{ item.title | escape }}">
+              {% else %}
+                <img src="{{ 'notebook-cream.jpg' | asset_url }}" alt="{{ item.title | escape }}">
+              {% endif %}
               <div>
-                <a href="{{ item.url }}">{{ item.product.title }}</a>
-                <p>{{ item.final_line_price | money }}</p>
+                <h2>{{ item.product.title }}</h2>
+                <label>
+                  Qty
+                  <input type="number" name="updates[]" value="{{ item.quantity }}" min="0">
+                </label>
               </div>
-              <input type="number" name="updates[]" value="{{ item.quantity }}" min="0" aria-label="Quantity">
+              <div>
+                <p>{{ item.final_line_price | money }}</p>
+                <a href="{{ item.url_to_remove }}">Remove</a>
+              </div>
             </li>
           {% endfor %}
         </ul>
         <p class="arzive-cart__total">Total {{ cart.total_price | money }}</p>
         <div class="arzive-cart__actions">
-          <button type="submit" name="update" class="arzive-btn arzive-btn--ghost-dark">Update</button>
-          <button type="submit" name="checkout" class="arzive-btn arzive-btn--ink">Checkout</button>
+          <button type="submit" name="update" class="arzive-btn arzive-btn--ghost" style="border-color:rgba(11,36,33,0.3);color:var(--forest)">Update</button>
+          <button type="submit" name="checkout" class="arzive-btn arzive-btn--forest">Checkout</button>
         </div>
       </form>
     {% endif %}
+
+    <div class="arzive-upsell">
+      <p class="arzive-upsell__title">You may also like</p>
+      <div class="arzive-upsell__grid">
+        <a class="arzive-upsell__card" href="/products/cornell-notebook">
+          <img src="{{ 'notebook-cream.jpg' | asset_url }}" alt="Cream Cornell Notebook">
+          <div>
+            <h3>The Cornell notebook</h3>
+            <p>Cream · structured notes</p>
+            <span class="arzive-btn arzive-btn--cream">Shop now</span>
+          </div>
+        </a>
+        <a class="arzive-upsell__card" href="/products/arzive-math-notebook">
+          <img src="{{ 'notebook-green.jpg' | asset_url }}" alt="Green Math Notebook">
+          <div>
+            <h3>The Math study system</h3>
+            <p>Forest green · problem sets</p>
+            <span class="arzive-btn arzive-btn--cream">Shop now</span>
+          </div>
+        </a>
+        <a class="arzive-upsell__card" href="{{ routes.all_products_collection_url }}">
+          <img src="{{ 'bundle-cornell-math.jpg' | asset_url }}" alt="Both notebooks">
+          <div>
+            <h3>Shop the pair</h3>
+            <p>Cornell + Math</p>
+            <span class="arzive-btn arzive-btn--cream">Shop now</span>
+          </div>
+        </a>
+      </div>
+    </div>
   </div>
 </section>
 
 {% schema %}
 {
   "name": "Cart",
+  "tag": "section",
+  "class": "section-cart",
   "settings": []
 }
 {% endschema %}

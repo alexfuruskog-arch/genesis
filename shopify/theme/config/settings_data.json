@@ -4,12 +4,14 @@
     "account_app_url": "https://study.arzive.com/account",
     "story_heading": "Our story",
     "story_body": "Two research-backed notebooks and Study with Arzive — scan your pages, then generate practice exams and flashcards.",
-    "color_forest": "#1a2e26",
-    "color_cream": "#f3eee4",
+    "color_forest": "#0B2421",
+    "color_cream": "#F5F5F0",
     "sections": {
       "header": {
         "type": "header",
-        "settings": {}
+        "settings": {
+          "text": "Free shipping over $75 · Shop all →"
+        }
       },
       "footer": {
         "type": "footer",

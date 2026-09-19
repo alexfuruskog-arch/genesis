@@ -1,13 +1,19 @@
 <footer class="arzive-footer">
-  <div class="arzive-shell arzive-footer__inner">
+  <div class="arzive-shell">
     <p class="arzive-footer__brand">ARZIVE</p>
     <p class="arzive-footer__copy">
-      Notebooks on Shopify · Study with Arzive for scanning and AI practice.
+      {{ section.settings.copy | default: 'Notebooks that teach you how to study — then Study with Arzive turns pages into practice.' }}
     </p>
     <div class="arzive-footer__links">
       <a href="{{ routes.all_products_collection_url }}">Shop</a>
+      <a href="{{ pages['our-story'].url | default: '/pages/our-story' }}">Our story</a>
       <a href="{{ settings.study_app_url | default: 'https://study.arzive.com/study' }}" rel="noopener">Study with Arzive</a>
       <a href="{{ routes.cart_url }}">Cart</a>
+    </div>
+    <div class="arzive-footer__reassure">
+      <span>Secure checkout</span>
+      <span>Thoughtful materials</span>
+      <span>Study tools that last</span>
     </div>
   </div>
 </footer>
@@ -15,6 +21,13 @@
 {% schema %}
 {
   "name": "Footer",
-  "settings": []
+  "settings": [
+    {
+      "type": "textarea",
+      "id": "copy",
+      "label": "Footer copy",
+      "default": "Notebooks that teach you how to study — then Study with Arzive turns pages into practice."
+    }
+  ]
 }
 {% endschema %}

@@ -1,47 +1,47 @@
-# Ladda upp ARZIVE-temat till Shopify
+# Ladda upp ARZIVE-temat (mock-layout v2)
 
-Temat: `shopify/theme/` → zip `shopify/arzive-theme.zip`.  
-Butik: `sexb4g-xw.myshopify.com`. Live math-handle: **`arzive-math-notebook`**.
+Temat följer Alexanders design-mocks: split hero, philosophy, 3-up products, interiors-karusell, sustainability, Choose Arzive, newsletter, cart.
 
-Design: mörkgrön hero, cream typografi, ARZIVE-wordmark, **SHOP + STUDY WITH ARZIVE**, **en** stark produktbild per notebook (inga limmade diptyker).
+**Produkter:** Cream Cornell + Green Math (`arzive-math-notebook`).  
+**En** editorial-bild per produkt — inga limmade diptyker.
 
-## 1) Skapa zip
+Butik: `sexb4g-xw.myshopify.com`
+
+## 1) Zip
 
 ```bash
 ./shopify/pack-theme.sh
 ```
 
-## 2) Ladda upp / byt tema
+→ `shopify/arzive-theme.zip` (även i Cursor Context docs)
 
-1. Shopify Admin → **Online Store → Themes**
-2. **Add theme → Upload zip file**
+## 2) Ladda upp
+
+1. Admin → **Online Store → Themes**
+2. **Add theme → Upload zip**
 3. Välj `arzive-theme.zip`
-4. **… → Publish**
+4. **Publish**
 
-Om du redan har ARZIVE publicerat: ladda upp den nya zip:en och publicera den (eller Replace theme).
+## 3) Settings
 
-## 3) Theme settings
+Customize → Theme settings:
 
-**Customize → Theme settings (kugghjul):**
+- **Study with Arzive URL** → din Next.js `/study`
+- **Homepage products** → Cornell + Math (`arzive-math-notebook`)
+- Skapa sidan **Our story** (handle `our-story`) så mallen `page.our-story` används
 
-1. **Study with Arzive URL** → din Next.js `/study`
-2. **Homepage products** → välj Cream Cornell + **Green Math** (`arzive-math-notebook`)
+## 4) Byt limmade Admin-bilder
 
-## 4) Viktigt — byt ut limmade produktbilder i Admin
+Temat använder `notebook-cream.jpg` / `notebook-green.jpg` som hero — men byt ändå i Admin:
 
-Temat visar nu **tema-assets** (`notebook-cream.jpg` / `notebook-green.jpg`) som huvudbild, så butiken ser bra ut även om Admin har en collage.
+1. **Products → Math Notebook** (`arzive-math-notebook`)
+2. **Media** → ta bort collagen (grön pärm + cream spiral limmade)
+3. Ladda upp `shopify/theme/assets/notebook-green.jpg`
+4. Samma för Cornell → `notebook-cream.jpg`
 
-Byt ändå ut den dåliga Admin-bilden så produktgalleriet/CDN inte visar limningen:
+## 5) Kolla
 
-1. Admin → **Products**
-2. Öppna **Math Notebook** (`arzive-math-notebook`)
-3. Under **Media**: ta bort bilden som är **grön pärm + cream spiral limmade i samma rektangel**
-4. Ladda upp en enda cover: använd `shopify/theme/assets/notebook-green.jpg` (eller motsvarande studio-foto)
-5. Gör samma för Cornell-produkten om den har en limmad collage → ersätt med `notebook-cream.jpg`
-
-## 5) Snabbkoll
-
-- Startsida: en cover per flik (Cornell / Math) — inte två bilder sida vid sida  
-- `/collections/all`: två kort, **en** foto vardera  
+- Startsida: split hero (lifestyle + cover), 3 kort, karusell  
+- `/collections/all`: två singel-foton  
 - `/products/arzive-math-notebook`: en hero-cover  
-- **Study with Arzive** i nav → Next.js
+- `/cart`: empty + upsell enligt mock

@@ -1,0 +1,90 @@
+{%- liquid
+  assign cornell = section.settings.product_cornell
+  if cornell == blank
+    assign cornell = all_products['cornell-notebook']
+  endif
+  if cornell == blank
+    assign cornell = all_products['arzive-cornell-notebook']
+  endif
+
+  assign math = section.settings.product_math
+  if math == blank
+    assign math = all_products['arzive-math-notebook']
+  endif
+  if math == blank
+    assign math = all_products['math-notebook']
+  endif
+
+  assign cornell_url = '/products/cornell-notebook'
+  if cornell != blank
+    assign cornell_url = cornell.url
+  endif
+  assign math_url = '/products/arzive-math-notebook'
+  if math != blank
+    assign math_url = math.url
+  endif
+-%}
+
+<section class="arzive-hero-split">
+  <div class="arzive-hero-split__panel">
+    <img
+      class="arzive-hero-split__bg"
+      src="{{ 'hero-lifestyle-cream.jpg' | asset_url }}"
+      alt="Student with Cream Cornell Notebook"
+      width="1200"
+      height="1600"
+    >
+    <div class="arzive-hero-split__scrim"></div>
+    <div class="arzive-badge">3M+<br>pages<br>studied</div>
+    <div class="arzive-hero-split__content">
+      <p class="arzive-hero-split__eyebrow">{{ section.settings.left_eyebrow | default: 'Cream Cornell' }}</p>
+      <h1 class="arzive-hero-split__title">
+        {{ section.settings.left_title | default: 'Join students striving for top grades' }}
+      </h1>
+      <p class="arzive-hero-split__text">
+        {{ section.settings.left_text | default: 'Cue, Main Notes, and Summary — the classic Cornell system on recycled cream paper.' }}
+      </p>
+      <a class="arzive-btn arzive-btn--forest" href="{{ cornell_url }}">Shop the Cornell notebook</a>
+    </div>
+  </div>
+
+  <div class="arzive-hero-split__panel arzive-hero-split__panel--dark">
+    <img
+      class="arzive-hero-split__bg"
+      src="{{ 'notebook-cream.jpg' | asset_url }}"
+      alt="Cream Cornell Notebook product"
+      width="1200"
+      height="1500"
+    >
+    <div class="arzive-hero-split__scrim"></div>
+    <div class="arzive-hero-split__content">
+      <p class="arzive-hero-split__eyebrow">{{ section.settings.right_eyebrow | default: 'Two systems' }}</p>
+      <h2 class="arzive-hero-split__title">
+        {{ section.settings.right_title | default: 'The notebooks teachers and students swear by' }}
+      </h2>
+      <p class="arzive-hero-split__text">
+        {{ section.settings.right_text | default: 'Cream Cornell for structured thinking. Forest-green Math for problem-solving.' }}
+      </p>
+      <a class="arzive-btn arzive-btn--cream" href="{{ math_url }}">Shop the Math study system</a>
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Hero split",
+  "tag": "section",
+  "class": "section-hero-split",
+  "settings": [
+    { "type": "product", "id": "product_cornell", "label": "Cornell product" },
+    { "type": "product", "id": "product_math", "label": "Math product" },
+    { "type": "text", "id": "left_eyebrow", "label": "Left eyebrow", "default": "Cream Cornell" },
+    { "type": "textarea", "id": "left_title", "label": "Left title", "default": "Join students striving for top grades" },
+    { "type": "textarea", "id": "left_text", "label": "Left text", "default": "Cue, Main Notes, and Summary — the classic Cornell system on recycled cream paper." },
+    { "type": "text", "id": "right_eyebrow", "label": "Right eyebrow", "default": "Two systems" },
+    { "type": "textarea", "id": "right_title", "label": "Right title", "default": "The notebooks teachers and students swear by" },
+    { "type": "textarea", "id": "right_text", "label": "Right text", "default": "Cream Cornell for structured thinking. Forest-green Math for problem-solving." }
+  ],
+  "presets": [{ "name": "ARZIVE hero split" }]
+}
+{% endschema %}

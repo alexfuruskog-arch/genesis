@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>ARZIVE — theme preview</title>
+    <title>ARZIVE theme preview — mock layout</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -13,284 +13,293 @@
     <link rel="stylesheet" href="../theme/assets/arzive.css" />
     <style>
       :root {
-        --forest: #1a2e26;
-        --cream: #f3eee4;
-        --forest-deep: #13231d;
-        --forest-mid: #243f35;
-        --cream-soft: #ebe4d6;
+        --forest: #0b2421;
+        --cream: #f5f5f0;
+        --forest-deep: #061614;
+        --forest-mid: #143530;
+        --cream-soft: #ebe6dc;
       }
-      .preview-switch {
+      .preview-nav {
         position: fixed;
         bottom: 1rem;
         right: 1rem;
-        z-index: 50;
+        z-index: 60;
         display: flex;
-        gap: 0.4rem;
+        gap: 0.35rem;
       }
-      .preview-switch a {
+      .preview-nav button {
         background: var(--forest);
         color: var(--cream);
-        padding: 0.55rem 0.8rem;
-        font-size: 0.65rem;
-        letter-spacing: 0.14em;
+        border: 0;
+        padding: 0.55rem 0.75rem;
+        font-size: 0.6rem;
+        letter-spacing: 0.12em;
         text-transform: uppercase;
+        cursor: pointer;
       }
       .preview-page {
         display: none;
       }
-      .preview-page.is-active {
+      .preview-page.is-on {
         display: block;
       }
     </style>
   </head>
-  <body class="arzive-body">
-    <div class="preview-switch">
-      <a href="#home" data-preview="home">Home</a>
-      <a href="#shop" data-preview="shop">Shop</a>
-      <a href="#product" data-preview="product">Product</a>
+  <body class="arzive-body template-index">
+    <div class="preview-nav">
+      <button type="button" data-go="home">Home</button>
+      <button type="button" data-go="shop">Shop</button>
+      <button type="button" data-go="cart">Cart</button>
+      <button type="button" data-go="story">Story</button>
     </div>
 
-    <!-- HOME -->
-    <div id="page-home" class="preview-page is-active template-index">
-      <header class="arzive-header arzive-header--forest">
+    <div id="home" class="preview-page is-on">
+      <div class="arzive-announce"><a href="#">Free shipping over $75 · Shop all →</a></div>
+      <header class="arzive-header">
         <div class="arzive-shell arzive-header__grid">
           <nav class="arzive-header__left">
-            <a class="arzive-nav-link" href="#shop" data-preview="shop">Shop</a>
-            <a class="arzive-nav-link" href="http://127.0.0.1:43123/study">
-              <span class="arzive-nav-link__full">Study with Arzive</span>
-              <span class="arzive-nav-link__short">Study</span>
-            </a>
+            <a class="arzive-nav-link" href="#"><span class="arzive-nav-link__full">Shop all</span><span class="arzive-nav-link__short">Shop</span></a>
+            <a class="arzive-nav-link" href="#"><span class="arzive-nav-link__full">Why Arzive</span><span class="arzive-nav-link__short">Story</span></a>
           </nav>
-          <a class="arzive-wordmark" href="#home" data-preview="home">ARZIVE</a>
+          <a class="arzive-wordmark" href="#">ARZIVE</a>
           <div class="arzive-header__right">
-            <a class="arzive-nav-link" href="http://127.0.0.1:43123/account">Account</a>
-            <a class="arzive-bag" href="#" aria-label="Cart">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path d="M7 8.5h10l-.85 11.2a1 1 0 0 1-1 .9H8.85a1 1 0 0 1-1-.9L7 8.5Z" stroke="currentColor" stroke-width="1.25" stroke-linejoin="round"/>
-                <path d="M9.2 8.5V7.4a2.8 2.8 0 0 1 5.6 0v1.1" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/>
-              </svg>
-            </a>
+            <a class="arzive-nav-link" href="http://127.0.0.1:43123/study"><span class="arzive-nav-link__full">Study with Arzive</span><span class="arzive-nav-link__short">Study</span></a>
+            <a class="arzive-nav-link" href="http://127.0.0.1:43123/account">Log in</a>
+            <a class="arzive-bag" href="#" aria-label="Cart"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M7 8.5h10l-.85 11.2a1 1 0 0 1-1 .9H8.85a1 1 0 0 1-1-.9L7 8.5Z" stroke="currentColor" stroke-width="1.25"/><path d="M9.2 8.5V7.4a2.8 2.8 0 0 1 5.6 0v1.1" stroke="currentColor" stroke-width="1.25"/></svg></a>
           </div>
         </div>
       </header>
 
       <main class="arzive-main">
-        <section class="arzive-hero">
-          <div class="arzive-shell arzive-hero__inner">
-            <p class="arzive-hero__eyebrow">ARZIVE</p>
-            <h1 class="arzive-hero__title">
-              We believe every student deserves the tools to succeed.
-            </h1>
-            <p class="arzive-hero__text">
-              Two research-backed notebooks. One for structured thinking, one for
-              mathematical clarity — crafted from recycled materials that feel as
-              considered as the systems inside.
-            </p>
-            <div class="arzive-hero__actions">
-              <a class="arzive-btn arzive-btn--solid" href="#shop" data-preview="shop">Shop notebooks</a>
-              <a class="arzive-btn arzive-btn--ghost" href="#shop" data-preview="shop">Our story</a>
+        <section class="arzive-hero-split">
+          <div class="arzive-hero-split__panel">
+            <img class="arzive-hero-split__bg" src="../theme/assets/hero-lifestyle-cream.jpg" alt="Lifestyle with Cream Cornell" />
+            <div class="arzive-hero-split__scrim"></div>
+            <div class="arzive-badge">3M+<br />pages<br />studied</div>
+            <div class="arzive-hero-split__content">
+              <p class="arzive-hero-split__eyebrow">Cream Cornell</p>
+              <h1 class="arzive-hero-split__title">Join students striving for top grades</h1>
+              <p class="arzive-hero-split__text">Cue, Main Notes, and Summary — the classic Cornell system on recycled cream paper.</p>
+              <a class="arzive-btn arzive-btn--forest" href="#">Shop the Cornell notebook</a>
+            </div>
+          </div>
+          <div class="arzive-hero-split__panel arzive-hero-split__panel--dark">
+            <img class="arzive-hero-split__bg" src="../theme/assets/notebook-cream.jpg" alt="Cream Cornell product" />
+            <div class="arzive-hero-split__scrim"></div>
+            <div class="arzive-hero-split__content">
+              <p class="arzive-hero-split__eyebrow">Two systems</p>
+              <h2 class="arzive-hero-split__title">The notebooks teachers and students swear by</h2>
+              <p class="arzive-hero-split__text">Cream Cornell for structured thinking. Forest-green Math for problem-solving.</p>
+              <a class="arzive-btn arzive-btn--cream" href="#">Shop the Math study system</a>
             </div>
           </div>
         </section>
 
-        <section class="arzive-products" data-arzive-tabs>
+        <section class="arzive-trust">
+          <div class="arzive-shell arzive-trust__row">
+            <div class="arzive-trust__item">Trusted by students</div>
+            <div class="arzive-trust__item">Math study system</div>
+            <div class="arzive-trust__item">Cornell method</div>
+            <div class="arzive-trust__item">Ships nationwide</div>
+          </div>
+        </section>
+
+        <section class="arzive-philosophy">
           <div class="arzive-shell">
-            <div class="arzive-tabs" role="tablist">
-              <button type="button" class="arzive-tab is-active" data-tab="cornell">Cornell · Cream</button>
-              <button type="button" class="arzive-tab" data-tab="math">Math · Green</button>
-            </div>
+            <p class="arzive-philosophy__label">Arzive's philosophy</p>
+            <h2 class="arzive-philosophy__title">We believe every student deserves the tools to succeed.</h2>
+            <p class="arzive-philosophy__tag">The only notebook that teaches you how to study.</p>
+          </div>
+        </section>
 
-            <div class="arzive-tab-panel is-active" data-panel="cornell">
-              <article class="arzive-showcase">
-                <figure class="arzive-showcase__figure">
-                  <img class="arzive-showcase__img" src="../theme/assets/notebook-cream.jpg" alt="Cream Cornell Notebook" />
-                </figure>
-                <div class="arzive-showcase__copy">
-                  <p class="arzive-showcase__color">Cream</p>
-                  <h2 class="arzive-showcase__title">Cream Cornell Notebook</h2>
-                  <p class="arzive-showcase__text">
-                    Cue, Main Notes, and Summary — the classic Cornell system on
-                    recycled cream paper, spiral-bound for lectures and revision.
-                  </p>
-                  <a class="arzive-btn arzive-btn--solid" href="#product" data-preview="product">Shop this notebook</a>
-                </div>
+        <section class="arzive-bundles">
+          <div class="arzive-shell">
+            <div class="arzive-bundles__head">
+              <p class="arzive-bundles__label">Our notebooks</p>
+              <h2 class="arzive-bundles__title">Start with the right system</h2>
+            </div>
+            <div class="arzive-bundles__grid">
+              <article class="arzive-bundle-card">
+                <a class="arzive-bundle-card__media" href="#"><img src="../theme/assets/bundle-cornell-math.jpg" alt="Bundle" /></a>
+                <p class="arzive-bundle-card__tag">New</p>
+                <p class="arzive-bundle-card__stars">★★★★★</p>
+                <h3 class="arzive-bundle-card__title">Back-to-school pair</h3>
+                <p class="arzive-bundle-card__text">Cream Cornell + Green Math in one start kit.</p>
+                <a class="arzive-btn arzive-btn--forest" href="#">Shop pair</a>
+              </article>
+              <article class="arzive-bundle-card">
+                <a class="arzive-bundle-card__media" href="#"><img src="../theme/assets/notebook-cream.jpg" alt="Cornell" /></a>
+                <p class="arzive-bundle-card__tag">New</p>
+                <p class="arzive-bundle-card__stars">★★★★★</p>
+                <h3 class="arzive-bundle-card__title">The Cornell notebook</h3>
+                <p class="arzive-bundle-card__text">Cue, Main Notes, and Summary on recycled cream paper.</p>
+                <p class="arzive-bundle-card__price">200,00 kr</p>
+                <a class="arzive-btn arzive-btn--forest" href="#">Shop Cornell</a>
+              </article>
+              <article class="arzive-bundle-card">
+                <a class="arzive-bundle-card__media" href="#"><img src="../theme/assets/notebook-green.jpg" alt="Math" /></a>
+                <p class="arzive-bundle-card__tag">New</p>
+                <p class="arzive-bundle-card__stars">★★★★★</p>
+                <h3 class="arzive-bundle-card__title">The Math study system</h3>
+                <p class="arzive-bundle-card__text">Grid for Example and Practice — forest-green cover.</p>
+                <p class="arzive-bundle-card__price">200,00 kr</p>
+                <a class="arzive-btn arzive-btn--forest" href="#">Shop Math</a>
               </article>
             </div>
+          </div>
+        </section>
 
-            <div class="arzive-tab-panel" data-panel="math" hidden>
-              <article class="arzive-showcase">
-                <figure class="arzive-showcase__figure">
-                  <img class="arzive-showcase__img" src="../theme/assets/notebook-green.jpg" alt="Green Math Notebook" />
-                </figure>
-                <div class="arzive-showcase__copy">
-                  <p class="arzive-showcase__color">Forest green</p>
-                  <h2 class="arzive-showcase__title">Green Math Notebook</h2>
-                  <p class="arzive-showcase__text">
-                    Grid for Example and Practice Questions, with Formulas and
-                    Explanations beside — built for problem sets that need room to think.
-                  </p>
-                  <a class="arzive-btn arzive-btn--solid" href="#product" data-preview="product">Shop this notebook</a>
-                </div>
-              </article>
+        <section class="arzive-interiors" data-arzive-carousel>
+          <div class="arzive-shell">
+            <h2 class="arzive-interiors__title">Don't know how to study? We got you.</h2>
+          </div>
+          <div class="arzive-interiors__track-wrap">
+            <div class="arzive-interiors__track" data-carousel-track>
+              <figure class="arzive-interiors__slide"><img src="../theme/assets/cornell-pages.jpg" alt="Cornell pages" /></figure>
+              <figure class="arzive-interiors__slide"><img src="../theme/assets/math-pages.jpg" alt="Math pages" /></figure>
+              <figure class="arzive-interiors__slide"><img src="../theme/assets/notebook-cream.jpg" alt="Cream cover" /></figure>
+              <figure class="arzive-interiors__slide"><img src="../theme/assets/notebook-green.jpg" alt="Green cover" /></figure>
             </div>
+            <div class="arzive-interiors__nav">
+              <button type="button" data-carousel-prev>←</button>
+              <button type="button" data-carousel-next>→</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="arzive-sustain">
+          <div class="arzive-shell">
+            <h2 class="arzive-sustain__title">Premium doesn’t mean wasteful. We use natural, recycled, and compostable materials.</h2>
+            <div class="arzive-sustain__grid">
+              <div class="arzive-sustain__item"><div class="arzive-sustain__icon">·</div><strong>100% plastic free</strong><p>No plastic wraps.</p></div>
+              <div class="arzive-sustain__item"><div class="arzive-sustain__icon">·</div><strong>100% recycled packaging</strong><p>Recycled end to end.</p></div>
+              <div class="arzive-sustain__item"><div class="arzive-sustain__icon">·</div><strong>100% natural materials</strong><p>Paper chosen for feel.</p></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="arzive-choose">
+          <div class="arzive-shell arzive-choose__grid">
+            <div class="arzive-choose__photos">
+              <img src="../theme/assets/choose-arzive-stack.jpg" alt="Stack" />
+              <img src="../theme/assets/notebook-green.jpg" alt="Math" />
+            </div>
+            <div>
+              <h2 class="arzive-choose__title">Choose Arzive</h2>
+              <div class="arzive-choose__block"><h3>Research-driven, user-approved</h3><p>Cornell structure and a dedicated Math layout — every page earns its place.</p></div>
+              <div class="arzive-choose__block"><h3>Focus on transfer, not just paper</h3><p>Scan into Study with Arzive for practice exams and flashcards.</p></div>
+              <div class="arzive-choose__block"><h3>Personal growth with the world in mind</h3><p>Recycled materials and tools meant to last a full semester.</p></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="arzive-newsletter">
+          <div class="arzive-shell arzive-newsletter__grid">
+            <div>
+              <h2 class="arzive-newsletter__title">Sign up for ARZIVE Weekly</h2>
+              <p class="arzive-newsletter__text">Study tips and notebook drops — straight to your inbox.</p>
+              <form class="arzive-newsletter__form" onsubmit="return false">
+                <input type="email" placeholder="Email address" />
+                <button type="submit" class="arzive-icon-btn">→</button>
+              </form>
+            </div>
+            <div class="arzive-newsletter__art">A</div>
           </div>
         </section>
       </main>
-
-      <footer class="arzive-footer">
-        <div class="arzive-shell">
-          <p class="arzive-footer__brand">ARZIVE</p>
-          <p class="arzive-footer__copy">Notebooks for students who take their thinking seriously.</p>
-        </div>
-      </footer>
+      <footer class="arzive-footer"><div class="arzive-shell"><p class="arzive-footer__brand">ARZIVE</p><p class="arzive-footer__copy">Notebooks that teach you how to study.</p></div></footer>
     </div>
 
-    <!-- SHOP / COLLECTION -->
-    <div id="page-shop" class="preview-page template-collection">
-      <header class="arzive-header arzive-header--cream">
-        <div class="arzive-shell arzive-header__grid">
-          <nav class="arzive-header__left">
-            <a class="arzive-nav-link" href="#shop" data-preview="shop">Shop</a>
-            <a class="arzive-nav-link" href="http://127.0.0.1:43123/study">
-              <span class="arzive-nav-link__full">Study with Arzive</span>
-              <span class="arzive-nav-link__short">Study</span>
-            </a>
-          </nav>
-          <a class="arzive-wordmark" href="#home" data-preview="home">ARZIVE</a>
-          <div class="arzive-header__right">
-            <a class="arzive-nav-link" href="http://127.0.0.1:43123/account">Account</a>
-            <a class="arzive-bag" href="#" aria-label="Cart">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M7 8.5h10l-.85 11.2a1 1 0 0 1-1 .9H8.85a1 1 0 0 1-1-.9L7 8.5Z" stroke="currentColor" stroke-width="1.25" stroke-linejoin="round"/><path d="M9.2 8.5V7.4a2.8 2.8 0 0 1 5.6 0v1.1" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/></svg>
-            </a>
-          </div>
-        </div>
-      </header>
+    <div id="shop" class="preview-page template-collection">
+      <div class="arzive-announce"><a href="#">Free shipping over $75 · Shop all →</a></div>
+      <header class="arzive-header"><div class="arzive-shell arzive-header__grid"><nav class="arzive-header__left"><a class="arzive-nav-link" href="#">Shop</a></nav><a class="arzive-wordmark" href="#">ARZIVE</a><div class="arzive-header__right"><a class="arzive-nav-link" href="#">Log in</a></div></div></header>
       <main class="arzive-main">
         <section class="arzive-collection">
           <div class="arzive-shell">
             <p class="arzive-kicker">Shop</p>
             <h1 class="arzive-shop__title">Notebooks</h1>
-            <p class="arzive-shop__intro">
-              Cream Cornell for structured notes. Forest-green Math for problem-solving.
-              One notebook, one photograph — nothing pasted together.
-            </p>
+            <p class="arzive-shop__intro">One editorial photograph per product — never a pasted collage.</p>
             <div class="arzive-shop__grid">
               <article class="arzive-card">
-                <a class="arzive-card__media" href="#product" data-preview="product">
-                  <img class="arzive-card__img" src="../theme/assets/notebook-cream.jpg" alt="Cream Cornell Notebook" />
-                </a>
+                <a class="arzive-card__media" href="#"><img src="../theme/assets/notebook-cream.jpg" alt="Cornell" /></a>
                 <div class="arzive-card__body">
-                  <div class="arzive-card__meta">
-                    <span class="arzive-swatch" style="background:#f3efe6"></span>
-                    <span>Cream</span>
-                  </div>
-                  <h2 class="arzive-card__title"><a href="#product" data-preview="product">Cream Cornell Notebook</a></h2>
-                  <p class="arzive-card__text">Cue, Main Notes, and Summary — the classic Cornell system on recycled cream paper.</p>
+                  <div class="arzive-card__meta"><span class="arzive-swatch" style="background:#F5F5F0"></span><span>Cream</span></div>
+                  <h2 class="arzive-card__title">Cream Cornell Notebook</h2>
+                  <p class="arzive-card__text">Cue, Main Notes, and Summary on recycled cream paper.</p>
                   <p class="arzive-card__price">200,00 kr</p>
-                  <a class="arzive-btn arzive-btn--ink" href="#product" data-preview="product">Buy notebook</a>
+                  <a class="arzive-btn arzive-btn--forest" href="#">Shop now</a>
                 </div>
               </article>
               <article class="arzive-card">
-                <a class="arzive-card__media" href="#product" data-preview="product">
-                  <img class="arzive-card__img" src="../theme/assets/notebook-green.jpg" alt="Green Math Notebook" />
-                </a>
+                <a class="arzive-card__media" href="#"><img src="../theme/assets/notebook-green.jpg" alt="Math" /></a>
                 <div class="arzive-card__body">
-                  <div class="arzive-card__meta">
-                    <span class="arzive-swatch" style="background:#1a2e26"></span>
-                    <span>Forest green</span>
-                  </div>
-                  <h2 class="arzive-card__title"><a href="#product" data-preview="product">Green Math Notebook</a></h2>
-                  <p class="arzive-card__text">Grid for Example and Practice Questions, with Formulas and Explanations beside.</p>
+                  <div class="arzive-card__meta"><span class="arzive-swatch" style="background:#0B2421"></span><span>Forest green</span></div>
+                  <h2 class="arzive-card__title">Green Math Notebook</h2>
+                  <p class="arzive-card__text">Grid for Example and Practice — forest-green cover.</p>
                   <p class="arzive-card__price">200,00 kr</p>
-                  <a class="arzive-btn arzive-btn--ink" href="#product" data-preview="product">Buy notebook</a>
+                  <a class="arzive-btn arzive-btn--forest" href="#">Shop now</a>
                 </div>
               </article>
             </div>
           </div>
         </section>
       </main>
-      <footer class="arzive-footer">
-        <div class="arzive-shell">
-          <p class="arzive-footer__brand">ARZIVE</p>
-          <p class="arzive-footer__copy">Notebooks for students who take their thinking seriously.</p>
-        </div>
-      </footer>
     </div>
 
-    <!-- PRODUCT -->
-    <div id="page-product" class="preview-page template-product">
-      <header class="arzive-header arzive-header--cream">
-        <div class="arzive-shell arzive-header__grid">
-          <nav class="arzive-header__left">
-            <a class="arzive-nav-link" href="#shop" data-preview="shop">Shop</a>
-            <a class="arzive-nav-link" href="http://127.0.0.1:43123/study">
-              <span class="arzive-nav-link__full">Study with Arzive</span>
-              <span class="arzive-nav-link__short">Study</span>
-            </a>
-          </nav>
-          <a class="arzive-wordmark" href="#home" data-preview="home">ARZIVE</a>
-          <div class="arzive-header__right">
-            <a class="arzive-nav-link" href="http://127.0.0.1:43123/account">Account</a>
-            <a class="arzive-bag" href="#" aria-label="Cart">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M7 8.5h10l-.85 11.2a1 1 0 0 1-1 .9H8.85a1 1 0 0 1-1-.9L7 8.5Z" stroke="currentColor" stroke-width="1.25" stroke-linejoin="round"/><path d="M9.2 8.5V7.4a2.8 2.8 0 0 1 5.6 0v1.1" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/></svg>
-            </a>
-          </div>
-        </div>
-      </header>
+    <div id="cart" class="preview-page">
+      <div class="arzive-announce"><a href="#">Free shipping over $75 · Shop all →</a></div>
+      <header class="arzive-header"><div class="arzive-shell arzive-header__grid"><nav class="arzive-header__left"><a class="arzive-nav-link" href="#">Shop</a></nav><a class="arzive-wordmark" href="#">ARZIVE</a><div class="arzive-header__right"><a class="arzive-nav-link" href="#">Log in</a></div></div></header>
       <main class="arzive-main">
-        <section class="arzive-product">
-          <div class="arzive-shell arzive-product__grid">
-            <div class="arzive-product__visual">
-              <figure class="arzive-product__hero">
-                <img class="arzive-product__img" src="../theme/assets/notebook-green.jpg" alt="Green Math Notebook" />
-              </figure>
+        <section class="arzive-cart-page">
+          <div class="arzive-shell">
+            <h1>My cart</h1>
+            <p class="arzive-cart-cheer">You’re ready to level up! We’re cheering you on.</p>
+            <p class="arzive-cart-ship">You are away from free shipping. + Free gift on every order.</p>
+            <div class="arzive-cart-empty">
+              <p>Your cart is empty. Add some beautiful products from our collections.</p>
+              <a class="arzive-btn arzive-btn--forest" href="#">Shop now</a>
             </div>
-            <div class="arzive-product__info">
-              <p class="arzive-kicker">Forest green · Mathematical clarity</p>
-              <h1 class="arzive-product__title">Green Math Notebook</h1>
-              <p class="arzive-product__price">200,00 kr</p>
-              <div class="arzive-product__desc">
-                <p>
-                  A dedicated place for your math practice. Keep calculations, worked
-                  examples and study notes together with Arzive’s custom Math layout.
-                </p>
-                <p>A4 format · 40 sheets / 80 pages · one introductory how-to page.</p>
+            <div class="arzive-upsell">
+              <p class="arzive-upsell__title">You may also like</p>
+              <div class="arzive-upsell__grid">
+                <a class="arzive-upsell__card" href="#"><img src="../theme/assets/notebook-cream.jpg" alt="" /><div><h3>The Cornell notebook</h3><p>Cream</p><span class="arzive-btn arzive-btn--cream">Shop now</span></div></a>
+                <a class="arzive-upsell__card" href="#"><img src="../theme/assets/notebook-green.jpg" alt="" /><div><h3>The Math study system</h3><p>Forest green</p><span class="arzive-btn arzive-btn--cream">Shop now</span></div></a>
               </div>
-              <button type="button" class="arzive-btn arzive-btn--ink">Add to cart</button>
-              <p class="arzive-product__study">
-                After checkout, scan pages in
-                <a href="http://127.0.0.1:43123/study">Study with Arzive</a>.
-              </p>
             </div>
           </div>
         </section>
       </main>
-      <footer class="arzive-footer">
-        <div class="arzive-shell">
-          <p class="arzive-footer__brand">ARZIVE</p>
-          <p class="arzive-footer__copy">Notebooks for students who take their thinking seriously.</p>
-        </div>
-      </footer>
+    </div>
+
+    <div id="story" class="preview-page template-page">
+      <div class="arzive-announce"><a href="#">Your dreams start with good note-taking. Shop now →</a></div>
+      <header class="arzive-header"><div class="arzive-shell arzive-header__grid"><nav class="arzive-header__left"><a class="arzive-nav-link" href="#">Shop</a><a class="arzive-nav-link" href="#">Our story</a></nav><a class="arzive-wordmark" href="#">ARZIVE</a><div class="arzive-header__right"><a class="arzive-nav-link" href="#">Account</a></div></div></header>
+      <main class="arzive-main">
+        <section class="arzive-philosophy arzive-philosophy--forest">
+          <div class="arzive-philosophy__frame">
+            <p class="arzive-philosophy__label">Arzive's philosophy</p>
+            <h2 class="arzive-philosophy__title">We believe every student deserves the tools to succeed.</h2>
+            <p style="margin:1.25rem auto 0;max-width:36rem;font-weight:300;line-height:1.7;opacity:0.8">Arzive creates thoughtfully designed notebooks that don't just hold your notes — they teach you how to study.</p>
+            <p class="arzive-philosophy__tag">The only notebook that teaches you how to study.</p>
+          </div>
+        </section>
+        <section class="arzive-quote">
+          <p class="arzive-quote__mark">ARZIVE</p>
+          <p class="arzive-quote__text">The palest ink is better than the strongest memory.</p>
+          <p class="arzive-philosophy__tag" style="color:rgba(245,245,240,0.55)">— Chinese proverb</p>
+        </section>
+      </main>
     </div>
 
     <script src="../theme/assets/arzive.js"></script>
     <script>
-      function showPage(name) {
-        document.querySelectorAll(".preview-page").forEach((el) => {
-          el.classList.toggle("is-active", el.id === "page-" + name);
-        });
-        document.body.className =
-          "arzive-body " +
-          (name === "home" ? "template-index" : name === "shop" ? "template-collection" : "template-product");
+      function go(name) {
+        document.querySelectorAll(".preview-page").forEach((el) => el.classList.toggle("is-on", el.id === name));
+        window.scrollTo(0, 0);
       }
-      document.querySelectorAll("[data-preview]").forEach((el) => {
-        el.addEventListener("click", (e) => {
-          e.preventDefault();
-          showPage(el.getAttribute("data-preview"));
-        });
-      });
-      if (location.hash === "#shop") showPage("shop");
-      if (location.hash === "#product") showPage("product");
+      document.querySelectorAll("[data-go]").forEach((btn) =>
+        btn.addEventListener("click", () => go(btn.getAttribute("data-go")))
+      );
     </script>
   </body>
 </html>

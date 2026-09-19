@@ -3,7 +3,6 @@
   if product.handle contains 'math'
     assign is_math = true
   endif
-
   if is_math
     assign cover_file = 'notebook-green.jpg'
     assign kicker = 'Forest green · Mathematical clarity'
@@ -15,34 +14,14 @@
 
 <section class="arzive-product">
   <div class="arzive-shell arzive-product__grid">
-    <div class="arzive-product__visual">
-      <figure class="arzive-product__hero">
-        <img
-          class="arzive-product__img"
-          src="{{ cover_file | asset_url }}"
-          alt="{{ product.title | escape }}"
-          width="1400"
-          height="1750"
-        >
-      </figure>
-      {% comment %} Secondary media only if Admin uploaded distinct photos — never glued side-by-side {% endcomment %}
-      {% if product.media.size > 1 %}
-        <ul class="arzive-product__thumbs">
-          {% for media in product.media limit: 4 %}
-            <li>
-              {{ media | image_url: width: 600 | image_tag: loading: 'lazy', alt: media.alt | default: product.title }}
-            </li>
-          {% endfor %}
-        </ul>
-      {% endif %}
-    </div>
-
+    <figure class="arzive-product__hero">
+      <img src="{{ cover_file | asset_url }}" alt="{{ product.title | escape }}" width="1400" height="1750">
+    </figure>
     <div class="arzive-product__info">
       <p class="arzive-kicker">{{ kicker }}</p>
       <h1 class="arzive-product__title">{{ product.title }}</h1>
       <p class="arzive-product__price">{{ product.selected_or_first_available_variant.price | money }}</p>
       <div class="arzive-product__desc rte">{{ product.description }}</div>
-
       {% form 'product', product %}
         <input type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}">
         {% unless product.has_only_default_variant %}
@@ -57,11 +36,10 @@
             </label>
           {% endfor %}
         {% endunless %}
-        <button type="submit" class="arzive-btn arzive-btn--ink" name="add"{% unless product.selected_or_first_available_variant.available %} disabled{% endunless %}>
+        <button type="submit" class="arzive-btn arzive-btn--forest" name="add"{% unless product.selected_or_first_available_variant.available %} disabled{% endunless %}>
           {% if product.selected_or_first_available_variant.available %}Add to cart{% else %}Sold out{% endif %}
         </button>
       {% endform %}
-
       <p class="arzive-product__study">
         After checkout, scan pages in
         <a href="{{ settings.study_app_url | default: 'https://study.arzive.com/study' }}" rel="noopener">Study with Arzive</a>.

@@ -1,0 +1,38 @@
+<section class="arzive-choose">
+  <div class="arzive-shell arzive-choose__grid">
+    <div class="arzive-choose__photos">
+      <img src="{{ 'choose-arzive-stack.jpg' | asset_url }}" alt="ARZIVE notebook stack" width="1000" height="750" loading="lazy">
+      <img src="{{ 'notebook-green.jpg' | asset_url }}" alt="Green Math Notebook" width="1000" height="1250" loading="lazy">
+    </div>
+    <div>
+      <h2 class="arzive-choose__title">{{ section.settings.heading | default: 'Choose Arzive' }}</h2>
+      <div class="arzive-choose__block">
+        <h3>Research-driven, user-approved</h3>
+        <p>{{ section.settings.block_1 | default: 'Built around proven study systems — Cornell structure and a dedicated Math layout — so every page earns its place.' }}</p>
+      </div>
+      <div class="arzive-choose__block">
+        <h3>Focus on transfer, not just paper</h3>
+        <p>{{ section.settings.block_2 | default: 'Write in the notebook, then scan into Study with Arzive to generate practice exams and flashcards under your account.' }}</p>
+      </div>
+      <div class="arzive-choose__block">
+        <h3>Personal growth with the world in mind</h3>
+        <p>{{ section.settings.block_3 | default: 'Recycled materials, considered packaging, and tools meant to last a full semester — not a week.' }}</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Choose Arzive",
+  "tag": "section",
+  "class": "section-choose",
+  "settings": [
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Choose Arzive" },
+    { "type": "textarea", "id": "block_1", "label": "Block 1" },
+    { "type": "textarea", "id": "block_2", "label": "Block 2" },
+    { "type": "textarea", "id": "block_3", "label": "Block 3" }
+  ],
+  "presets": [{ "name": "ARZIVE choose" }]
+}
+{% endschema %}
