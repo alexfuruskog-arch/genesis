@@ -13,6 +13,8 @@ function shopUrl(path = "") {
 
 export function SiteNav() {
   const pathname = usePathname();
+  // Forest header only on home & story. Study / Pricing / Shop / Account stay cream
+  // (pathname === "/pricing" must never match forest).
   const onForest = pathname === "/" || pathname === "/story";
 
   return (

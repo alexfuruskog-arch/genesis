@@ -12,7 +12,7 @@ const plans = [
     cta: "Create free account",
     href: "/account",
     points: [
-      "3 Study sessions per week (practice exam or flashcards)",
+      "3 chats per week (practice exam or flashcards)",
       "Up to 5 scans saved under your account",
       "Cream Cornell & Green Math tagging",
       "Local library always · cloud when Supabase is connected",
@@ -31,7 +31,7 @@ const plans = [
     points: [
       "Unlimited practice exams & flashcards",
       "Unlimited scans to your private library",
-      "Active-recall sessions without weekly caps",
+      "Active-recall chats without weekly caps",
       "Priority when exam week spikes traffic",
     ],
   },
@@ -66,7 +66,7 @@ const plans = [
       "Everything in Annual features, month to month",
       "$25 notebook credit each semester (Cornell or Math)",
       "Concierge first-scan setup",
-      "Unlimited sessions — no soft ceilings",
+      "Unlimited chats — no soft ceilings",
     ],
   },
 ] as const;
@@ -159,7 +159,7 @@ export default function PricingPage() {
               Free means free — and finite
             </h3>
             <p className="mt-3 text-sm font-light leading-7 text-forest/68">
-              Three Study sessions a week. Five scans. When you hit the gate,
+              Three chats a week. Five scans. When you hit the gate,
               Study blocks the action and offers Standard — no dark patterns,
               no infinite soft trial.
             </p>
@@ -177,7 +177,7 @@ export default function PricingPage() {
 
       <section className="bg-forest px-5 py-16 text-center text-cream">
         <p className="mx-auto max-w-xl font-display text-2xl leading-snug sm:text-3xl">
-          Start free. Upgrade when the third session isn&apos;t enough.
+          Start free. Upgrade when the third chat isn&apos;t enough.
         </p>
         <div className="mt-9 flex flex-wrap justify-center gap-3">
           <Link href="/account" className="btn-solid">

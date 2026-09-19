@@ -195,3 +195,49 @@ h3,
 .study-input:focus {
   border-bottom-color: var(--forest);
 }
+
+.plan-meter {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.plan-meter-row {
+  display: grid;
+  grid-template-columns: 4.5rem 1fr auto;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.plan-meter-track {
+  height: 2px;
+  background: rgba(245, 245, 240, 0.18);
+  overflow: hidden;
+}
+
+.plan-meter-fill {
+  height: 100%;
+  background: var(--cream);
+  transform-origin: left center;
+  transition: width 0.55s ease;
+}
+
+.how-step {
+  position: relative;
+}
+
+.how-step + .how-step::before {
+  content: "";
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .how-step + .how-step::before {
+    display: block;
+    position: absolute;
+    left: -1.15rem;
+    top: 0.55rem;
+    width: 1.5rem;
+    height: 1px;
+    background: rgba(11, 36, 33, 0.18);
+  }
+}

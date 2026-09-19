@@ -75,7 +75,7 @@ function AccountInner() {
     setPlanState(next);
     setMessage(
       next === "free"
-        ? "Back on Free — 3 Study sessions per week, 5 scans."
+        ? "Back on Free — 3 chats per week, 5 scans."
         : `${PLAN_LABELS[next]} active on this device.`,
     );
   }

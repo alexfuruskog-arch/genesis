@@ -28,6 +28,24 @@ import {
 
 type NotebookModel = "math" | "cornell";
 
+const HOW_STEPS = [
+  {
+    n: "01",
+    title: "Capture",
+    copy: "Photograph a Cream Cornell or Green Math page into your private library.",
+  },
+  {
+    n: "02",
+    title: "Practice",
+    copy: "Generate a practice exam or flashcards from the notes you actually wrote.",
+  },
+  {
+    n: "03",
+    title: "Learn",
+    copy: "Force active recall — then return to the page with sharper questions.",
+  },
+] as const;
+
 export default function StudyPage() {
   const { user, ready, authHeaders } = useAuth();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -55,6 +73,8 @@ export default function StudyPage() {
   const signedIn = Boolean(user?.email);
   const sessionGate = canStartStudySession(plan);
   const scanGate = canScan(plan);
+  const chatPct = Math.min(100, (sessionsUsed / FREE_SESSION_CAP) * 100);
+  const scanPct = Math.min(100, (scansUsed / FREE_SCAN_CAP) * 100);
 
   useEffect(() => {
     setPlanState(getPlan());
@@ -143,7 +163,7 @@ export default function StudyPage() {
     const gate = canStartStudySession(plan);
     if (!gate.ok) {
       setGenerateError(
-        `Free plan: ${FREE_SESSION_CAP} Study sessions per week. You’ve used ${gate.used}. Upgrade to Standard — $12/month — for unlimited practice.`,
+        `Free plan: ${FREE_SESSION_CAP} chats per week. You’ve used ${gate.used}. Upgrade to Standard — $12/month — for unlimited practice.`,
       );
       return;
     }
@@ -179,26 +199,75 @@ export default function StudyPage() {
             Capture Cream Cornell or Green Math pages, then force active recall with
             practice exams and flashcards — the fast study loop, ARZIVE-designed.
           </p>
-          <div className="mt-8 flex flex-wrap items-center gap-4 text-[0.62rem] uppercase tracking-[0.16em] text-cream/55">
-            {signedIn ? (
-              <span>Signed in · {user?.email}</span>
+
+          <div className="mt-10 grid gap-8 border-t border-cream/15 pt-8 sm:grid-cols-[1fr_auto] sm:items-end">
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-[0.62rem] uppercase tracking-[0.16em] text-cream/55">
+              {signedIn ? (
+                <span>Signed in · {user?.email}</span>
+              ) : (
+                <Link href="/account" className="underline underline-offset-4 text-cream/80">
+                  Log in to save scans
+                </Link>
+              )}
+              {health ? (
+                <span>
+                  {cloudEnabled ? "Cloud library" : "Local library"} · {health.integrations.llm}
+                </span>
+              ) : null}
+            </div>
+
+            {plan === "free" ? (
+              <div className="plan-meter w-full max-w-xs sm:justify-self-end">
+                <p className="mb-1 text-[0.58rem] uppercase tracking-[0.2em] text-cream/45">
+                  Free · this week
+                </p>
+                <div className="plan-meter-row">
+                  <span className="text-[0.62rem] uppercase tracking-[0.14em] text-cream/65">
+                    Chats
+                  </span>
+                  <div className="plan-meter-track" aria-hidden>
+                    <div className="plan-meter-fill" style={{ width: `${chatPct}%` }} />
+                  </div>
+                  <span className="text-[0.62rem] tabular-nums tracking-[0.08em] text-cream/70">
+                    {sessionsUsed}/{FREE_SESSION_CAP}
+                  </span>
+                </div>
+                <div className="plan-meter-row">
+                  <span className="text-[0.62rem] uppercase tracking-[0.14em] text-cream/65">
+                    Scans
+                  </span>
+                  <div className="plan-meter-track" aria-hidden>
+                    <div className="plan-meter-fill" style={{ width: `${scanPct}%` }} />
+                  </div>
+                  <span className="text-[0.62rem] tabular-nums tracking-[0.08em] text-cream/70">
+                    {scansUsed}/{FREE_SCAN_CAP}
+                  </span>
+                </div>
+              </div>
             ) : (
-              <Link href="/account" className="underline underline-offset-4 text-cream/80">
-                Log in to save scans
-              </Link>
+              <p className="text-[0.62rem] uppercase tracking-[0.16em] text-cream/55">
+                Plan · {plan} · unlimited
+              </p>
             )}
-            <span>
-              Plan · {plan}
-              {plan === "free"
-                ? ` · ${sessionsUsed}/${FREE_SESSION_CAP} sessions this week · ${scansUsed}/${FREE_SCAN_CAP} scans`
-                : " · unlimited"}
-            </span>
-            {health ? (
-              <span>
-                {cloudEnabled ? "Cloud library" : "Local library"} · {health.integrations.llm}
-              </span>
-            ) : null}
           </div>
+        </div>
+      </section>
+
+      <section className="border-b border-forest/10 bg-cream">
+        <div className="mx-auto grid max-w-6xl gap-8 px-5 py-10 sm:px-8 md:grid-cols-3 md:gap-10 md:py-12 lg:px-10">
+          {HOW_STEPS.map((step) => (
+            <div key={step.n} className="how-step animate-soft-in">
+              <p className="text-[0.58rem] uppercase tracking-[0.22em] text-forest/40">
+                {step.n}
+              </p>
+              <h2 className="mt-2 font-display text-2xl tracking-[0.02em] text-forest">
+                {step.title}
+              </h2>
+              <p className="mt-2 max-w-xs text-sm font-light leading-6 text-forest/65">
+                {step.copy}
+              </p>
+            </div>
+          ))}
         </div>
       </section>
 
@@ -221,7 +290,7 @@ export default function StudyPage() {
               Free plan · weekly gate
             </p>
             <h2 className="mt-3 font-display text-2xl tracking-[0.02em] text-forest sm:text-3xl">
-              You&apos;ve used your {FREE_SESSION_CAP} Study sessions this week.
+              You&apos;ve used your {FREE_SESSION_CAP} chats this week.
             </h2>
             <p className="mt-3 max-w-xl text-sm font-light leading-7 text-forest/70">
               Free is honest about its limits. Standard unlocks unlimited practice
@@ -251,7 +320,7 @@ export default function StudyPage() {
             </h2>
             <p className="mt-3 max-w-xl text-sm font-light leading-7 text-forest/70">
               You can still practice from notes already in your library (
-              {sessionGate.remaining} session
+              {sessionGate.remaining} chat
               {sessionGate.remaining === 1 ? "" : "s"} left this week). Upgrade for
               unlimited captures.
             </p>
@@ -278,9 +347,9 @@ export default function StudyPage() {
         <div className="grid gap-8 lg:grid-cols-2 lg:gap-10">
           <div className="space-y-8">
             <section className="study-panel">
-              <p className="study-label">01 · Scan</p>
+              <p className="study-label">01 · Capture</p>
               <h2 className="mt-3 font-display text-2xl tracking-[0.03em] text-forest">
-                Capture a page
+                Photograph a page
               </h2>
               <p className="mt-2 text-sm font-light leading-6 text-forest/70">
                 Tag the notebook model, then open the camera or upload a photo / PDF.
@@ -398,14 +467,18 @@ export default function StudyPage() {
               </div>
 
               {listLoading ? (
-                <p className="mt-8 text-sm font-light text-forest/60">Loading…</p>
+                <p className="mt-10 text-center text-sm font-light tracking-wide text-forest/50">
+                  Opening library…
+                </p>
               ) : null}
 
               {!listLoading && documents.length === 0 ? (
-                <div className="mt-8 bg-cream px-4 py-10 text-center">
-                  <p className="font-display text-xl text-forest">No scans yet</p>
-                  <p className="mt-2 text-sm font-light text-forest/60">
-                    Capture a Cornell or Math page to begin.
+                <div className="mt-8 border border-dashed border-forest/15 px-5 py-12 text-center">
+                  <p className="font-display text-[1.35rem] tracking-[0.02em] text-forest">
+                    Empty shelf
+                  </p>
+                  <p className="mx-auto mt-2 max-w-[16rem] text-sm font-light leading-6 text-forest/55">
+                    Capture one Cornell or Math page — practice starts from what you wrote.
                   </p>
                 </div>
               ) : null}
@@ -508,30 +581,31 @@ export default function StudyPage() {
               </button>
               {plan === "free" && sessionGate.ok ? (
                 <p className="mt-3 text-xs font-light text-forest/55">
-                  {sessionGate.remaining} of {FREE_SESSION_CAP} Free sessions left this
-                  week.
+                  {sessionGate.remaining} of {FREE_SESSION_CAP} Free chats left this week.
                 </p>
               ) : null}
               {generateError ? <p className="mt-3 text-sm text-red-800">{generateError}</p> : null}
             </section>
 
             <section className="study-panel min-h-[20rem]">
-              <p className="study-label">Results</p>
+              <p className="study-label">04 · Learn</p>
               <h2 className="mt-3 font-display text-2xl tracking-[0.03em] text-forest">
-                Your session
+                Your chat
               </h2>
 
               {generateBusy ? (
-                <div className="mt-8 bg-cream px-4 py-12 text-center text-sm font-light text-forest/65">
+                <div className="mt-8 border border-dashed border-forest/12 px-4 py-14 text-center text-sm font-light text-forest/55">
                   Retrieving your notes…
                 </div>
               ) : null}
 
               {!generateBusy && !result && !generateError ? (
-                <div className="mt-8 bg-cream px-4 py-12 text-center">
-                  <p className="font-display text-xl text-forest">Nothing generated yet</p>
-                  <p className="mt-2 text-sm font-light text-forest/60">
-                    Pick scans and generate a practice exam or flashcards.
+                <div className="mt-8 border border-dashed border-forest/15 px-5 py-14 text-center">
+                  <p className="font-display text-[1.35rem] tracking-[0.02em] text-forest">
+                    Waiting on a chat
+                  </p>
+                  <p className="mx-auto mt-2 max-w-[17rem] text-sm font-light leading-6 text-forest/55">
+                    Pick scans, then generate a practice exam or a deck of flashcards.
                   </p>
                 </div>
               ) : null}
