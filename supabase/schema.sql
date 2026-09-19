@@ -133,6 +133,19 @@ create table if not exists public.shopify_customers (
 create index if not exists shopify_customers_shop_idx
   on public.shopify_customers (shop_domain, shopify_customer_id);
 
+-- Shop installs (OAuth / Admin token). Tokens are server-only; no user policies.
+create table if not exists public.shopify_installs (
+  id uuid primary key default gen_random_uuid(),
+  shop_domain text not null unique,
+  access_token text not null,
+  scope text,
+  connection_method text not null default 'oauth',
+  shop_name text,
+  is_active boolean not null default true,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 -- ---------------------------------------------------------------------------
 -- Row Level Security
 -- ---------------------------------------------------------------------------
@@ -141,6 +154,7 @@ alter table public.documents enable row level security;
 alter table public.document_chunks enable row level security;
 alter table public.quiz_sessions enable row level security;
 alter table public.shopify_customers enable row level security;
+alter table public.shopify_installs enable row level security;
 
 drop policy if exists "profiles_select_own" on public.profiles;
 create policy "profiles_select_own"
@@ -181,6 +195,8 @@ create policy "shopify_customers_own"
   on public.shopify_customers for all
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
+
+-- shopify_installs: no anon/authenticated policies — only service_role (RLS bypass).
 
 -- ---------------------------------------------------------------------------
 -- Storage bucket for uploaded study files

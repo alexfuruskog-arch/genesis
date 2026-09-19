@@ -16,6 +16,7 @@ out/
 .env
 .env.local
 backend/.local_uploads/
+backend/.local_shopify_install.json
 
 # OS / editor
 .DS_Store

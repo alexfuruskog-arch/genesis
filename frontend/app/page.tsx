@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 import { DocumentUpload } from "@/components/DocumentUpload";
 import { QuizBoard } from "@/components/QuizBoard";
+import { ShopifyConnect } from "@/components/ShopifyConnect";
 import {
   fetchHealth,
   fetchShopifyStatus,
@@ -145,24 +146,28 @@ export default function Home() {
             </section>
           </div>
 
-          <section className="rounded-3xl border border-ink/8 bg-white p-5 shadow-sm sm:p-6">
-            <QuizBoard
-              quiz={quiz}
-              loading={quizLoading}
-              error={quizError}
-              canGenerate={Boolean(document) && !backendError}
-              onGenerate={onGenerate}
-            />
-          </section>
+          <div className="space-y-6">
+            <section className="rounded-3xl border border-ink/8 bg-white p-5 shadow-sm sm:p-6">
+              <QuizBoard
+                quiz={quiz}
+                loading={quizLoading}
+                error={quizError}
+                canGenerate={Boolean(document) && !backendError}
+                onGenerate={onGenerate}
+              />
+            </section>
+            <ShopifyConnect disabled={Boolean(backendError)} onStatus={setShopify} />
+          </div>
         </div>
       </main>
 
       <footer className="border-t border-ink/8 bg-white/60">
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-2 px-4 py-5 text-xs text-ink/60 sm:flex-row sm:items-center sm:justify-between sm:px-6">
           <p>
-            Commerce pekar mot Shopify ({shopify?.mode ?? "okänd"}
-            {shopify?.shop_domain ? ` · ${shopify.shop_domain}` : ""}).
-            Koppla kund via <code>/shopify/customers/link</code>.
+            Commerce via Shopify
+            {shopify?.connected
+              ? ` · kopplad (${shopify.shop_domain})`
+              : " · inte kopplad ännu"}.
           </p>
           <p>
             Frontend-nycklar: Supabase{" "}
@@ -207,8 +212,10 @@ function StatusPills({
       ok: Boolean(health),
     },
     {
-      label: `Shopify ${shopify?.mode ?? health?.integrations.shopify ?? "…"}`,
-      ok: Boolean(health),
+      label: shopify?.connected
+        ? `Shopify ${shopify.shop_domain ?? "live"}`
+        : "Shopify",
+      ok: Boolean(shopify?.connected),
     },
   ];
   return (

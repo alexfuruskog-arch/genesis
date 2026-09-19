@@ -35,10 +35,11 @@ class Settings(BaseSettings):
         "read_customers,write_customers,read_products,write_draft_orders"
     )
     shopify_oauth_redirect_uri: str = (
-        "http://127.0.0.1:48721/shopify/oauth/callback"
+        "http://127.0.0.1:43123/shopify/callback"
     )
 
     local_upload_dir: str = ".local_uploads"
+    local_shopify_install_path: str = ".local_shopify_install.json"
     max_upload_bytes: int = 10 * 1024 * 1024
     embedding_dimensions: int = 1536
 
@@ -52,6 +53,12 @@ class Settings(BaseSettings):
     @property
     def supabase_key(self) -> str | None:
         return self.supabase_service_role_key or self.supabase_anon_key
+
+    @property
+    def oauth_redirect_uri(self) -> str:
+        return (self.shopify_oauth_redirect_uri or "").strip() or (
+            self.frontend_origin.rstrip("/") + "/shopify/callback"
+        )
 
 
 @lru_cache

@@ -83,22 +83,28 @@ Then set the backend Supabase env vars (service role on the API, anon key on bot
 | `GET` | `/hello` | Short hello payload |
 | `POST` | `/upload-document` | Multipart file → storage + `documents` + chunking |
 | `POST` | `/generate-quiz` | `{ document_id, question_count? }` → retrieval + LLM JSON questions |
-| `GET` | `/shopify/status` | Config + linked customer |
-| `GET` | `/shopify/oauth/install` | Builds Admin OAuth install URL |
-| `GET` | `/shopify/oauth/callback` | Exchanges `code` for an access token |
+| `GET` | `/shopify/status` | Connected shop + linked customer |
+| `POST` | `/shopify/connect` | OAuth start **or** Admin API token install |
+| `POST` | `/shopify/disconnect` | Clears the saved shop install |
+| `GET` | `/shopify/oauth/install` | Same as connect without a token (OAuth URL) |
+| `GET` | `/shopify/oauth/callback` | Shopify redirect → save token → frontend |
+| `POST` | `/shopify/oauth/complete` | Frontend callback exchanges `code` |
 | `POST` | `/shopify/customers/link` | App user ↔ Shopify customer |
-| `GET` | `/shopify/products` | Admin product list (or mock) |
-| `POST` | `/shopify/checkout` | Draft order / checkout placeholder |
-| `POST` | `/shopify/webhooks/{topic}` | HMAC-verified webhook stub (`customers/*`, `orders/paid`, …) |
+| `GET` | `/shopify/products` | Live Admin product list when connected |
+| `POST` | `/shopify/checkout` | Draft order + `invoice_url` |
+| `POST` | `/shopify/webhooks/{topic}` | HMAC webhook stub (`customers/*`, `orders/paid`, uninstall) |
 
 ## Shopify notes
 
-Point a custom/public app at this backend:
+Use the **Koppla Shopify** panel on the home page.
 
-- OAuth: `GET /shopify/oauth/install?shop=store.myshopify.com` then complete `/shopify/oauth/callback`. Persist the token as `SHOPIFY_ADMIN_API_TOKEN`.
-- Customer link: `POST /shopify/customers/link` upserts `shopify_customers` (`shopify_customer_id`, `shop_domain`).
-- Checkout: `POST /shopify/checkout` creates a Shopify **draft order** when an Admin token exists and returns `invoice_url`.
-- Webhooks: subscribe Shopify to `https://<api-host>/shopify/webhooks/customers/create` (and update / `orders/paid` / `app/uninstalled`). Verification uses `SHOPIFY_WEBHOOK_SECRET`. Handlers are real routes with placeholder sync/entitlement steps — extend, don’t replace.
+**Custom app (fastest locally)**  
+In Shopify Admin → Settings → Apps and sales channels → Develop apps: create an app, enable Admin API scopes `read_customers`, `write_customers`, `read_products`, `write_draft_orders`, install it, copy the Admin API access token. Paste shop + token in Plugga.
+
+**OAuth app**  
+Set `SHOPIFY_CLIENT_ID` and `SHOPIFY_CLIENT_SECRET`. Redirect URL in the Shopify app must match `SHOPIFY_OAUTH_REDIRECT_URI` (default `http://127.0.0.1:43123/shopify/callback`). Click **Installera i Shopify**. The token is stored server-side (memory + `.local_shopify_install.json`, and `shopify_installs` when Supabase is on). It is never sent back to the browser.
+
+After connect you can link a customer email and create a draft-order checkout. Webhooks: `https://<api-host>/shopify/webhooks/customers/create` (and update / `orders/paid` / `app/uninstalled`). `app/uninstalled` clears the saved install.
 
 ## Render notes
 

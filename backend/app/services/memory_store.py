@@ -20,6 +20,8 @@ class MemoryStore:
         self.chunks: dict[str, dict[str, Any]] = {}
         self.quiz_sessions: dict[str, dict[str, Any]] = {}
         self.shopify_customers: dict[str, dict[str, Any]] = {}
+        self.shopify_installs: dict[str, dict[str, Any]] = {}
+        self.oauth_states: dict[str, dict[str, Any]] = {}
         self.webhooks: list[dict[str, Any]] = []
 
     def create_document(self, row: dict[str, Any]) -> dict[str, Any]:
@@ -90,6 +92,33 @@ class MemoryStore:
 
     def get_shopify_customer(self, user_id: str) -> dict[str, Any] | None:
         return self.shopify_customers.get(user_id)
+
+    def upsert_shopify_install(self, row: dict[str, Any]) -> dict[str, Any]:
+        with self._lock:
+            for existing in self.shopify_installs.values():
+                existing["is_active"] = existing.get("shop_domain") == row["shop_domain"]
+            self.shopify_installs[row["shop_domain"]] = row
+            return row
+
+    def get_active_shopify_install(self) -> dict[str, Any] | None:
+        active = [row for row in self.shopify_installs.values() if row.get("is_active")]
+        if active:
+            return active[0]
+        if len(self.shopify_installs) == 1:
+            return next(iter(self.shopify_installs.values()))
+        return None
+
+    def clear_shopify_installs(self) -> None:
+        with self._lock:
+            self.shopify_installs.clear()
+
+    def put_oauth_state(self, state: str, payload: dict[str, Any]) -> None:
+        with self._lock:
+            self.oauth_states[state] = payload
+
+    def pop_oauth_state(self, state: str) -> dict[str, Any] | None:
+        with self._lock:
+            return self.oauth_states.pop(state, None)
 
     def record_webhook(self, event: dict[str, Any]) -> dict[str, Any]:
         with self._lock:

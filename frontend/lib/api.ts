@@ -46,10 +46,45 @@ export type QuizResponse = {
 
 export type ShopifyStatus = {
   configured: boolean;
+  connected: boolean;
   mode: string;
+  connection_method: string | null;
   shop_domain: string | null;
+  shop_name: string | null;
   has_oauth_app: boolean;
   has_admin_token: boolean;
+  has_webhook_secret?: boolean;
+  oauth_redirect_uri: string | null;
+  oauth_scopes: string | null;
+  linked_customer: Record<string, unknown> | null;
+};
+
+export type ShopifyProduct = {
+  id: string;
+  title: string;
+  status: string;
+  variants: { id: string; title: string; price: string }[];
+};
+
+export type ShopifyConnectResult = {
+  connected: boolean;
+  method: string;
+  authorize_url?: string;
+  install?: {
+    shop_domain: string;
+    shop_name: string | null;
+    connection_method: string;
+  };
+};
+
+export type ShopifyCheckout = {
+  checkout: {
+    id: string | number | null;
+    invoice_url: string | null;
+    status: string;
+    source: string;
+    detail?: string;
+  };
   linked_customer: Record<string, unknown> | null;
 };
 
@@ -107,6 +142,87 @@ export async function generateQuiz(
 
 export async function fetchShopifyStatus(): Promise<ShopifyStatus> {
   const response = await fetch(`${apiUrl}/shopify/status`, { cache: "no-store" });
+  if (!response.ok) {
+    throw new Error(await parseError(response));
+  }
+  return response.json();
+}
+
+export async function connectShopifyShop(input: {
+  shop: string;
+  admin_api_token?: string;
+}): Promise<ShopifyConnectResult> {
+  const response = await fetch(`${apiUrl}/shopify/connect`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
+  if (!response.ok) {
+    throw new Error(await parseError(response));
+  }
+  return response.json();
+}
+
+export async function disconnectShopifyShop(): Promise<void> {
+  const response = await fetch(`${apiUrl}/shopify/disconnect`, { method: "POST" });
+  if (!response.ok) {
+    throw new Error(await parseError(response));
+  }
+}
+
+export async function completeShopifyOAuth(
+  input: {
+    shop: string;
+    code: string;
+    state?: string;
+    hmac?: string;
+  },
+  search = "",
+): Promise<ShopifyConnectResult> {
+  const qs = search.startsWith("?") ? search : search ? `?${search}` : "";
+  const response = await fetch(`${apiUrl}/shopify/oauth/complete${qs}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
+  if (!response.ok) {
+    throw new Error(await parseError(response));
+  }
+  return response.json();
+}
+
+export async function fetchShopifyProducts(): Promise<ShopifyProduct[]> {
+  const response = await fetch(`${apiUrl}/shopify/products`, { cache: "no-store" });
+  if (!response.ok) {
+    throw new Error(await parseError(response));
+  }
+  const body = await response.json();
+  return body.products ?? [];
+}
+
+export async function linkShopifyCustomer(input: {
+  email: string;
+  display_name?: string;
+}): Promise<void> {
+  const response = await fetch(`${apiUrl}/shopify/customers/link`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
+  if (!response.ok) {
+    throw new Error(await parseError(response));
+  }
+}
+
+export async function createShopifyCheckout(
+  variantId: string,
+  quantity = 1,
+): Promise<ShopifyCheckout> {
+  const response = await fetch(`${apiUrl}/shopify/checkout`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ variant_id: variantId, quantity }),
+  });
   if (!response.ok) {
     throw new Error(await parseError(response));
   }
