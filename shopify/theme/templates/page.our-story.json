@@ -4,31 +4,68 @@
       "type": "philosophy",
       "settings": {
         "forest": true,
-        "framed": true,
+        "framed": false,
+        "story_layout": true,
         "label": "Arzive's philosophy",
-        "title": "We believe every student deserves the tools to succeed.",
-        "body": "Arzive creates thoughtfully designed notebooks that don't just hold your notes — they teach you how to study, learn smarter, and unlock your full potential.",
+        "title": "We believe every student deserves the tools to succeed. Arzive creates thoughtfully designed notebooks that don't just hold your notes, they teach you how to study, learn smarter, and unlock your full potential.",
+        "body": "",
         "tagline": "The only notebook that teaches you how to study."
       }
     },
     "interiors": {
       "type": "interiors-carousel",
       "settings": {
-        "heading": "How everything started"
+        "heading": "How everything started",
+        "label_style": true
       }
     },
     "sustain": {
       "type": "sustainability",
-      "settings": {}
+      "settings": {
+        "heading": "Premium doesn't mean wasteful. We use natural, recycled, and compostable materials to protect our shared home.",
+        "compact": true
+      }
     },
     "choose": {
       "type": "choose-arzive",
-      "settings": {}
+      "settings": {
+        "heading": "Choose Arzive",
+        "block_1_label": "Research-driven, user-approved",
+        "block_1": "We've helped 100,000+ students transform the way they learn with systems built for real classrooms — Cream Cornell and Green Math.",
+        "block_2_label": "Positive transfer, risk-free",
+        "block_2": "Try ARZIVE risk-free with our 6-month money-back guarantee. If it doesn't change how you study, send it back.",
+        "block_3_label": "Personal growth with the world in mind",
+        "block_3": "5% of profits support education charities. Premium paper shouldn't cost the planet — or your focus."
+      }
     },
     "quote": {
       "type": "quote",
-      "settings": {}
+      "settings": {
+        "quote": "The palest ink is better than the strongest memory.",
+        "attribution": "— Chinese proverb"
+      }
+    },
+    "trust": {
+      "type": "trust-bar",
+      "settings": {
+        "variant": "story"
+      }
+    },
+    "newsletter": {
+      "type": "newsletter",
+      "settings": {
+        "heading": "A weekly boost of inspiration sent to your inbox.",
+        "text": "Study tips, notebook drops, and ways to turn handwritten pages into practice — straight from ARZIVE."
+      }
     }
   },
-  "order": ["philosophy", "interiors", "sustain", "choose", "quote"]
+  "order": [
+    "philosophy",
+    "interiors",
+    "sustain",
+    "choose",
+    "quote",
+    "trust",
+    "newsletter"
+  ]
 }

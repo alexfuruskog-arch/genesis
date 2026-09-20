@@ -1,29 +1,71 @@
-<section class="arzive-trust">
-  <div class="arzive-shell arzive-trust__row">
-    <div class="arzive-trust__item">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3l2.2 4.6L19 8.4l-3.5 3.4.8 4.8L12 14.3 7.7 16.6l.8-4.8L5 8.4l4.8-.8L12 3Z" stroke="currentColor" stroke-width="1.2"/></svg>
-      Trusted by students
+{% if section.settings.variant == 'story' %}
+  <section class="arzive-trust arzive-trust--story">
+    <div class="arzive-shell arzive-trust__row">
+      <div class="arzive-trust__item">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M3 7h13l5 5v5H3V7Z" stroke="currentColor" stroke-width="1.2"/>
+          <path d="M16 7v5h5" stroke="currentColor" stroke-width="1.2"/>
+          <circle cx="7.5" cy="18.5" r="1.5" stroke="currentColor" stroke-width="1.2"/>
+          <circle cx="17.5" cy="18.5" r="1.5" stroke="currentColor" stroke-width="1.2"/>
+        </svg>
+        Free shipping
+      </div>
+      <div class="arzive-trust__item">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M12 3 4.5 6.5v5.2c0 4.4 3.1 8.2 7.5 9.3 4.4-1.1 7.5-4.9 7.5-9.3V6.5L12 3Z" stroke="currentColor" stroke-width="1.2"/>
+          <path d="M9 12.2 11 14.2 15.2 10" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        100% secure checkout
+      </div>
+      <div class="arzive-trust__item">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="1.2"/>
+          <path d="M12 8v4l2.5 1.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+        </svg>
+        6 month money-back
+      </div>
     </div>
-    <div class="arzive-trust__item">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 7h14v12H5V7Zm3-3h8v3H8V4Z" stroke="currentColor" stroke-width="1.2"/></svg>
-      Math study system
+  </section>
+{% else %}
+  <section class="arzive-trust">
+    <div class="arzive-shell arzive-trust__row">
+      <div class="arzive-trust__item">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3l2.2 4.6L19 8.4l-3.5 3.4.8 4.8L12 14.3 7.7 16.6l.8-4.8L5 8.4l4.8-.8L12 3Z" stroke="currentColor" stroke-width="1.2"/></svg>
+        Trusted by students
+      </div>
+      <div class="arzive-trust__item">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 7h14v12H5V7Zm3-3h8v3H8V4Z" stroke="currentColor" stroke-width="1.2"/></svg>
+        Math study system
+      </div>
+      <div class="arzive-trust__item">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 12h16M12 4v16" stroke="currentColor" stroke-width="1.2"/></svg>
+        Cornell method
+      </div>
+      <div class="arzive-trust__item">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 17h16l-2-8H6l-2 8Zm4-8V6a4 4 0 0 1 8 0v3" stroke="currentColor" stroke-width="1.2"/></svg>
+        Ships nationwide
+      </div>
     </div>
-    <div class="arzive-trust__item">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 12h16M12 4v16" stroke="currentColor" stroke-width="1.2"/></svg>
-      Cornell method
-    </div>
-    <div class="arzive-trust__item">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 17h16l-2-8H6l-2 8Zm4-8V6a4 4 0 0 1 8 0v3" stroke="currentColor" stroke-width="1.2"/></svg>
-      Ships nationwide
-    </div>
-  </div>
-</section>
+  </section>
+{% endif %}
 
 {% schema %}
 {
   "name": "Trust bar",
   "tag": "section",
   "class": "section-trust",
+  "settings": [
+    {
+      "type": "select",
+      "id": "variant",
+      "label": "Variant",
+      "options": [
+        { "value": "home", "label": "Home" },
+        { "value": "story", "label": "Our Story" }
+      ],
+      "default": "home"
+    }
+  ],
   "presets": [{ "name": "ARZIVE trust bar" }]
 }
 {% endschema %}

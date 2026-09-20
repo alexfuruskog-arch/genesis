@@ -1,29 +1,44 @@
-<section class="arzive-sustain">
+<section class="arzive-sustain{% if section.settings.compact %} arzive-sustain--compact{% endif %}">
   <div class="arzive-shell">
     <h2 class="arzive-sustain__title">
-      {{ section.settings.heading | default: 'Premium doesn’t mean wasteful. We use natural, recycled, and compostable materials to protect our shared home.' }}
+      {{ section.settings.heading | default: "Premium doesn't mean wasteful. We use natural, recycled, and compostable materials to protect our shared home." }}
     </h2>
     <div class="arzive-sustain__grid">
       <div class="arzive-sustain__item">
         <div class="arzive-sustain__icon" aria-hidden="true">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 4c4 3 7 6 7 10a7 7 0 1 1-14 0c0-4 3-7 7-10Z" stroke="currentColor" stroke-width="1.3"/></svg>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+            <path d="M8 4h5l3 6v8a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.2"/>
+            <path d="M5 5l14 14" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+          </svg>
         </div>
-        <strong>100% plastic free</strong>
-        <p>No plastic wraps. Packaging that breaks down cleanly.</p>
+        <strong>100% plastic-free</strong>
+        {% unless section.settings.compact %}
+          <p>No plastic wraps. Packaging that breaks down cleanly.</p>
+        {% endunless %}
       </div>
       <div class="arzive-sustain__item">
         <div class="arzive-sustain__icon" aria-hidden="true">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M5 19V8l7-4 7 4v11H5Z" stroke="currentColor" stroke-width="1.3"/></svg>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+            <path d="M7 8.5 12 4l5 4.5M17 15.5 12 20l-5-4.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M8.5 10.5h7v3h-7v-3Z" stroke="currentColor" stroke-width="1.2"/>
+          </svg>
         </div>
-        <strong>100% recycled packaging</strong>
-        <p>Shipments packed with recycled materials end to end.</p>
+        <strong>100% recycled FSC™ paper</strong>
+        {% unless section.settings.compact %}
+          <p>Shipments packed with recycled materials end to end.</p>
+        {% endunless %}
       </div>
       <div class="arzive-sustain__item">
         <div class="arzive-sustain__icon" aria-hidden="true">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 12c2-4 5-7 8-7s6 3 8 7c-2 4-5 7-8 7s-6-3-8-7Z" stroke="currentColor" stroke-width="1.3"/><circle cx="12" cy="12" r="2.5" stroke="currentColor" stroke-width="1.3"/></svg>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+            <path d="M12 20c-3-2.5-6-5.2-6-9a6 6 0 1 1 12 0c0 3.8-3 6.5-6 9Z" stroke="currentColor" stroke-width="1.2"/>
+            <path d="M12 11.5v3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+          </svg>
         </div>
         <strong>100% natural materials</strong>
-        <p>Paper and covers chosen for feel, durability, and footprint.</p>
+        {% unless section.settings.compact %}
+          <p>Paper and covers chosen for feel, durability, and footprint.</p>
+        {% endunless %}
       </div>
     </div>
   </div>
@@ -39,7 +54,13 @@
       "type": "textarea",
       "id": "heading",
       "label": "Heading",
-      "default": "Premium doesn’t mean wasteful. We use natural, recycled, and compostable materials to protect our shared home."
+      "default": "Premium doesn't mean wasteful. We use natural, recycled, and compostable materials to protect our shared home."
+    },
+    {
+      "type": "checkbox",
+      "id": "compact",
+      "label": "Icons + labels only",
+      "default": false
     }
   ],
   "presets": [{ "name": "ARZIVE sustainability" }]

@@ -1,20 +1,35 @@
 <footer class="arzive-footer">
-  <div class="arzive-shell">
+  <div class="arzive-shell arzive-footer__grid">
+    <div class="arzive-footer__col">
+      <p class="arzive-footer__col-title">Shop</p>
+      <a href="{{ routes.all_products_collection_url }}">All notebooks</a>
+      <a href="{{ routes.root_url }}">Cream Cornell</a>
+      <a href="{{ routes.root_url }}">Green Math</a>
+    </div>
+    <div class="arzive-footer__col">
+      <p class="arzive-footer__col-title">Arzive</p>
+      <a href="{{ pages['our-story'].url | default: '/pages/our-story' }}">Our story</a>
+      <a href="{{ settings.study_app_url | default: 'https://arzive-web.onrender.com/study' }}" rel="noopener">Study with Arzive</a>
+      <a href="{{ settings.pricing_app_url | default: 'https://arzive-web.onrender.com/pricing' }}" rel="noopener">Pricing</a>
+    </div>
+    <div class="arzive-footer__col">
+      <p class="arzive-footer__col-title">Support</p>
+      <a href="{{ routes.cart_url }}">Cart</a>
+      <a href="{{ settings.account_app_url | default: 'https://arzive-web.onrender.com/account' }}" rel="noopener">Account</a>
+      <a href="mailto:hello@arzive.com">Contact</a>
+    </div>
+    <div class="arzive-footer__col">
+      <p class="arzive-footer__col-title">Connect</p>
+      <span>Instagram</span>
+      <span>TikTok</span>
+      <span>YouTube</span>
+    </div>
+  </div>
+  <div class="arzive-shell arzive-footer__bottom">
     <p class="arzive-footer__brand">ARZIVE</p>
     <p class="arzive-footer__copy">
-      {{ section.settings.copy | default: 'Notebooks that teach you how to study — then Study with Arzive turns pages into practice.' }}
+      {{ section.settings.copy | default: 'Notebooks that teach you how to study — Cream Cornell & Green Math.' }}
     </p>
-    <div class="arzive-footer__links">
-      <a href="{{ routes.all_products_collection_url }}">Shop</a>
-      <a href="{{ pages['our-story'].url | default: '/pages/our-story' }}">Our story</a>
-      <a href="{{ settings.study_app_url | default: 'https://study.arzive.com/study' }}" rel="noopener">Study with Arzive</a>
-      <a href="{{ routes.cart_url }}">Cart</a>
-    </div>
-    <div class="arzive-footer__reassure">
-      <span>Secure checkout</span>
-      <span>Thoughtful materials</span>
-      <span>Study tools that last</span>
-    </div>
   </div>
 </footer>
 
@@ -26,7 +41,7 @@
       "type": "textarea",
       "id": "copy",
       "label": "Footer copy",
-      "default": "Notebooks that teach you how to study — then Study with Arzive turns pages into practice."
+      "default": "Notebooks that teach you how to study — Cream Cornell & Green Math."
     }
   ]
 }

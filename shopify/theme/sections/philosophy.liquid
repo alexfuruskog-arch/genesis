@@ -1,13 +1,11 @@
-<section class="arzive-philosophy{% if section.settings.forest %} arzive-philosophy--forest{% endif %}">
+<section class="arzive-philosophy{% if section.settings.forest %} arzive-philosophy--forest{% endif %}{% if section.settings.story_layout %} arzive-philosophy--story{% endif %}">
   <div class="{% if section.settings.framed %}arzive-philosophy__frame{% else %}arzive-shell{% endif %}">
     <p class="arzive-philosophy__label">{{ section.settings.label | default: "Arzive's philosophy" }}</p>
     <h2 class="arzive-philosophy__title">
       {{ section.settings.title | default: 'We believe every student deserves the tools to succeed.' }}
     </h2>
     {% if section.settings.body != blank %}
-      <p class="arzive-philosophy__text" style="margin:1.25rem auto 0;max-width:36rem;font-weight:300;line-height:1.7;opacity:0.8;">
-        {{ section.settings.body }}
-      </p>
+      <p class="arzive-philosophy__text">{{ section.settings.body }}</p>
     {% endif %}
     <p class="arzive-philosophy__tag">
       {{ section.settings.tagline | default: 'The only notebook that teaches you how to study.' }}
@@ -23,6 +21,7 @@
   "settings": [
     { "type": "checkbox", "id": "forest", "label": "Forest background", "default": false },
     { "type": "checkbox", "id": "framed", "label": "Dashed frame", "default": false },
+    { "type": "checkbox", "id": "story_layout", "label": "Our Story layout", "default": false },
     { "type": "text", "id": "label", "label": "Label", "default": "Arzive's philosophy" },
     { "type": "textarea", "id": "title", "label": "Title", "default": "We believe every student deserves the tools to succeed." },
     { "type": "textarea", "id": "body", "label": "Body" },

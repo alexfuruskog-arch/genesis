@@ -1,28 +1,36 @@
-<section class="arzive-interiors" data-arzive-carousel>
+<section class="arzive-interiors{% if section.settings.label_style %} arzive-interiors--story{% endif %}" data-arzive-carousel>
   <div class="arzive-shell">
-    <h2 class="arzive-interiors__title">
-      {{ section.settings.heading | default: "Don't know how to study? We got you." }}
+    <h2 class="arzive-interiors__title{% if section.settings.label_style %} arzive-interiors__title--label{% endif %}">
+      {{ section.settings.heading | default: "How everything started" }}
     </h2>
   </div>
   <div class="arzive-interiors__track-wrap">
+    <button type="button" class="arzive-interiors__arrow arzive-interiors__arrow--prev" data-carousel-prev aria-label="Previous">←</button>
     <div class="arzive-interiors__track" data-carousel-track>
       <figure class="arzive-interiors__slide">
-        <img src="{{ 'cornell-pages.jpg' | asset_url }}" alt="Cornell notebook interior pages" width="800" height="1000" loading="lazy">
+        <img src="{{ 'cornell-pages.jpg' | asset_url }}" alt="Cream Cornell notebook interior — Main Notes layout" width="800" height="1000" loading="lazy">
+      </figure>
+      <figure class="arzive-interiors__slide arzive-interiors__slide--cover">
+        <div class="arzive-math-cover" role="img" aria-label="How to study math — Green Math study system">
+          <p class="arzive-math-cover__eyebrow">ARZIVE</p>
+          <p class="arzive-math-cover__title">how to<br>study<br>math</p>
+          <div class="arzive-math-cover__inset">
+            <img src="{{ 'notebook-green.jpg' | asset_url }}" alt="" width="400" height="500" loading="lazy">
+          </div>
+          <p class="arzive-math-cover__foot">Green Math study system</p>
+        </div>
       </figure>
       <figure class="arzive-interiors__slide">
-        <img src="{{ 'math-pages.jpg' | asset_url }}" alt="Math notebook interior pages" width="800" height="1000" loading="lazy">
+        <img src="{{ 'math-pages.jpg' | asset_url }}" alt="Green Math notebook interior — Example and Practice grid" width="800" height="1000" loading="lazy">
       </figure>
       <figure class="arzive-interiors__slide">
-        <img src="{{ 'notebook-cream.jpg' | asset_url }}" alt="Cream Cornell cover" width="800" height="1000" loading="lazy">
+        <img src="{{ 'notebook-cream.jpg' | asset_url }}" alt="Cream Cornell Notebook cover" width="800" height="1000" loading="lazy">
       </figure>
       <figure class="arzive-interiors__slide">
-        <img src="{{ 'notebook-green.jpg' | asset_url }}" alt="Green Math cover" width="800" height="1000" loading="lazy">
+        <img src="{{ 'notebook-green.jpg' | asset_url }}" alt="Green Math Notebook cover" width="800" height="1000" loading="lazy">
       </figure>
     </div>
-    <div class="arzive-interiors__nav">
-      <button type="button" data-carousel-prev aria-label="Previous">←</button>
-      <button type="button" data-carousel-next aria-label="Next">→</button>
-    </div>
+    <button type="button" class="arzive-interiors__arrow arzive-interiors__arrow--next" data-carousel-next aria-label="Next">→</button>
   </div>
 </section>
 
@@ -36,7 +44,13 @@
       "type": "text",
       "id": "heading",
       "label": "Heading",
-      "default": "Don't know how to study? We got you."
+      "default": "How everything started"
+    },
+    {
+      "type": "checkbox",
+      "id": "label_style",
+      "label": "Small label heading (Our Story)",
+      "default": false
     }
   ],
   "presets": [{ "name": "ARZIVE interiors carousel" }]
