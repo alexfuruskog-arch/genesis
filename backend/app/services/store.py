@@ -259,5 +259,227 @@ class DataStore:
     def recent_webhooks(self) -> list[dict[str, Any]]:
         return memory_store.recent_webhooks()
 
+    def set_profile_plan(
+        self,
+        user_id: str,
+        plan: str,
+        status: str | None = None,
+        expires_at: str | None = None,
+    ) -> dict[str, Any] | None:
+        saved = memory_store.set_profile_plan(user_id, plan, status, expires_at)
+        client = get_supabase_client()
+        if client:
+            try:
+                client.table("profiles").update(
+                    {
+                        "plan": plan,
+                        "plan_status": status or "active",
+                        "plan_expires_at": expires_at,
+                        "updated_at": _now_iso(),
+                    }
+                ).eq("id", user_id).execute()
+            except Exception:
+                pass
+        return saved
+
+    def count_documents(self, user_id: str) -> int:
+        client = get_supabase_client()
+        if not client:
+            return memory_store.count_documents(user_id)
+        try:
+            response = (
+                client.table("documents")
+                .select("id", count="exact")
+                .eq("user_id", user_id)
+                .execute()
+            )
+            if response.count is not None:
+                return int(response.count)
+            return len(response.data or [])
+        except Exception:
+            return memory_store.count_documents(user_id)
+
+    def count_quiz_sessions_in_week(self, user_id: str, week_id: str) -> int:
+        client = get_supabase_client()
+        if not client:
+            return memory_store.count_quiz_sessions_in_week(user_id, week_id)
+        try:
+            response = (
+                client.table("quiz_sessions")
+                .select("id, created_at")
+                .eq("user_id", user_id)
+                .execute()
+            )
+            count = 0
+            for row in response.data or []:
+                created = row.get("created_at") or ""
+                try:
+                    moment = datetime.fromisoformat(created.replace("Z", "+00:00"))
+                except ValueError:
+                    continue
+                year, week, _ = moment.isocalendar()
+                if f"{year}-W{week:02d}" == week_id:
+                    count += 1
+            return count
+        except Exception:
+            return memory_store.count_quiz_sessions_in_week(user_id, week_id)
+
+    def upsert_entitlement(self, email: str, payload: dict[str, Any]) -> dict[str, Any]:
+        saved = memory_store.upsert_entitlement(email, payload)
+        client = get_supabase_client()
+        if client:
+            try:
+                row = {
+                    "email": saved["email"],
+                    "plan": saved.get("plan") or "free",
+                    "status": saved.get("status") or "active",
+                    "sku": saved.get("sku"),
+                    "shopify_order_id": saved.get("shopify_order_id"),
+                    "shopify_contract_id": saved.get("shopify_contract_id"),
+                    "shopify_customer_id": saved.get("shopify_customer_id"),
+                    "source": saved.get("source"),
+                    "shop_domain": saved.get("shop_domain"),
+                    "expires_at": saved.get("expires_at"),
+                    "updated_at": _now_iso(),
+                }
+                client.table("membership_entitlements").upsert(
+                    row, on_conflict="email"
+                ).execute()
+            except Exception:
+                pass
+        return saved
+
+    def get_entitlement_by_email(self, email: str) -> dict[str, Any] | None:
+        local = memory_store.get_entitlement_by_email(email)
+        if local:
+            return local
+        client = get_supabase_client()
+        if not client:
+            return None
+        try:
+            response = (
+                client.table("membership_entitlements")
+                .select("*")
+                .eq("email", email.strip().lower())
+                .limit(1)
+                .execute()
+            )
+            data = response.data or []
+            if data:
+                memory_store.upsert_entitlement(email, data[0])
+                return data[0]
+        except Exception:
+            return None
+        return None
+
+    def get_entitlement_by_contract(self, contract_id: str) -> dict[str, Any] | None:
+        local = memory_store.get_entitlement_by_contract(contract_id)
+        if local:
+            return local
+        client = get_supabase_client()
+        if not client:
+            return None
+        try:
+            response = (
+                client.table("membership_entitlements")
+                .select("*")
+                .eq("shopify_contract_id", str(contract_id))
+                .limit(1)
+                .execute()
+            )
+            data = response.data or []
+            if data:
+                email = data[0].get("email")
+                if email:
+                    memory_store.upsert_entitlement(email, data[0])
+                return data[0]
+        except Exception:
+            return None
+        return None
+
+    def get_entitlement_by_customer(self, customer_id: str) -> dict[str, Any] | None:
+        local = memory_store.get_entitlement_by_customer(customer_id)
+        if local:
+            return local
+        client = get_supabase_client()
+        if not client:
+            return None
+        try:
+            response = (
+                client.table("membership_entitlements")
+                .select("*")
+                .eq("shopify_customer_id", str(customer_id))
+                .limit(1)
+                .execute()
+            )
+            data = response.data or []
+            if data:
+                email = data[0].get("email")
+                if email:
+                    memory_store.upsert_entitlement(email, data[0])
+                return data[0]
+        except Exception:
+            return None
+        return None
+
+    def set_supabase_plan_by_email(
+        self,
+        email: str,
+        plan: str,
+        status: str | None = None,
+        expires_at: str | None = None,
+    ) -> None:
+        user_id = self.find_supabase_user_id_by_email(email)
+        if not user_id:
+            return
+        client = get_supabase_client()
+        if not client:
+            return
+        try:
+            client.table("profiles").update(
+                {
+                    "plan": plan,
+                    "plan_status": status or "active",
+                    "plan_expires_at": expires_at,
+                    "email": email.strip().lower(),
+                    "updated_at": _now_iso(),
+                }
+            ).eq("id", user_id).execute()
+        except Exception:
+            pass
+
+    def find_supabase_user_id_by_email(self, email: str) -> str | None:
+        client = get_supabase_client()
+        if not client:
+            return None
+        normalized = email.strip().lower()
+        try:
+            response = (
+                client.table("profiles")
+                .select("id, email")
+                .eq("email", normalized)
+                .limit(1)
+                .execute()
+            )
+            data = response.data or []
+            if data:
+                return str(data[0]["id"])
+        except Exception:
+            pass
+        try:
+            listed = client.auth.admin.list_users()
+            users = getattr(listed, "users", None) or listed or []
+            for user in users:
+                user_email = getattr(user, "email", None)
+                user_id = getattr(user, "id", None)
+                if isinstance(user, dict):
+                    user_email = user.get("email")
+                    user_id = user.get("id")
+                if (user_email or "").strip().lower() == normalized and user_id:
+                    return str(user_id)
+        except Exception:
+            return None
+        return None
+
 
 store = DataStore()

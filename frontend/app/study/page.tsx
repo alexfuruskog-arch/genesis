@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
   fetchHealth,
+  fetchMembership,
   generateStudy,
   listDocuments,
   uploadDocument,
@@ -13,9 +14,11 @@ import {
   type UploadedDocument,
 } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
+import { shopifyMembershipUrl } from "@/lib/env";
 import {
   canScan,
   canStartStudySession,
+  applyServerUsage,
   FREE_SCAN_CAP,
   FREE_SESSION_CAP,
   getPlan,
@@ -82,6 +85,29 @@ export default function StudyPage() {
     setScansUsed(getScanCount());
   }, []);
 
+  useEffect(() => {
+    if (!ready || !signedIn) return;
+    let cancelled = false;
+    void fetchMembership(authHeaders)
+      .then((next) => {
+        if (cancelled) return;
+        applyServerUsage({
+          plan: next.plan,
+          chats_used: next.chats_used,
+          scans_used: next.scans_used,
+        });
+        setPlanState(next.plan);
+        setSessionsUsed(next.chats_used);
+        setScansUsed(next.scans_used);
+      })
+      .catch(() => {
+        /* keep cached plan if the API is down */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [ready, signedIn, authHeaders]);
+
   const refresh = useCallback(async () => {
     setListLoading(true);
     try {
@@ -136,6 +162,19 @@ export default function StudyPage() {
       setDocuments((current) => [...uploaded, ...current]);
       setSelected((current) => [...uploaded.map((doc) => doc.id), ...current]);
       setScansUsed(recordScan(uploaded.length));
+      try {
+        const next = await fetchMembership(authHeaders);
+        applyServerUsage({
+          plan: next.plan,
+          chats_used: next.chats_used,
+          scans_used: next.scans_used,
+        });
+        setPlanState(next.plan);
+        setSessionsUsed(next.chats_used);
+        setScansUsed(next.scans_used);
+      } catch {
+        /* keep local count */
+      }
       const backend = uploaded[0]?.storage_backend;
       setUploadNotice(
         backend === "supabase"
@@ -178,6 +217,19 @@ export default function StudyPage() {
       );
       setSessionsUsed(recordStudySession());
       setResult(study);
+      try {
+        const next = await fetchMembership(authHeaders);
+        applyServerUsage({
+          plan: next.plan,
+          chats_used: next.chats_used,
+          scans_used: next.scans_used,
+        });
+        setPlanState(next.plan);
+        setSessionsUsed(next.chats_used);
+        setScansUsed(next.scans_used);
+      } catch {
+        /* keep local count */
+      }
     } catch (err) {
       setGenerateError(err instanceof Error ? err.message : "Generation failed.");
     } finally {
@@ -301,9 +353,9 @@ export default function StudyPage() {
               exams and flashcards for $12/month — or save with Annual.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
-              <Link href="/account?plan=standard" className="btn-ink">
+              <a href={shopifyMembershipUrl("standard")} className="btn-ink">
                 Upgrade to Standard · $12
-              </Link>
+              </a>
               <Link
                 href="/pricing"
                 className="border border-forest/25 px-4 py-2.5 text-[0.62rem] uppercase tracking-[0.14em] text-forest"
@@ -329,9 +381,9 @@ export default function StudyPage() {
               unlimited captures.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
-              <Link href="/account?plan=standard" className="btn-ink">
+              <a href={shopifyMembershipUrl("standard")} className="btn-ink">
                 Unlock unlimited scans
-              </Link>
+              </a>
               <Link
                 href="/pricing"
                 className="border border-forest/25 px-4 py-2.5 text-[0.62rem] uppercase tracking-[0.14em] text-forest"

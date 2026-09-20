@@ -24,4 +24,4 @@ rm -f "$OUT"
 )
 
 echo "Created $OUT"
-unzip -l "$OUT" | head -40
+unzip -l "$OUT" | head -40 || true

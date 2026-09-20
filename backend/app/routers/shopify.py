@@ -17,6 +17,7 @@ from app.schemas.shopify import (
     OAuthCompleteRequest,
     ShopifyStatusResponse,
 )
+from app.services.membership import membership_service
 from app.services.shopify import normalize_shop_domain, shopify_client
 from app.services.store import store
 
@@ -221,37 +222,35 @@ def create_checkout(
     return {"checkout": checkout, "linked_customer": linked}
 
 
+@router.post("/webhooks")
+async def shopify_webhook_root(
+    request: Request,
+    x_shopify_hmac_sha256: str | None = Header(default=None, alias="X-Shopify-Hmac-Sha256"),
+    x_shopify_shop_domain: str | None = Header(default=None, alias="X-Shopify-Shop-Domain"),
+    x_shopify_topic: str | None = Header(default=None, alias="X-Shopify-Topic"),
+) -> dict[str, Any]:
+    return await _ingest_webhook(
+        topic=x_shopify_topic or "unknown",
+        request=request,
+        hmac_header=x_shopify_hmac_sha256,
+        shop_domain=x_shopify_shop_domain,
+    )
+
+
 @router.post("/webhooks/{topic:path}")
 async def shopify_webhook(
     topic: str,
     request: Request,
     x_shopify_hmac_sha256: str | None = Header(default=None, alias="X-Shopify-Hmac-Sha256"),
     x_shopify_shop_domain: str | None = Header(default=None, alias="X-Shopify-Shop-Domain"),
+    x_shopify_topic: str | None = Header(default=None, alias="X-Shopify-Topic"),
 ) -> dict[str, Any]:
-    body = await request.body()
-    verified = shopify_client.verify_webhook(body, x_shopify_hmac_sha256)
-    payload: Any
-    try:
-        payload = json.loads(body.decode("utf-8") or "{}")
-    except json.JSONDecodeError:
-        payload = {"raw": body.decode("utf-8", errors="replace")}
-
-    handled = _handle_webhook(topic, payload, x_shopify_shop_domain)
-    store.record_webhook(
-        {
-            "topic": topic,
-            "shop_domain": x_shopify_shop_domain,
-            "verified": verified,
-            "handled": handled,
-        }
+    return await _ingest_webhook(
+        topic=topic or x_shopify_topic or "unknown",
+        request=request,
+        hmac_header=x_shopify_hmac_sha256,
+        shop_domain=x_shopify_shop_domain,
     )
-    return {
-        "ok": True,
-        "topic": topic,
-        "verified": verified,
-        "handled": handled,
-        "shop_domain": x_shopify_shop_domain,
-    }
 
 
 @router.get("/webhooks/recent")
@@ -334,20 +333,64 @@ def _public_install(row: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+async def _ingest_webhook(
+    topic: str,
+    request: Request,
+    hmac_header: str | None,
+    shop_domain: str | None,
+) -> dict[str, Any]:
+    body = await request.body()
+    secret_configured = bool(get_settings().shopify_webhook_secret)
+    verified = shopify_client.verify_webhook(body, hmac_header)
+    if secret_configured and not verified:
+        raise HTTPException(status_code=401, detail="Shopify HMAC could not be verified.")
+    payload: Any
+    try:
+        payload = json.loads(body.decode("utf-8") or "{}")
+    except json.JSONDecodeError:
+        payload = {"raw": body.decode("utf-8", errors="replace")}
+
+    handled = _handle_webhook(topic, payload, shop_domain)
+    store.record_webhook(
+        {
+            "topic": topic,
+            "shop_domain": shop_domain,
+            "verified": verified,
+            "handled": handled,
+            "unsigned_accepted": not secret_configured,
+        }
+    )
+    return {
+        "ok": True,
+        "topic": topic,
+        "verified": verified,
+        "handled": handled,
+        "shop_domain": shop_domain,
+        "mode": "live" if secret_configured else "mock",
+    }
+
+
 def _handle_webhook(topic: str, payload: Any, shop_domain: str | None) -> str:
-    normalized = topic.replace("_", "/")
-    if normalized in {"customers/create", "customers/update", "customers/data_request"}:
-        customer_id = str((payload or {}).get("id") or "")
-        email = (payload or {}).get("email")
-        if customer_id or email:
-            return "customer_sync_placeholder"
-        return "ignored"
-    if normalized in {"orders/paid", "orders/create"}:
-        return "entitlement_placeholder"
-    if normalized in {"app/uninstalled", "shop/update"}:
-        if normalized == "app/uninstalled":
-            store.clear_shopify_installs()
-            return "shop_uninstalled"
+    normalized = topic.replace("_", "/").lower().strip("/")
+    if normalized in {"app/uninstalled", "shop/redact"}:
+        store.clear_shopify_installs()
+        return "shop_uninstalled"
+    if normalized in {
+        "orders/paid",
+        "orders/create",
+        "orders/cancelled",
+        "refunds/create",
+        "subscription_contracts/create",
+        "subscription_contracts/update",
+        "subscription_billing_attempts/success",
+        "subscription_billing_attempts/failure",
+        "customers/create",
+        "customers/update",
+    }:
+        if normalized in {"customers/create", "customers/update"}:
+            email = (payload or {}).get("email") if isinstance(payload, dict) else None
+            return "customer_recorded" if email else "ignored"
+        return membership_service.apply_webhook(normalized, payload, shop_domain)
+    if normalized in {"shop/update"}:
         return "shop_lifecycle_placeholder"
-    del shop_domain
-    return "recorded"
+    return membership_service.apply_webhook(normalized, payload, shop_domain)

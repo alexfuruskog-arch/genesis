@@ -1,0 +1,7 @@
+{% comment %}
+  Hidden selling_plan so Pricing Buy posts a Shopify Subscription, not a one-time item.
+  If the product has no selling plan yet, nothing is rendered and checkout stays one-time.
+{% endcomment %}
+{%- if variant and variant.selling_plan_allocations.size > 0 -%}
+  <input type="hidden" name="selling_plan" value="{{ variant.selling_plan_allocations.first.selling_plan.id }}">
+{%- endif -%}

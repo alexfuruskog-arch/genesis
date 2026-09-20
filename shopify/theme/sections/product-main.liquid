@@ -24,6 +24,7 @@
       <div class="arzive-product__desc rte">{{ product.description }}</div>
       {% form 'product', product %}
         <input type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}">
+        {% render 'selling-plan-input', variant: product.selected_or_first_available_variant %}
         {% unless product.has_only_default_variant %}
           {% for option in product.options_with_values %}
             <label class="arzive-field">

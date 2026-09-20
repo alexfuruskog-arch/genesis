@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { shopifyMembershipUrl } from "@/lib/env";
+
 const plans = [
   {
     id: "free",
@@ -26,8 +28,8 @@ const plans = [
     note: "The study loop, unlocked.",
     badge: "Most chosen",
     featured: true,
-    cta: "Start Standard",
-    href: "/account?plan=standard",
+    cta: "Buy Standard on Shopify",
+    href: shopifyMembershipUrl("standard"),
     points: [
       "Unlimited practice exams & flashcards",
       "Unlimited scans to your private library",
@@ -43,8 +45,8 @@ const plans = [
     note: "Eight dollars a month — save 33%.",
     badge: "Best value",
     featured: false,
-    cta: "Choose Annual",
-    href: "/account?plan=annual",
+    cta: "Buy Annual on Shopify",
+    href: shopifyMembershipUrl("annual"),
     points: [
       "Everything in Standard",
       "Billed once · $8 effective monthly",
@@ -60,8 +62,8 @@ const plans = [
     note: "Unlimited Study + stationery credit.",
     badge: "Notebook + Study",
     featured: false,
-    cta: "Become a Scholar",
-    href: "/account?plan=scholar",
+    cta: "Buy Scholar on Shopify",
+    href: shopifyMembershipUrl("scholar"),
     points: [
       "Everything in Annual features, month to month",
       "$25 notebook credit each semester (Cornell or Math)",
@@ -138,16 +140,29 @@ export default function PricingPage() {
                     </span>
                   ) : null}
                 </p>
-                <Link
-                  href={plan.href}
-                  className={`mt-6 inline-flex ${
-                    plan.featured
-                      ? "btn-ink"
-                      : "border border-forest/25 px-4 py-2.5 text-[0.62rem] uppercase tracking-[0.14em] text-forest transition hover:border-forest/50"
-                  }`}
-                >
-                  {plan.cta}
-                </Link>
+                {plan.href.startsWith("http") ? (
+                  <a
+                    href={plan.href}
+                    className={`mt-6 inline-flex ${
+                      plan.featured
+                        ? "btn-ink"
+                        : "border border-forest/25 px-4 py-2.5 text-[0.62rem] uppercase tracking-[0.14em] text-forest transition hover:border-forest/50"
+                    }`}
+                  >
+                    {plan.cta}
+                  </a>
+                ) : (
+                  <Link
+                    href={plan.href}
+                    className={`mt-6 inline-flex ${
+                      plan.featured
+                        ? "btn-ink"
+                        : "border border-forest/25 px-4 py-2.5 text-[0.62rem] uppercase tracking-[0.14em] text-forest transition hover:border-forest/50"
+                    }`}
+                  >
+                    {plan.cta}
+                  </Link>
+                )}
               </div>
             </article>
           ))}
@@ -167,9 +182,10 @@ export default function PricingPage() {
           <div>
             <h3 className="font-display text-xl tracking-[0.02em]">Checkout</h3>
             <p className="mt-3 text-sm font-light leading-7 text-forest/68">
-              Choose a plan on Account. Paid tiers unlock unlimited chats and
-              scans immediately. Shopify subscription billing can take over when
-              you connect Storefront — the product experience is ready either way.
+              Paid plans check out on Shopify with a recurring card (Shopify
+              Payments). Use the same email in Study — if you buy first, the plan
+              attaches when you sign up; if you already have Study, it unlocks as
+              soon as the order is paid.
             </p>
           </div>
         </div>
@@ -183,9 +199,9 @@ export default function PricingPage() {
           <Link href="/account" className="btn-solid">
             Create free account
           </Link>
-          <Link href="/account?plan=standard" className="btn-ghost">
+          <a href={shopifyMembershipUrl("standard")} className="btn-ghost">
             Go Standard · $12
-          </Link>
+          </a>
         </div>
       </section>
     </main>

@@ -44,7 +44,7 @@ Open [http://127.0.0.1:43123](http://127.0.0.1:43123). The UI calls `/backend/*`
 
 - **Shop** deep-links to Shopify product pages when `NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN` is set (handles: `arzive-cornell-notebook`, `arzive-math-notebook` — see [`shopify/products.md`](shopify/products.md)).
 - **Study with Arzive** is `/study` on the same origin — camera/upload scans under your account, multi-note selection, practice exam or flashcards. Files land in Supabase Storage with RLS when configured.
-- **Pricing** (`/pricing`): Free (3 Study sessions/week, 5 scans), Standard **$12/mo**, Annual **$96/yr**, Scholar **$29/mo**. Free limits are enforced in the Study UI.
+- **Pricing** (`/pricing`): Free (3 chats/week, 5 scans), Standard **$12/mo**, Annual **$96/yr**, Scholar **$29/mo**. Paid CTAs check out on Shopify. Free limits are enforced in the Study UI **and** the API.
 - Later: import the Shopify theme into this Next app or use Hydrogen/Storefront API; still one ARZIVE brand.
 
 ## Environment variables
@@ -131,7 +131,8 @@ Then set `NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN` so Shop buy buttons hit those produc
 | `POST` | `/shopify/customers/link` | App user ↔ Shopify customer |
 | `GET` | `/shopify/products` | Live Admin product list when connected |
 | `POST` | `/shopify/checkout` | Draft order + `invoice_url` |
-| `POST` | `/shopify/webhooks/{topic}` | HMAC webhook stub |
+| `GET` | `/membership` or `/membership/me` | Current Study plan, chat/scan usage |
+| `POST` | `/shopify/webhooks` or `/shopify/webhooks/{topic}` | HMAC-verified membership webhooks (`orders/paid` → plan) |
 
 ## Pages
 
@@ -147,7 +148,7 @@ Then set `NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN` so Shop buy buttons hit those produc
 
 Blueprint: [`render.yaml`](render.yaml) → services **arzive-api** (FastAPI) + **arzive-web** (Next.js Study).
 
-Full Swedish steps + env paste list: [`RENDER.md`](RENDER.md).
+Full Swedish steps + env paste list: [`RENDER.md`](RENDER.md). Shopify memberships (clicks only): [`docs/SHOPIFY-SUBSCRIPTIONS.md`](docs/SHOPIFY-SUBSCRIPTIONS.md).
 
 1. **Create repo** in Cursor (GitHub) — required; Render cannot use the Origin temp remote.
 2. Render Dashboard → **New → Blueprint** → connect the GitHub repo → Apply.

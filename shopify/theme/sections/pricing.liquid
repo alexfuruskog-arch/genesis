@@ -74,6 +74,7 @@
           <form class="arzive-plan__form" action="{{ routes.cart_add_url }}" method="post">
             <input type="hidden" name="id" value="{{ standard_variant.id }}">
             <input type="hidden" name="quantity" value="1">
+            {% render 'selling-plan-input', variant: standard_variant %}
             <input type="hidden" name="return_to" value="/checkout">
             <button type="submit" class="arzive-btn arzive-btn--forest arzive-plan__cta">
               Buy Standard · $12
@@ -105,6 +106,7 @@
           <form class="arzive-plan__form" action="{{ routes.cart_add_url }}" method="post">
             <input type="hidden" name="id" value="{{ annual_variant.id }}">
             <input type="hidden" name="quantity" value="1">
+            {% render 'selling-plan-input', variant: annual_variant %}
             <input type="hidden" name="return_to" value="/checkout">
             <button type="submit" class="arzive-btn arzive-btn--outline arzive-plan__cta">
               Buy Annual · $96
@@ -136,6 +138,7 @@
           <form class="arzive-plan__form" action="{{ routes.cart_add_url }}" method="post">
             <input type="hidden" name="id" value="{{ scholar_variant.id }}">
             <input type="hidden" name="quantity" value="1">
+            {% render 'selling-plan-input', variant: scholar_variant %}
             <input type="hidden" name="return_to" value="/checkout">
             <button type="submit" class="arzive-btn arzive-btn--outline arzive-plan__cta">
               Buy Scholar · $29

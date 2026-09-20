@@ -26,6 +26,21 @@ class MemoryStore:
         self.profiles: dict[str, dict[str, Any]] = {}
         self.profiles_by_email: dict[str, str] = {}
         self.sessions: dict[str, str] = {}
+        self.entitlements: dict[str, dict[str, Any]] = {}
+
+    def reset(self) -> None:
+        with self._lock:
+            self.documents.clear()
+            self.chunks.clear()
+            self.quiz_sessions.clear()
+            self.shopify_customers.clear()
+            self.shopify_installs.clear()
+            self.oauth_states.clear()
+            self.webhooks.clear()
+            self.profiles.clear()
+            self.profiles_by_email.clear()
+            self.sessions.clear()
+            self.entitlements.clear()
 
     def create_document(self, row: dict[str, Any]) -> dict[str, Any]:
         with self._lock:
@@ -44,8 +59,16 @@ class MemoryStore:
 
     def create_profile(self, row: dict[str, Any]) -> dict[str, Any]:
         with self._lock:
+            row = {
+                "plan": "free",
+                "plan_status": "none",
+                "plan_expires_at": None,
+                **row,
+            }
             self.profiles[row["id"]] = row
-            self.profiles_by_email[row["email"]] = row["id"]
+            email = (row.get("email") or "").strip().lower()
+            if email:
+                self.profiles_by_email[email] = row["id"]
             return row
 
     def get_profile(self, user_id: str) -> dict[str, Any] | None:
@@ -163,6 +186,72 @@ class MemoryStore:
 
     def recent_webhooks(self) -> list[dict[str, Any]]:
         return list(self.webhooks)
+
+    def set_profile_plan(
+        self,
+        user_id: str,
+        plan: str,
+        status: str | None = None,
+        expires_at: str | None = None,
+    ) -> dict[str, Any] | None:
+        with self._lock:
+            profile = self.profiles.get(user_id)
+            if not profile:
+                return None
+            profile["plan"] = plan
+            profile["plan_status"] = status or "active"
+            profile["plan_expires_at"] = expires_at
+            return profile
+
+    def count_documents(self, user_id: str) -> int:
+        return len([doc for doc in self.documents.values() if doc.get("user_id") == user_id])
+
+    def count_quiz_sessions_in_week(self, user_id: str, week_id: str) -> int:
+        count = 0
+        for row in self.quiz_sessions.values():
+            if row.get("user_id") != user_id:
+                continue
+            created = row.get("created_at") or ""
+            try:
+                moment = datetime.fromisoformat(created.replace("Z", "+00:00"))
+            except ValueError:
+                continue
+            year, week, _ = moment.isocalendar()
+            if f"{year}-W{week:02d}" == week_id:
+                count += 1
+        return count
+
+    def upsert_entitlement(self, email: str, payload: dict[str, Any]) -> dict[str, Any]:
+        key = email.strip().lower()
+        with self._lock:
+            existing = self.entitlements.get(key) or {}
+            row = {
+                **existing,
+                **payload,
+                "email": key,
+                "updated_at": _now().isoformat(),
+            }
+            if not existing:
+                row["created_at"] = _now().isoformat()
+            self.entitlements[key] = row
+            return row
+
+    def get_entitlement_by_email(self, email: str) -> dict[str, Any] | None:
+        return self.entitlements.get(email.strip().lower())
+
+    def get_entitlement_by_contract(self, contract_id: str) -> dict[str, Any] | None:
+        target = str(contract_id)
+        for row in self.entitlements.values():
+            if str(row.get("shopify_contract_id") or "") == target:
+                return row
+        return None
+
+    def get_entitlement_by_customer(self, customer_id: str) -> dict[str, Any] | None:
+        target = str(customer_id)
+        for row in self.entitlements.values():
+            if str(row.get("shopify_customer_id") or "") == target:
+                return row
+        return None
 
 
 def _cosine(left: list[float], right: list[float]) -> float:

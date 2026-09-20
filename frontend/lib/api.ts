@@ -58,12 +58,40 @@ export type StudyResponse = {
 
 export type QuizResponse = StudyResponse;
 
+export type PlanId = "free" | "standard" | "annual" | "scholar";
+
 export type AuthSession = {
   id: string;
   email: string;
   source: string;
   token: string;
   message?: string | null;
+  plan?: PlanId;
+  plan_label?: string;
+  unlimited?: boolean;
+  billing_status?: string;
+  plan_expires_at?: string | null;
+  chats_used?: number;
+  chats_cap?: number;
+  chats_remaining?: number;
+  scans_used?: number;
+  scans_cap?: number;
+  scans_remaining?: number;
+};
+
+export type MembershipSnapshot = {
+  plan: PlanId;
+  plan_label: string;
+  unlimited: boolean;
+  billing_status: string;
+  plan_expires_at: string | null;
+  chats_used: number;
+  chats_cap: number;
+  chats_remaining: number;
+  scans_used: number;
+  scans_cap: number;
+  scans_remaining: number;
+  email: string | null;
 };
 
 export type ShopifyStatus = {
@@ -225,6 +253,18 @@ export async function authLogout(token?: string): Promise<void> {
     method: "POST",
     authHeaders: token ? { Authorization: `Bearer ${token}` } : undefined,
   });
+}
+
+export async function fetchMe(
+  authHeaders?: Record<string, string>,
+): Promise<AuthSession> {
+  return request("/auth/me", { cache: "no-store", authHeaders });
+}
+
+export async function fetchMembership(
+  authHeaders?: Record<string, string>,
+): Promise<MembershipSnapshot> {
+  return request("/membership/me", { cache: "no-store", authHeaders });
 }
 
 export async function fetchShopifyStatus(): Promise<ShopifyStatus> {

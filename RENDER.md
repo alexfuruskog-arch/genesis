@@ -41,7 +41,16 @@ Cross-service-URL:er (`FRONTEND_ORIGIN`, `NEXT_PUBLIC_API_URL`, `API_PROXY_TARGE
 | `OPENAI_API_KEY` eller `ANTHROPIC_API_KEY` | LLM |
 | `LLM_PROVIDER` | redan `auto` |
 | `SHOPIFY_STORE_URL` | `din-shop.myshopify.com` |
-| `SHOPIFY_*` tokens | connect/webhooks (valfritt) |
+| `SHOPIFY_WEBHOOK_SECRET` | HMAC från Shopify Admin → Inställningar → Aviseringar → Webhooks |
+| `SHOPIFY_CLIENT_ID` / `SHOPIFY_CLIENT_SECRET` | custom app OAuth (valfritt) |
+| `SHOPIFY_ADMIN_API_TOKEN` | Admin API (valfritt) |
+| `SHOPIFY_API_VERSION` | redan `2025-01` |
+
+Webhook-URL att klistra in i Shopify:
+
+`https://arzive-api.onrender.com/shopify/webhooks`
+
+Klickguide: se Cursor-docs `SHOPIFY-SUBSCRIPTIONS.md`.
 
 ### arzive-web
 

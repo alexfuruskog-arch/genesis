@@ -206,6 +206,63 @@ create policy "shopify_customers_own"
 -- shopify_installs: no anon/authenticated policies — only service_role (RLS bypass).
 
 -- ---------------------------------------------------------------------------
+-- Membership plan (Shopify webhook → Study)
+-- ---------------------------------------------------------------------------
+alter table public.profiles
+  add column if not exists email text;
+alter table public.profiles
+  add column if not exists plan text not null default 'free';
+alter table public.profiles
+  add column if not exists plan_status text not null default 'none';
+alter table public.profiles
+  add column if not exists plan_expires_at timestamptz;
+
+create unique index if not exists profiles_email_idx
+  on public.profiles (email)
+  where email is not null;
+
+create table if not exists public.membership_entitlements (
+  email text primary key,
+  plan text not null default 'free',
+  status text not null default 'active',
+  sku text,
+  shopify_order_id text,
+  shopify_contract_id text,
+  shopify_customer_id text,
+  source text,
+  shop_domain text,
+  expires_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists membership_entitlements_contract_idx
+  on public.membership_entitlements (shopify_contract_id);
+
+alter table public.membership_entitlements enable row level security;
+-- No authenticated policies: service role (API) only.
+
+create or replace function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  insert into public.profiles (id, display_name, email, plan)
+  values (
+    new.id,
+    coalesce(new.raw_user_meta_data ->> 'display_name', split_part(new.email, '@', 1)),
+    lower(new.email),
+    'free'
+  )
+  on conflict (id) do update
+    set email = excluded.email;
+  return new;
+end;
+$$;
+
+-- ---------------------------------------------------------------------------
 -- Storage bucket for uploaded study files
 -- ---------------------------------------------------------------------------
 insert into storage.buckets (id, name, public)

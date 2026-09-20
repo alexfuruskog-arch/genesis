@@ -17,7 +17,11 @@ class ShopifyClient:
     """Admin API + OAuth. Uses a saved shop install when the UI connects a store."""
 
     def __init__(self) -> None:
-        self.settings = get_settings()
+        pass
+
+    @property
+    def settings(self):
+        return get_settings()
 
     @property
     def env_shop_domain(self) -> str | None:

@@ -4,9 +4,11 @@ import Link from "next/link";
 import { FormEvent, Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
+import { fetchMembership, type MembershipSnapshot } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
+import { shopifyMembershipUrl } from "@/lib/env";
+import { applyServerUsage, type PlanId } from "@/lib/plan";
 import { ShopifyConnect } from "@/components/ShopifyConnect";
-import { getPlan, setPlan, type PlanId } from "@/lib/plan";
 
 const PLAN_LABELS: Record<PlanId, string> = {
   free: "Free",
@@ -15,8 +17,8 @@ const PLAN_LABELS: Record<PlanId, string> = {
   scholar: "Scholar · $29/mo",
 };
 
-function parsePlan(raw: string | null): PlanId | null {
-  if (raw === "standard" || raw === "annual" || raw === "scholar" || raw === "free") {
+function parsePlan(raw: string | null): Exclude<PlanId, "free"> | null {
+  if (raw === "standard" || raw === "annual" || raw === "scholar") {
     return raw;
   }
   return null;
@@ -24,30 +26,52 @@ function parsePlan(raw: string | null): PlanId | null {
 
 function AccountInner() {
   const searchParams = useSearchParams();
-  const { user, ready, signIn, signUp, signOut } = useAuth();
+  const { user, ready, signIn, signUp, signOut, authHeaders } = useAuth();
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
-  const [plan, setPlanState] = useState<PlanId>("free");
+  const [membership, setMembership] = useState<MembershipSnapshot | null>(null);
+  const intended = parsePlan(searchParams.get("plan"));
+  const plan: PlanId = membership?.plan || (user?.plan as PlanId | undefined) || "free";
 
   useEffect(() => {
-    const fromQuery = parsePlan(searchParams.get("plan"));
-    if (fromQuery) {
-      setPlan(fromQuery);
-      setPlanState(fromQuery);
-      if (fromQuery !== "free") {
-        setMessage(
-          `${PLAN_LABELS[fromQuery]} selected. Sign in to attach it to your account — Study unlocks unlimited immediately for this browser.`,
-        );
-        setMode("signup");
-      }
+    if (!ready || !user?.email) {
+      setMembership(null);
       return;
     }
-    setPlanState(getPlan());
-  }, [searchParams]);
+    let cancelled = false;
+    void fetchMembership(authHeaders)
+      .then((next) => {
+        if (cancelled) return;
+        setMembership(next);
+        applyServerUsage({
+          plan: next.plan,
+          chats_used: next.chats_used,
+          scans_used: next.scans_used,
+        });
+        if (next.plan !== "free") {
+          setMessage(`${PLAN_LABELS[next.plan]} is active on this Study account.`);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setMembership(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [ready, user?.email, user?.plan, authHeaders]);
+
+  useEffect(() => {
+    if (intended) {
+      setMode("signup");
+      setMessage(
+        `Checkout ${PLAN_LABELS[intended]} on Shopify with this same email. After the card charge, Study shows the paid plan automatically.`,
+      );
+    }
+  }, [intended]);
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
@@ -57,7 +81,9 @@ function AccountInner() {
     try {
       if (mode === "signup") {
         await signUp(email, password);
-        setMessage("Account created. Open Study with Arzive to scan notes.");
+        setMessage(
+          "Account created. If you already paid in Shopify with this email, your plan is unlocked.",
+        );
       } else {
         await signIn(email, password);
         setMessage("Signed in.");
@@ -68,16 +94,6 @@ function AccountInner() {
     } finally {
       setBusy(false);
     }
-  }
-
-  function choosePlan(next: PlanId) {
-    setPlan(next);
-    setPlanState(next);
-    setMessage(
-      next === "free"
-        ? "Back on Free — 3 chats per week, 5 scans."
-        : `${PLAN_LABELS[next]} active on this device.`,
-    );
   }
 
   return (
@@ -91,18 +107,31 @@ function AccountInner() {
             Signed in as <strong className="font-medium text-forest">{user.email}</strong>
           </p>
           <p className="mt-4 text-[0.62rem] uppercase tracking-[0.16em] text-forest/50">
-            Plan · {PLAN_LABELS[plan]}
+            Plan · {membership?.plan_label || PLAN_LABELS[plan]}
+          </p>
+          <p className="mt-3 text-sm font-light text-forest/65">
+            Shopify checkout and Study are two accounts until the emails match.
+            Use this address in the Shopify card form.
           </p>
           <div className="mt-7 flex flex-wrap gap-3">
             <Link href="/study" className="btn-ink">
               Study with Arzive
             </Link>
-            <Link
-              href="/pricing"
-              className="border border-forest/25 px-4 py-2.5 text-[0.62rem] tracking-[0.14em] uppercase text-forest"
-            >
-              Change plan
-            </Link>
+            {plan === "free" ? (
+              <a
+                href={shopifyMembershipUrl("standard")}
+                className="border border-forest/25 px-4 py-2.5 text-[0.62rem] tracking-[0.14em] uppercase text-forest"
+              >
+                Buy Standard · $12/mo
+              </a>
+            ) : (
+              <Link
+                href="/pricing"
+                className="border border-forest/25 px-4 py-2.5 text-[0.62rem] tracking-[0.14em] uppercase text-forest"
+              >
+                Compare plans
+              </Link>
+            )}
             <button
               type="button"
               className="border border-forest/25 px-4 py-2.5 text-[0.62rem] tracking-[0.14em] uppercase text-forest"
@@ -122,7 +151,8 @@ function AccountInner() {
             {mode === "signup" ? "Create account" : "Sign in"}
           </h1>
           <p className="mt-2 text-sm font-light text-forest/65">
-            One account for Study with Arzive — scans, exams, and flashcards.
+            One Study account. Paid plans unlock when this email matches the
+            Shopify customer email from checkout.
           </p>
           <p className="mt-3 text-[0.62rem] uppercase tracking-[0.16em] text-forest/50">
             Plan · {PLAN_LABELS[plan]}
@@ -184,37 +214,36 @@ function AccountInner() {
 
       <div className="mt-10 w-full border-t border-cream/15 pt-8">
         <p className="text-[0.62rem] uppercase tracking-[0.18em] text-cream/55">
-          Attach a plan
+          Unlock Study on Shopify
         </p>
-        <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
           {(
             [
-              ["free", "Free"],
-              ["standard", "Standard"],
-              ["annual", "Annual"],
-              ["scholar", "Scholar"],
+              ["standard", "Standard · $12/mo"],
+              ["annual", "Annual · $96/yr"],
+              ["scholar", "Scholar · $29/mo"],
             ] as const
           ).map(([id, label]) => (
-            <button
+            <a
               key={id}
-              type="button"
-              onClick={() => choosePlan(id)}
-              className={`px-3 py-3 text-[0.58rem] uppercase tracking-[0.12em] transition ${
-                plan === id
+              href={shopifyMembershipUrl(id)}
+              className={`px-3 py-3 text-center text-[0.58rem] uppercase tracking-[0.12em] transition ${
+                intended === id || plan === id
                   ? "bg-cream text-forest"
                   : "border border-cream/25 text-cream/80 hover:border-cream/50"
               }`}
             >
               {label}
-            </button>
+            </a>
           ))}
         </div>
         <p className="mt-3 text-xs font-light text-cream/50">
-          Billing is local for this MVP. See{" "}
+          Recurring card via Shopify Payments — not Autogiro. After checkout,
+          open Study with the same email.{" "}
           <Link href="/pricing" className="underline underline-offset-2">
-            Pricing
-          </Link>{" "}
-          for the full editorial list.
+            Compare plans
+          </Link>
+          .
         </p>
       </div>
     </>

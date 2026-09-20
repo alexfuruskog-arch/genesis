@@ -8,6 +8,7 @@ from app.config import get_settings
 from app.deps import CurrentUser
 from app.services.extraction import chunk_text, extract_text
 from app.services.llm import llm_client
+from app.services.membership import membership_service
 from app.services.store import store
 from app.services.supabase_client import get_supabase_client
 
@@ -24,6 +25,7 @@ class DocumentService:
         mime_type: str | None,
         notebook_model: str | None = None,
     ) -> dict:
+        membership_service.assert_can_scan(user)
         document_id = str(uuid4())
         safe_name = Path(filename).name or "notes.txt"
         # Path prefix = auth user id so Supabase storage RLS can scope by folder.
@@ -105,6 +107,7 @@ class DocumentService:
     ) -> dict:
         if not document_ids:
             raise ValueError("Select at least one scan.")
+        membership_service.assert_can_chat(user)
 
         documents = []
         for document_id in document_ids:

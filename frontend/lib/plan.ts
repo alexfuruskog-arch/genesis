@@ -1,4 +1,4 @@
-/** Client-side plan + weekly Study session caps (Free tier). */
+/** Client cache of the last server plan. Source of truth is the API. */
 
 export type PlanId = "free" | "standard" | "annual" | "scholar";
 
@@ -18,7 +18,29 @@ export function getPlan(): PlanId {
 }
 
 export function setPlan(plan: PlanId) {
+  if (typeof window === "undefined") return;
   window.localStorage.setItem(PLAN_KEY, plan);
+}
+
+export function applyServerPlan(plan: PlanId) {
+  if (typeof window === "undefined") return;
+  setPlan(plan);
+}
+
+export function applyServerUsage(input: {
+  plan?: PlanId;
+  chats_used?: number;
+  scans_used?: number;
+}) {
+  if (typeof window === "undefined") return;
+  if (input.plan) setPlan(input.plan);
+  if (typeof input.chats_used === "number") {
+    ensureWeek();
+    window.localStorage.setItem(COUNT_KEY, String(input.chats_used));
+  }
+  if (typeof input.scans_used === "number") {
+    window.localStorage.setItem(SCANS_KEY, String(input.scans_used));
+  }
 }
 
 export function isUnlimited(plan: PlanId = getPlan()) {

@@ -102,7 +102,7 @@ Create these three products so the **Pricing** page (`page.pricing`) Buy buttons
 | **Price** | 12.00 USD |
 | **Product type** | Membership |
 | **Tags** | membership, study, standard |
-| **Selling plan** | Optional Shopify subscription (monthly). Until then, sell as one-time and renew manually. |
+| **Selling plan** | Enable native Shopify Subscriptions (monthly). See `docs/SHOPIFY-SUBSCRIPTIONS.md`. |
 
 ### Annual — $96/year
 

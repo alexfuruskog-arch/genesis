@@ -4,6 +4,7 @@ from app.config import get_settings
 from app.deps import CurrentUser, get_current_user
 from app.schemas.documents import DocumentListResponse, UploadDocumentResponse
 from app.services.documents import document_service
+from app.services.membership import PlanLimitError
 
 router = APIRouter(tags=["documents"])
 
@@ -34,6 +35,8 @@ async def upload_document(
             mime_type=file.content_type,
             notebook_model=model,
         )
+    except PlanLimitError as exc:
+        raise HTTPException(status_code=403, detail=str(exc)) from exc
     except Exception as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
     return UploadDocumentResponse(**result)
