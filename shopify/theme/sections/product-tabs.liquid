@@ -4,13 +4,10 @@
     assign cornell = settings.product_cornell
   endif
   if cornell == blank
-    assign cornell = all_products['cornell-notebook']
-  endif
-  if cornell == blank
     assign cornell = all_products['arzive-cornell-notebook']
   endif
   if cornell == blank
-    assign cornell = all_products['cream-cornell-notebook']
+    assign cornell = all_products['cornell-notebook']
   endif
 
   assign math = section.settings.product_math
@@ -23,11 +20,8 @@
   if math == blank
     assign math = all_products['math-notebook']
   endif
-  if math == blank
-    assign math = all_products['green-math-notebook']
-  endif
 
-  assign cornell_handle = 'cornell-notebook'
+  assign cornell_handle = 'arzive-cornell-notebook'
   if cornell != blank
     assign cornell_handle = cornell.handle
   endif
@@ -47,7 +41,7 @@
         aria-selected="true"
         data-tab="cornell"
       >
-        Cornell · Cream
+        Cornell
       </button>
       <button
         type="button"
@@ -56,7 +50,7 @@
         aria-selected="false"
         data-tab="math"
       >
-        Math · Green
+        Math
       </button>
     </div>
 
@@ -66,7 +60,7 @@
         fallback_handle: cornell_handle,
         color_name: 'Cream',
         cover_asset: 'notebook-cream.jpg',
-        fallback_title: 'Cream Cornell Notebook',
+        fallback_title: 'Cornell Notebook',
         fallback_text: 'Cue, Main Notes, and Summary — the classic Cornell system on recycled cream paper, spiral-bound for lectures and revision.'
       %}
     </div>
@@ -77,7 +71,7 @@
         fallback_handle: math_handle,
         color_name: 'Forest green',
         cover_asset: 'notebook-green.jpg',
-        fallback_title: 'Green Math Notebook',
+        fallback_title: 'Math Notebook',
         fallback_text: 'Grid for Example and Practice Questions, with Formulas and Explanations beside — built for problem sets that need room to think.'
       %}
     </div>
@@ -93,12 +87,12 @@
     {
       "type": "product",
       "id": "product_cornell",
-      "label": "Cream Cornell product"
+      "label": "Cornell Notebook product"
     },
     {
       "type": "product",
       "id": "product_math",
-      "label": "Green Math product"
+      "label": "Math Notebook product"
     }
   ],
   "presets": [

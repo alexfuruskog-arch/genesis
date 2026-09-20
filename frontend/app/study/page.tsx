@@ -32,7 +32,7 @@ const HOW_STEPS = [
   {
     n: "01",
     title: "Capture",
-    copy: "Photograph a Cream Cornell or Green Math page into your private library.",
+    copy: "Photograph a Cornell or Math notebook page into your private library.",
   },
   {
     n: "02",
@@ -196,7 +196,7 @@ export default function StudyPage() {
             Read once. Recall hard. Remember longer.
           </h1>
           <p className="animate-fade-up-delay mt-5 max-w-xl text-[0.98rem] font-light leading-7 text-cream/72 sm:text-lg">
-            Capture Cream Cornell or Green Math pages, then force active recall with
+            Capture Cornell or Math notebook pages, then force active recall with
             practice exams and flashcards — the fast study loop, ARZIVE-designed.
           </p>
 
@@ -362,8 +362,8 @@ export default function StudyPage() {
               <div className="mt-5 flex flex-wrap gap-2">
                 {(
                   [
-                    { id: "cornell" as const, label: "Cream Cornell" },
-                    { id: "math" as const, label: "Green Math" },
+                    { id: "cornell" as const, label: "Cornell" },
+                    { id: "math" as const, label: "Math" },
                   ] as const
                 ).map((option) => (
                   <button
@@ -447,7 +447,7 @@ export default function StudyPage() {
               />
               <p className="mt-4 text-xs font-light text-forest/55">
                 .jpg .png .pdf .txt · max 10 MB · tagged as{" "}
-                {notebookModel === "cornell" ? "Cream Cornell" : "Green Math"}
+                {notebookModel === "cornell" ? "Cornell" : "Math"}
               </p>
               {uploadError ? <p className="mt-3 text-sm text-red-800">{uploadError}</p> : null}
               {uploadNotice ? <p className="mt-3 text-sm text-forest/75">{uploadNotice}</p> : null}
@@ -492,9 +492,9 @@ export default function StudyPage() {
                   const checked = selected.includes(doc.id);
                   const model =
                     doc.notebook_model === "math"
-                      ? "Green Math"
+                      ? "Math"
                       : doc.notebook_model === "cornell"
-                        ? "Cream Cornell"
+                        ? "Cornell"
                         : null;
                   return (
                     <li key={doc.id}>

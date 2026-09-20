@@ -74,11 +74,11 @@ services:
       - key: NEXT_PUBLIC_SUPABASE_ANON_KEY
         sync: false
       - key: NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN
-        sync: false
+        value: arzive.org
       - key: NEXT_PUBLIC_SHOPIFY_CORNELL_HANDLE
-        value: cornell-notebook
+        value: arzive-cornell-notebook
       - key: NEXT_PUBLIC_SHOPIFY_MATH_HANDLE
-        value: math-notebook
+        value: arzive-math-notebook
       - key: NEXT_PUBLIC_SHOPIFY_STOREFRONT_ACCESS_TOKEN
         sync: false
       - key: NEXT_PUBLIC_SHOPIFY_API_KEY

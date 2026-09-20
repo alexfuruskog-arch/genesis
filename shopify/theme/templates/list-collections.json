@@ -6,8 +6,8 @@
         "cornell": {
           "type": "notebook",
           "settings": {
-            "handle": "cornell-notebook",
-            "title": "Cream Cornell Notebook",
+            "handle": "arzive-cornell-notebook",
+            "title": "Cornell Notebook",
             "color_name": "Cream",
             "color_hex": "#f3efe6",
             "cover_asset": "notebook-cream.jpg",
@@ -18,8 +18,8 @@
         "math": {
           "type": "notebook",
           "settings": {
-            "handle": "math-notebook",
-            "title": "Green Math Notebook",
+            "handle": "arzive-math-notebook",
+            "title": "Math Notebook",
             "color_name": "Forest green",
             "color_hex": "#1a2e26",
             "cover_asset": "notebook-green.jpg",
@@ -31,7 +31,7 @@
       "block_order": ["cornell", "math"],
       "settings": {
         "heading": "Two notebook models",
-        "intro": "Cream Cornell for structured notes. Green Math for problem-solving. Checkout here — then scan pages in Study with Arzive under your account."
+        "intro": "Cornell for structured notes. Math for problem-solving. Checkout here — then scan pages in Study with Arzive under your account."
       }
     }
   },

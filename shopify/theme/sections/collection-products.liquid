@@ -3,7 +3,7 @@
     <p class="arzive-kicker">{{ collection.title | default: 'Shop' }}</p>
     <h1 class="arzive-shop__title">Notebooks</h1>
     <p class="arzive-shop__intro">
-      Cream Cornell for structured notes. Forest-green Math for problem-solving. One editorial photograph per product — never a pasted collage.
+      Cornell for structured notes. Math for problem-solving. One editorial photograph per product — never a pasted collage.
     </p>
     <div class="arzive-shop__grid">
       {% for product in collection.products %}
@@ -25,8 +25,8 @@
           description_fallback: product.description | strip_html | truncate: 180
         %}
       {% else %}
-        {% render 'product-card', handle: 'cornell-notebook', title_fallback: 'Cream Cornell Notebook', color_name: 'Cream', color_hex: '#F5F5F0', cover_asset: 'notebook-cream.jpg', description_fallback: 'Cue, Main Notes, and Summary on recycled cream paper.' %}
-        {% render 'product-card', handle: 'arzive-math-notebook', title_fallback: 'Green Math Notebook', color_name: 'Forest green', color_hex: '#0B2421', cover_asset: 'notebook-green.jpg', description_fallback: 'Grid for Example and Practice Questions — forest-green cover.' %}
+        {% render 'product-card', handle: 'arzive-cornell-notebook', title_fallback: 'Cornell Notebook', color_name: 'Cream', color_hex: '#F5F5F0', cover_asset: 'notebook-cream.jpg', description_fallback: 'Cue, Main Notes, and Summary on recycled cream paper.' %}
+        {% render 'product-card', handle: 'arzive-math-notebook', title_fallback: 'Math Notebook', color_name: 'Forest green', color_hex: '#0B2421', cover_asset: 'notebook-green.jpg', description_fallback: 'Grid for Example and Practice Questions — forest-green cover.' %}
       {% endfor %}
     </div>
   </div>

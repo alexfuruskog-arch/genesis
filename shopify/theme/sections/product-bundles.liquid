@@ -1,6 +1,9 @@
 {%- liquid
   assign cornell = section.settings.product_cornell
   if cornell == blank
+    assign cornell = all_products['arzive-cornell-notebook']
+  endif
+  if cornell == blank
     assign cornell = all_products['cornell-notebook']
   endif
   assign math = section.settings.product_math
@@ -11,7 +14,7 @@
     assign math = all_products['math-notebook']
   endif
 
-  assign cornell_url = '/products/cornell-notebook'
+  assign cornell_url = '/products/arzive-cornell-notebook'
   assign cornell_price = ''
   if cornell != blank
     assign cornell_url = cornell.url
@@ -36,38 +39,38 @@
     <div class="arzive-bundles__grid">
       <article class="arzive-bundle-card">
         <a class="arzive-bundle-card__media" href="{{ routes.all_products_collection_url }}">
-          <img src="{{ 'bundle-cornell-math.jpg' | asset_url }}" alt="Cream Cornell and Green Math notebooks" width="900" height="900" loading="lazy">
+          <img src="{{ 'bundle-cornell-math.jpg' | asset_url }}" alt="Cornell Notebook and Math Notebook" width="900" height="900" loading="lazy">
         </a>
         <p class="arzive-bundle-card__tag">New</p>
         <p class="arzive-bundle-card__stars" aria-label="5 stars">★★★★★</p>
         <h3 class="arzive-bundle-card__title">Back-to-school pair</h3>
-        <p class="arzive-bundle-card__text">Cream Cornell + Green Math — structured notes and problem-solving in one start kit.</p>
+        <p class="arzive-bundle-card__text">Cornell + Math — structured notes and problem-solving in one start kit.</p>
         <p class="arzive-bundle-card__price">Shop both</p>
-        <a class="arzive-btn arzive-btn--forest" href="{{ routes.all_products_collection_url }}">Shop pair</a>
+        <a class="arzive-btn arzive-btn--forest" href="{{ routes.all_products_collection_url }}">Go to shop</a>
       </article>
 
       <article class="arzive-bundle-card">
         <a class="arzive-bundle-card__media" href="{{ cornell_url }}">
-          <img src="{{ 'notebook-cream.jpg' | asset_url }}" alt="Cream Cornell Notebook" width="900" height="900" loading="lazy">
+          <img src="{{ 'notebook-cream.jpg' | asset_url }}" alt="Cornell Notebook" width="900" height="900" loading="lazy">
         </a>
         <p class="arzive-bundle-card__tag">New</p>
         <p class="arzive-bundle-card__stars" aria-label="5 stars">★★★★★</p>
-        <h3 class="arzive-bundle-card__title">{% if cornell != blank %}{{ cornell.title }}{% else %}The Cornell notebook{% endif %}</h3>
+        <h3 class="arzive-bundle-card__title">{% if cornell != blank %}{{ cornell.title }}{% else %}Cornell Notebook{% endif %}</h3>
         <p class="arzive-bundle-card__text">Cue, Main Notes, and Summary on recycled cream paper — spiral-bound for lectures and revision.</p>
         {% if cornell_price != blank %}<p class="arzive-bundle-card__price">{{ cornell_price }}</p>{% endif %}
-        <a class="arzive-btn arzive-btn--forest" href="{{ cornell_url }}">Shop Cornell</a>
+        <a class="arzive-btn arzive-btn--forest" href="{{ cornell_url }}">Go to shop</a>
       </article>
 
       <article class="arzive-bundle-card">
         <a class="arzive-bundle-card__media" href="{{ math_url }}">
-          <img src="{{ 'notebook-green.jpg' | asset_url }}" alt="Green Math Notebook" width="900" height="900" loading="lazy">
+          <img src="{{ 'notebook-green.jpg' | asset_url }}" alt="Math Notebook" width="900" height="900" loading="lazy">
         </a>
         <p class="arzive-bundle-card__tag">New</p>
         <p class="arzive-bundle-card__stars" aria-label="5 stars">★★★★★</p>
-        <h3 class="arzive-bundle-card__title">{% if math != blank %}{{ math.title }}{% else %}The Math study system{% endif %}</h3>
+        <h3 class="arzive-bundle-card__title">{% if math != blank %}{{ math.title }}{% else %}Math Notebook{% endif %}</h3>
         <p class="arzive-bundle-card__text">Grid for Example and Practice, with Formulas and Explanations beside — forest-green cover.</p>
         {% if math_price != blank %}<p class="arzive-bundle-card__price">{{ math_price }}</p>{% endif %}
-        <a class="arzive-btn arzive-btn--forest" href="{{ math_url }}">Shop Math</a>
+        <a class="arzive-btn arzive-btn--forest" href="{{ math_url }}">Go to shop</a>
       </article>
     </div>
   </div>

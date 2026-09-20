@@ -51,12 +51,12 @@
       {
         "type": "product",
         "id": "product_cornell",
-        "label": "Cream Cornell product"
+        "label": "Cornell Notebook product"
       },
       {
         "type": "product",
         "id": "product_math",
-        "label": "Green Math product"
+        "label": "Math Notebook product"
       }
     ]
   },

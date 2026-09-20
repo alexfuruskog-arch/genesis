@@ -3,8 +3,8 @@
     <div class="arzive-footer__col">
       <p class="arzive-footer__col-title">Shop</p>
       <a href="{{ routes.all_products_collection_url }}">All notebooks</a>
-      <a href="{{ routes.root_url }}">Cream Cornell</a>
-      <a href="{{ routes.root_url }}">Green Math</a>
+      <a href="{{ routes.root_url }}products/arzive-cornell-notebook">Cornell Notebook</a>
+      <a href="{{ routes.root_url }}products/arzive-math-notebook">Math Notebook</a>
     </div>
     <div class="arzive-footer__col">
       <p class="arzive-footer__col-title">Arzive</p>
@@ -28,7 +28,7 @@
   <div class="arzive-shell arzive-footer__bottom">
     <p class="arzive-footer__brand">ARZIVE</p>
     <p class="arzive-footer__copy">
-      {{ section.settings.copy | default: 'Notebooks that teach you how to study — Cream Cornell & Green Math.' }}
+      {{ section.settings.copy | default: 'Notebooks that teach you how to study — Cornell & Math.' }}
     </p>
   </div>
 </footer>
@@ -41,7 +41,7 @@
       "type": "textarea",
       "id": "copy",
       "label": "Footer copy",
-      "default": "Notebooks that teach you how to study — Cream Cornell & Green Math."
+      "default": "Notebooks that teach you how to study — Cornell & Math."
     }
   ]
 }

@@ -3,22 +3,20 @@
 import Image from "next/image";
 import Link from "next/link";
 
-import { shopifyStoreDomain } from "@/lib/env";
+import { shopifyStoreDomain, shopifyStoreUrl } from "@/lib/env";
 import { products, shopifyProductUrl } from "@/lib/products";
 
-function shopBase() {
-  const domain = (shopifyStoreDomain || "").replace(/^https?:\/\//, "").replace(/\/$/, "");
-  return domain ? `https://${domain}` : null;
-}
-
 export default function HomePage() {
-  const shop = shopBase();
   const cornell = products.find((p) => p.id === "cornell")!;
   const math = products.find((p) => p.id === "math")!;
   const cornellUrl =
-    shopifyProductUrl(cornell.shopifyHandle, shopifyStoreDomain) || "/shop#cornell";
+    shopifyProductUrl(cornell.shopifyHandle, shopifyStoreDomain) ||
+    shopifyStoreUrl(`/products/${cornell.shopifyHandle}`);
   const mathUrl =
-    shopifyProductUrl(math.shopifyHandle, shopifyStoreDomain) || "/shop#math";
+    shopifyProductUrl(math.shopifyHandle, shopifyStoreDomain) ||
+    shopifyStoreUrl(`/products/${math.shopifyHandle}`);
+  const shopUrl = shopifyStoreUrl();
+  const storyUrl = shopifyStoreUrl("/pages/our-story");
 
   return (
     <main className="bg-cream text-forest">
@@ -26,7 +24,7 @@ export default function HomePage() {
         <div className="relative min-h-[28rem] overflow-hidden bg-cream-soft">
           <Image
             src="/products/notebook-cream.jpg"
-            alt="Cream Cornell Notebook lifestyle"
+            alt="Cornell Notebook"
             fill
             className="object-cover"
             priority
@@ -42,7 +40,7 @@ export default function HomePage() {
           </div>
           <div className="absolute inset-x-0 bottom-0 z-10 p-6 sm:p-10">
             <p className="text-[0.62rem] uppercase tracking-[0.2em] text-forest/70">
-              Cream Cornell
+              Cornell
             </p>
             <h1 className="mt-3 max-w-md font-display text-[1.85rem] leading-[1.15] tracking-[0.01em] sm:text-[2.35rem]">
               Join students striving for top grades
@@ -52,7 +50,7 @@ export default function HomePage() {
               cream paper.
             </p>
             <a href={cornellUrl} className="btn-ink mt-5 inline-flex">
-              Shop the Cornell notebook
+              Go to shop
             </a>
           </div>
         </div>
@@ -60,7 +58,7 @@ export default function HomePage() {
         <div className="relative min-h-[28rem] overflow-hidden bg-forest text-cream">
           <Image
             src="/products/notebook-green.jpg"
-            alt="Green Math Notebook"
+            alt="Math Notebook"
             fill
             className="object-cover opacity-90"
             priority
@@ -75,12 +73,12 @@ export default function HomePage() {
               The notebooks teachers and students swear by
             </h2>
             <p className="mt-3 max-w-sm text-sm font-light leading-6 text-cream/72">
-              Cream Cornell for structured thinking. Forest-green Math for
-              problem-solving — then Study with Arzive turns pages into practice.
+              Cornell for structured thinking. Math for problem-solving — then Study
+              with Arzive turns pages into practice.
             </p>
             <div className="mt-5 flex flex-wrap gap-3">
               <a href={mathUrl} className="btn-solid">
-                Shop the Math study system
+                Go to shop
               </a>
               <Link href="/study" className="btn-ghost">
                 Study with Arzive
@@ -93,7 +91,7 @@ export default function HomePage() {
       <section className="bg-forest py-4 text-cream">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-x-10 gap-y-3 px-5 text-[0.62rem] uppercase tracking-[0.16em] text-cream/90 sm:px-8">
           <span>Trusted by students</span>
-          <span>Math study system</span>
+          <span>Math notebook</span>
           <span>Cornell method</span>
           <span>Active recall practice</span>
         </div>
@@ -109,6 +107,17 @@ export default function HomePage() {
         <p className="mt-6 text-[0.68rem] uppercase italic tracking-[0.2em] text-forest/55">
           The only notebook that teaches you how to study.
         </p>
+        <div className="mt-8 flex flex-wrap justify-center gap-3">
+          <a href={shopUrl} className="btn-ink">
+            Go to shop
+          </a>
+          <a
+            href={storyUrl}
+            className="border border-forest/25 px-4 py-2.5 text-[0.65rem] uppercase tracking-[0.14em] text-forest"
+          >
+            Our story
+          </a>
+        </div>
       </section>
 
       <section className="mx-auto max-w-6xl px-5 pb-20 sm:px-8 lg:px-10">
@@ -125,42 +134,42 @@ export default function HomePage() {
             <div className="relative aspect-[4/5] overflow-hidden bg-cream-soft">
               <Image
                 src="/products/notebook-cream.jpg"
-                alt="Cream Cornell"
+                alt="Cornell Notebook"
                 fill
                 className="object-cover"
                 sizes="(max-width: 768px) 100vw, 50vw"
               />
             </div>
             <p className="mt-5 text-[0.58rem] font-semibold uppercase tracking-[0.16em] text-[#8a6b3d]">
-              Cream Cornell
+              Structured thinking
             </p>
             <h3 className="mt-2 font-display text-2xl">{cornell.name}</h3>
             <p className="mt-2 max-w-sm text-sm font-light leading-6 text-forest/70">
               {cornell.description}
             </p>
             <a href={cornellUrl} className="btn-ink mt-5 self-start">
-              Shop Cornell
+              Go to shop
             </a>
           </article>
           <article className="flex flex-col">
             <div className="relative aspect-[4/5] overflow-hidden bg-forest">
               <Image
                 src="/products/notebook-green.jpg"
-                alt="Green Math"
+                alt="Math Notebook"
                 fill
                 className="object-cover"
                 sizes="(max-width: 768px) 100vw, 50vw"
               />
             </div>
             <p className="mt-5 text-[0.58rem] font-semibold uppercase tracking-[0.16em] text-[#8a6b3d]">
-              Green Math
+              Mathematical clarity
             </p>
             <h3 className="mt-2 font-display text-2xl">{math.name}</h3>
             <p className="mt-2 max-w-sm text-sm font-light leading-6 text-forest/70">
               {math.description}
             </p>
             <a href={mathUrl} className="btn-ink mt-5 self-start">
-              Shop Math
+              Go to shop
             </a>
           </article>
         </div>
@@ -180,16 +189,12 @@ export default function HomePage() {
             <Link href="/study" className="btn-solid">
               Open Study
             </Link>
-            <Link href="/pricing" className="btn-ghost">
-              Pricing
-            </Link>
+            <a href={shopUrl} className="btn-ghost">
+              Go to shop
+            </a>
           </div>
         </div>
       </section>
-
-      {shop ? (
-        <p className="sr-only">Shopify storefront {shop}</p>
-      ) : null}
     </main>
   );
 }

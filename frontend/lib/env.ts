@@ -5,16 +5,23 @@ export const apiUrl = "/backend";
 export const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 export const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
 
-/** Always the live Shopify shop — logo / Shop / bag never point at Next. */
+/** Custom domain first; myshopify fallback. */
 export const shopifyStoreDomain =
-  process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN || "sexb4g-xw.myshopify.com";
+  process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN || "arzive.org";
+
 export const shopifyCornellHandle =
-  process.env.NEXT_PUBLIC_SHOPIFY_CORNELL_HANDLE ?? "cornell-notebook";
+  process.env.NEXT_PUBLIC_SHOPIFY_CORNELL_HANDLE ?? "arzive-cornell-notebook";
 export const shopifyMathHandle =
   process.env.NEXT_PUBLIC_SHOPIFY_MATH_HANDLE ?? "arzive-math-notebook";
 export const shopifyStorefrontToken =
   process.env.NEXT_PUBLIC_SHOPIFY_STOREFRONT_ACCESS_TOKEN ?? "";
 export const shopifyApiKey = process.env.NEXT_PUBLIC_SHOPIFY_API_KEY ?? "";
+
+export function shopifyStoreUrl(path = ""): string {
+  const domain = shopifyStoreDomain.replace(/^https?:\/\//, "").replace(/\/$/, "");
+  const clean = path.startsWith("/") ? path : path ? `/${path}` : "";
+  return `https://${domain}${clean}`;
+}
 
 export const publicConfig = {
   apiUrl,

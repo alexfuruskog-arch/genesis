@@ -3,7 +3,7 @@
     <p class="arzive-kicker">Shop</p>
     <h1 class="arzive-shop__title">{{ section.settings.heading | default: 'Two notebook models' }}</h1>
     <p class="arzive-shop__intro">
-      {{ section.settings.intro | default: 'Cream Cornell for structured thinking. Forest-green Math for problem-solving. Checkout here — then scan pages in Study with Arzive under your account.' }}
+      {{ section.settings.intro | default: 'Cornell for structured thinking. Math for problem-solving. Checkout here — then scan pages in Study with Arzive under your account.' }}
     </p>
 
     <div class="arzive-shop__grid">
@@ -52,7 +52,7 @@
       "type": "textarea",
       "id": "intro",
       "label": "Intro",
-      "default": "Cream Cornell for structured thinking. Forest-green Math for problem-solving. Checkout here — then scan pages in Study with Arzive under your account."
+      "default": "Cornell for structured thinking. Math for problem-solving. Checkout here — then scan pages in Study with Arzive under your account."
     }
   ],
   "blocks": [
@@ -61,8 +61,8 @@
       "name": "Notebook",
       "settings": [
         { "type": "product", "id": "product", "label": "Product" },
-        { "type": "text", "id": "handle", "label": "Fallback handle", "default": "cornell-notebook" },
-        { "type": "text", "id": "title", "label": "Fallback title", "default": "Cream Cornell Notebook" },
+        { "type": "text", "id": "handle", "label": "Fallback handle", "default": "arzive-cornell-notebook" },
+        { "type": "text", "id": "title", "label": "Fallback title", "default": "Cornell Notebook" },
         { "type": "text", "id": "color_name", "label": "Color name", "default": "Cream" },
         { "type": "color", "id": "color_hex", "label": "Swatch", "default": "#f3efe6" },
         { "type": "text", "id": "cover_asset", "label": "Cover asset filename", "default": "notebook-cream.jpg" },
@@ -77,8 +77,8 @@
         {
           "type": "notebook",
           "settings": {
-            "handle": "cornell-notebook",
-            "title": "Cream Cornell Notebook",
+            "handle": "arzive-cornell-notebook",
+            "title": "Cornell Notebook",
             "color_name": "Cream",
             "color_hex": "#f3efe6",
             "cover_asset": "notebook-cream.jpg",
@@ -89,7 +89,7 @@
           "type": "notebook",
           "settings": {
             "handle": "arzive-math-notebook",
-            "title": "Green Math Notebook",
+            "title": "Math Notebook",
             "color_name": "Forest green",
             "color_hex": "#1a2e26",
             "cover_asset": "notebook-green.jpg",

@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { shopifyStoreUrl } from "@/lib/env";
+
 export default function StoryPage() {
   return (
     <main className="bg-forest text-cream">
@@ -17,9 +19,12 @@ export default function StoryPage() {
           study with them.
         </p>
         <div className="mt-10 flex flex-wrap gap-3">
-          <Link href="/shop" className="btn-solid">
-            Shop notebooks
-          </Link>
+          <a href={shopifyStoreUrl()} className="btn-solid">
+            Go to shop
+          </a>
+          <a href={shopifyStoreUrl("/pages/our-story")} className="btn-ghost">
+            Our story on the shop
+          </a>
           <Link href="/study" className="btn-ghost">
             Study with Arzive
           </Link>

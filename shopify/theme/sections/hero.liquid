@@ -9,7 +9,7 @@
     </p>
     <div class="arzive-hero__actions">
       <a class="arzive-btn arzive-btn--solid" href="{{ section.settings.primary_link | default: routes.all_products_collection_url }}">
-        {{ section.settings.primary_label | default: 'Shop notebooks' }}
+        {{ section.settings.primary_label | default: 'Go to shop' }}
       </a>
       {% if section.settings.secondary_label != blank %}
         <a class="arzive-btn arzive-btn--ghost" href="{{ section.settings.secondary_link | default: pages['our-story'].url | default: '#story' }}">
@@ -48,7 +48,7 @@
       "type": "text",
       "id": "primary_label",
       "label": "Primary button label",
-      "default": "Shop notebooks"
+      "default": "Go to shop"
     },
     {
       "type": "url",

@@ -14,7 +14,8 @@ export type Product = {
 };
 
 const cornellHandle =
-  process.env.NEXT_PUBLIC_SHOPIFY_CORNELL_HANDLE?.trim() || "cornell-notebook";
+  process.env.NEXT_PUBLIC_SHOPIFY_CORNELL_HANDLE?.trim() ||
+  "arzive-cornell-notebook";
 const mathHandle =
   process.env.NEXT_PUBLIC_SHOPIFY_MATH_HANDLE?.trim() || "arzive-math-notebook";
 
@@ -22,7 +23,7 @@ export const products: Product[] = [
   {
     id: "cornell",
     slug: "cornell",
-    name: "Cream Cornell Notebook",
+    name: "Cornell Notebook",
     shortName: "Cornell",
     colorName: "Cream",
     colorHex: "#f3efe6",
@@ -32,12 +33,12 @@ export const products: Product[] = [
     coverImage: "/products/notebook-cream.jpg",
     layoutImage: "/products/cornell-pages.jpg",
     shopifyHandle: cornellHandle,
-    priceLabel: "Checkout on Shopify",
+    priceLabel: "Go to shop",
   },
   {
     id: "math",
     slug: "math",
-    name: "Green Math Notebook",
+    name: "Math Notebook",
     shortName: "Math",
     colorName: "Forest green",
     colorHex: "#1a2e26",
@@ -47,7 +48,7 @@ export const products: Product[] = [
     coverImage: "/products/notebook-green.jpg",
     layoutImage: "/products/math-pages.jpg",
     shopifyHandle: mathHandle,
-    priceLabel: "Checkout on Shopify",
+    priceLabel: "Go to shop",
   },
 ];
 
@@ -55,7 +56,11 @@ export function shopifyProductUrl(
   handle: string,
   storeDomain?: string,
 ): string | null {
-  const domain = (storeDomain || process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN || "")
+  const domain = (
+    storeDomain ||
+    process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN ||
+    "arzive.org"
+  )
     .replace(/^https?:\/\//, "")
     .replace(/\/$/, "");
   if (!domain) return null;

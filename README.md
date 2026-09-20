@@ -42,7 +42,7 @@ Open [http://127.0.0.1:43123](http://127.0.0.1:43123). The UI calls `/backend/*`
 
 ## Architecture (why one site)
 
-- **Shop** deep-links to Shopify product pages when `NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN` is set (handles: `cornell-notebook`, `math-notebook` — see [`shopify/products.md`](shopify/products.md)).
+- **Shop** deep-links to Shopify product pages when `NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN` is set (handles: `arzive-cornell-notebook`, `arzive-math-notebook` — see [`shopify/products.md`](shopify/products.md)).
 - **Study with Arzive** is `/study` on the same origin — camera/upload scans under your account, multi-note selection, practice exam or flashcards. Files land in Supabase Storage with RLS when configured.
 - **Pricing** (`/pricing`): Free (3 Study sessions/week, 5 scans), Standard **$12/mo**, Annual **$96/yr**, Scholar **$29/mo**. Free limits are enforced in the Study UI.
 - Later: import the Shopify theme into this Next app or use Hydrogen/Storefront API; still one ARZIVE brand.
@@ -76,8 +76,8 @@ Open [http://127.0.0.1:43123](http://127.0.0.1:43123). The UI calls `/backend/*`
 | `NEXT_PUBLIC_SUPABASE_URL` | Public Supabase URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Public anon key |
 | `NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN` | Public shop domain for buy links |
-| `NEXT_PUBLIC_SHOPIFY_CORNELL_HANDLE` | Optional override (default `cornell-notebook`) |
-| `NEXT_PUBLIC_SHOPIFY_MATH_HANDLE` | Optional override (default `math-notebook`) |
+| `NEXT_PUBLIC_SHOPIFY_CORNELL_HANDLE` | Optional override (default `arzive-cornell-notebook`) |
+| `NEXT_PUBLIC_SHOPIFY_MATH_HANDLE` | Optional override (default `arzive-math-notebook`) |
 | `NEXT_PUBLIC_SHOPIFY_STOREFRONT_ACCESS_TOKEN` | Storefront API (later checkout UI) |
 | `NEXT_PUBLIC_SHOPIFY_API_KEY` | Public Shopify app key |
 
@@ -102,7 +102,7 @@ Study with Arzive stays on Next.js; set **Study with Arzive URL** in theme setti
 
 ## Shopify product paste
 
-Paste-ready titles, descriptions, handles, and CSV for **Cream Cornell Notebook** and **Green Math Notebook**:
+Paste-ready titles, descriptions, handles, and CSV for **Cornell Notebook** and **Math Notebook**:
 
 - [`shopify/products.md`](shopify/products.md) — copy into Shopify Admin
 - [`shopify/products.csv`](shopify/products.csv) — Products → Import

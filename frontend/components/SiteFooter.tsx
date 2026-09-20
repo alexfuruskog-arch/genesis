@@ -1,13 +1,6 @@
 import Link from "next/link";
 
-import { shopifyStoreDomain } from "@/lib/env";
-
-function shopUrl(path = "") {
-  const domain = (shopifyStoreDomain || "sexb4g-xw.myshopify.com")
-    .replace(/^https?:\/\//, "")
-    .replace(/\/$/, "");
-  return `https://${domain}${path}`;
-}
+import { shopifyStoreUrl } from "@/lib/env";
 
 export function SiteFooter() {
   return (
@@ -20,7 +13,7 @@ export function SiteFooter() {
           </p>
         </div>
         <nav className="flex flex-wrap gap-x-7 gap-y-3 text-[0.62rem] uppercase tracking-[0.16em] text-forest/70">
-          <a href={shopUrl("/collections/all")} className="transition hover:text-forest">
+          <a href={shopifyStoreUrl()} className="transition hover:text-forest">
             Shop
           </a>
           <Link href="/study" className="transition hover:text-forest">
@@ -29,6 +22,12 @@ export function SiteFooter() {
           <Link href="/pricing" className="transition hover:text-forest">
             Pricing
           </Link>
+          <a
+            href={shopifyStoreUrl("/pages/our-story")}
+            className="transition hover:text-forest"
+          >
+            Our story
+          </a>
           <Link href="/account" className="transition hover:text-forest">
             Account
           </Link>

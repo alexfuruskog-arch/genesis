@@ -4,8 +4,8 @@ Use these two products in Shopify Admin. Handles match the Next.js Shop buy link
 
 Default product URLs:
 
-- `https://YOUR-STORE.myshopify.com/products/cornell-notebook`
-- `https://YOUR-STORE.myshopify.com/products/math-notebook`
+- `https://YOUR-STORE.myshopify.com/products/arzive-cornell-notebook`
+- `https://YOUR-STORE.myshopify.com/products/arzive-math-notebook`
 
 If your Admin handles differ, set:
 
@@ -14,12 +14,12 @@ If your Admin handles differ, set:
 
 ---
 
-## 1) Cream Cornell Notebook
+## 1) Cornell Notebook
 
 | Field | Value |
 | --- | --- |
-| **Title** | Cream Cornell Notebook |
-| **Handle / URL slug** | `cornell-notebook` |
+| **Title** | Cornell Notebook |
+| **Handle / URL slug** | `arzive-cornell-notebook` |
 | **Vendor** | ARZIVE |
 | **Product type** | Notebook |
 | **Tags** | cornell, cream, study, notebook |
@@ -28,7 +28,7 @@ If your Admin handles differ, set:
 **Description (paste into Shopify):**
 
 ```html
-<p>The Cream Cornell Notebook — structured thinking on recycled cream paper.</p>
+<p>The Cornell Notebook — structured thinking on recycled cream paper.</p>
 <p>Each page follows the classic Cornell system: <strong>Cues</strong>, <strong>Main Notes</strong>, and <strong>Summary</strong>. Spiral-bound for lectures and revision.</p>
 <p>After you write, open <em>Study with Arzive</em>, scan your pages to your account, and turn selected notes into a practice exam or flashcards.</p>
 <ul>
@@ -42,12 +42,12 @@ If your Admin handles differ, set:
 
 ---
 
-## 2) Green Math Notebook
+## 2) Math Notebook
 
 | Field | Value |
 | --- | --- |
-| **Title** | Green Math Notebook |
-| **Handle / URL slug** | `math-notebook` |
+| **Title** | Math Notebook |
+| **Handle / URL slug** | `arzive-math-notebook` |
 | **Vendor** | ARZIVE |
 | **Product type** | Notebook |
 | **Tags** | math, green, study, notebook |
@@ -56,7 +56,7 @@ If your Admin handles differ, set:
 **Description (paste into Shopify):**
 
 ```html
-<p>The Green Math Notebook — mathematical clarity in forest green.</p>
+<p>The Math Notebook — mathematical clarity in forest green.</p>
 <p>Pages are built for problem sets: a large <strong>Example and Practice Questions</strong> grid, plus <strong>Formulas</strong> and <strong>Explanations</strong> beside.</p>
 <p>Scan finished pages into Study with Arzive under your customer account to generate practice exams or flashcards from the notes you choose.</p>
 <ul>
@@ -81,8 +81,8 @@ In `frontend/.env.local`:
 ```bash
 NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN=your-store.myshopify.com
 # optional overrides if Admin handles differ:
-# NEXT_PUBLIC_SHOPIFY_CORNELL_HANDLE=cornell-notebook
-# NEXT_PUBLIC_SHOPIFY_MATH_HANDLE=math-notebook
+# NEXT_PUBLIC_SHOPIFY_CORNELL_HANDLE=arzive-cornell-notebook
+# NEXT_PUBLIC_SHOPIFY_MATH_HANDLE=arzive-math-notebook
 ```
 
 Shop buttons then open `/products/<handle>` on that domain.

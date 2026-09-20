@@ -3,25 +3,17 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { shopifyStoreDomain } from "@/lib/env";
-
-function shopUrl(path = "") {
-  const domain = (shopifyStoreDomain || "sexb4g-xw.myshopify.com")
-    .replace(/^https?:\/\//, "")
-    .replace(/\/$/, "");
-  return `https://${domain}${path}`;
-}
+import { shopifyStoreUrl } from "@/lib/env";
 
 export function SiteNav() {
   const pathname = usePathname();
-  // Forest header only on home & story. Study / Pricing / Shop / Account stay cream
-  // (pathname === "/pricing" must never match forest).
-  const onForest = pathname === "/" || pathname === "/story";
+  // Forest header only on home. Study / Pricing / Shop / Account stay cream.
+  const onForest = pathname === "/";
 
   return (
     <>
       <div className="arzive-announce">
-        <a href={shopUrl("/collections/all")}>
+        <a href={shopifyStoreUrl("/collections/all")}>
           Free shipping over $75 · Shop all →
         </a>
       </div>
@@ -35,7 +27,7 @@ export function SiteNav() {
         <div className="mx-auto grid max-w-6xl grid-cols-[1fr_auto_1fr] items-center gap-2 px-5 py-4 sm:gap-4 sm:px-8 lg:px-10">
           <nav className="flex min-w-0 items-center gap-4 sm:gap-7">
             <a
-              href={shopUrl("/collections/all")}
+              href={shopifyStoreUrl()}
               className={`nav-link ${onForest ? "text-cream" : "text-forest"}`}
             >
               Shop
@@ -50,7 +42,7 @@ export function SiteNav() {
           </nav>
 
           <a
-            href={shopUrl()}
+            href={shopifyStoreUrl()}
             className={`font-display text-center text-[1.45rem] tracking-[0.3em] sm:text-[1.75rem] sm:tracking-[0.34em] ${
               onForest ? "text-cream" : "text-forest"
             }`}
@@ -65,12 +57,12 @@ export function SiteNav() {
             >
               Pricing
             </Link>
-            <Link
-              href="/story"
+            <a
+              href={shopifyStoreUrl("/pages/our-story")}
               className={`nav-link hidden sm:inline ${onForest ? "text-cream" : "text-forest"}`}
             >
               Our story
-            </Link>
+            </a>
             <Link
               href="/account"
               className={`nav-link ${onForest ? "text-cream" : "text-forest"}`}
@@ -78,7 +70,7 @@ export function SiteNav() {
               Account
             </Link>
             <a
-              href={shopUrl("/cart")}
+              href={shopifyStoreUrl("/cart")}
               aria-label="Shopping bag"
               className={`${onForest ? "text-cream" : "text-forest"} transition hover:opacity-70`}
             >
