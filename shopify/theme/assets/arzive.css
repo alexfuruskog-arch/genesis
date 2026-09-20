@@ -209,6 +209,16 @@ input {
   color: var(--forest);
 }
 
+.arzive-btn--outline {
+  background: transparent;
+  color: var(--forest);
+  border: 1px solid rgba(11, 36, 33, 0.3);
+}
+
+.arzive-btn--outline:hover {
+  border-color: var(--forest);
+}
+
 .arzive-btn--ghost {
   background: transparent;
   color: var(--cream);
@@ -1351,4 +1361,242 @@ input {
 .template-page .arzive-main {
   background: var(--forest);
   color: var(--cream);
+}
+
+/* —— Pricing (membership checkout) —— */
+.arzive-pricing {
+  background: var(--cream);
+  color: var(--forest);
+  padding: 3.5rem 0 5rem;
+}
+
+.arzive-pricing__head {
+  text-align: center;
+  max-width: 36rem;
+  margin: 0 auto 2.75rem;
+}
+
+.arzive-pricing__label {
+  margin: 0;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 0.95rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.arzive-pricing__title {
+  margin: 1rem 0 0;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-weight: 500;
+  font-size: clamp(2rem, 4vw, 2.85rem);
+  line-height: 1.15;
+}
+
+.arzive-pricing__sub {
+  margin: 1rem auto 0;
+  font-weight: 300;
+  line-height: 1.65;
+  color: rgba(11, 36, 33, 0.68);
+}
+
+.arzive-pricing__grid {
+  display: grid;
+  gap: 1rem;
+}
+
+@media (min-width: 700px) {
+  .arzive-pricing__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1100px) {
+  .arzive-pricing__grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1.15rem;
+  }
+}
+
+.arzive-plan {
+  background: #f0ebe3;
+  padding: 1.65rem 1.35rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  border: 1px solid transparent;
+}
+
+.arzive-plan--featured {
+  background: var(--forest);
+  color: var(--cream);
+}
+
+.arzive-plan__badge {
+  margin: 0;
+  font-size: 0.58rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  opacity: 0.55;
+}
+
+.arzive-plan--featured .arzive-plan__badge {
+  opacity: 0.7;
+  color: var(--cream);
+}
+
+.arzive-plan__name {
+  margin: 0.65rem 0 0;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-weight: 500;
+  font-size: 1.85rem;
+  letter-spacing: 0.02em;
+}
+
+.arzive-plan__note {
+  margin: 0.45rem 0 0;
+  font-weight: 300;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  opacity: 0.72;
+  min-height: 2.6em;
+}
+
+.arzive-plan__price {
+  margin: 1.25rem 0 0;
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+}
+
+.arzive-plan__amount {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 2.55rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  line-height: 1;
+}
+
+.arzive-plan__cadence {
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.55;
+}
+
+.arzive-plan__features {
+  list-style: none;
+  margin: 1.35rem 0 0;
+  padding: 1.15rem 0 0;
+  border-top: 1px solid rgba(11, 36, 33, 0.12);
+  flex: 1;
+}
+
+.arzive-plan--featured .arzive-plan__features {
+  border-top-color: rgba(245, 245, 240, 0.18);
+}
+
+.arzive-plan__features li {
+  position: relative;
+  padding-left: 1rem;
+  margin-top: 0.55rem;
+  font-size: 0.88rem;
+  font-weight: 300;
+  line-height: 1.45;
+  opacity: 0.82;
+}
+
+.arzive-plan__features li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.55em;
+  width: 0.35rem;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.55;
+}
+
+.arzive-plan__form {
+  margin-top: 1.5rem;
+}
+
+.arzive-plan__cta {
+  margin-top: 1.5rem;
+  width: 100%;
+}
+
+.arzive-plan__form .arzive-plan__cta {
+  margin-top: 0;
+}
+
+.arzive-plan--featured .arzive-btn--forest {
+  background: var(--cream);
+  color: var(--forest);
+}
+
+.arzive-plan--featured .arzive-btn--outline {
+  color: var(--cream);
+  border-color: rgba(245, 245, 240, 0.4);
+}
+
+.arzive-pricing__compare {
+  margin-top: 4rem;
+  padding-top: 2.5rem;
+  border-top: 1px solid rgba(11, 36, 33, 0.1);
+}
+
+.arzive-pricing__compare-title {
+  margin: 0 0 1.5rem;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-weight: 500;
+  font-size: 1.65rem;
+  text-align: center;
+}
+
+.arzive-pricing__table-wrap {
+  overflow-x: auto;
+}
+
+.arzive-pricing__table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 36rem;
+  font-size: 0.88rem;
+}
+
+.arzive-pricing__table th,
+.arzive-pricing__table td {
+  padding: 0.85rem 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid rgba(11, 36, 33, 0.1);
+  font-weight: 300;
+}
+
+.arzive-pricing__table thead th {
+  font-size: 0.62rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-weight: 600;
+  opacity: 0.7;
+}
+
+.arzive-pricing__table tbody th {
+  font-weight: 400;
+  color: rgba(11, 36, 33, 0.85);
+}
+
+.arzive-pricing__admin {
+  margin: 2.5rem auto 0;
+  max-width: 40rem;
+  text-align: center;
+  font-size: 0.78rem;
+  font-weight: 300;
+  line-height: 1.6;
+  color: rgba(11, 36, 33, 0.55);
+}
+
+.arzive-pricing__admin code {
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
 }

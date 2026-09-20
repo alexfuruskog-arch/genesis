@@ -1,7 +1,7 @@
 {%- liquid
   assign study_url = settings.study_app_url | default: 'https://arzive-web.onrender.com/study'
   assign account_url = settings.account_app_url | default: 'https://arzive-web.onrender.com/account'
-  assign pricing_url = settings.pricing_app_url | default: 'https://arzive-web.onrender.com/pricing'
+  assign pricing_url = pages['pricing'].url | default: settings.pricing_app_url | default: '/pages/pricing'
   assign story_url = pages['our-story'].url | default: '/pages/our-story'
 -%}
 

@@ -1,0 +1,17 @@
+{
+  "sections": {
+    "pricing": {
+      "type": "pricing",
+      "settings": {
+        "label": "Study with Arzive",
+        "heading": "Choose how you practice.",
+        "subheading": "Free tastes the loop. Paid unlocks unlimited chats and scans — checkout on Shopify.",
+        "study_url": "https://arzive-web.onrender.com/study",
+        "standard_handle": "membership-standard",
+        "annual_handle": "membership-annual",
+        "scholar_handle": "membership-scholar"
+      }
+    }
+  },
+  "order": ["pricing"]
+}

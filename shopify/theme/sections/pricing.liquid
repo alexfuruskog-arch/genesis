@@ -1,0 +1,236 @@
+{%- liquid
+  assign study_url = section.settings.study_url | default: settings.study_app_url | default: 'https://arzive-web.onrender.com/study'
+
+  assign standard = section.settings.product_standard
+  if standard == blank and section.settings.standard_handle != blank
+    assign standard = all_products[section.settings.standard_handle]
+  endif
+
+  assign annual = section.settings.product_annual
+  if annual == blank and section.settings.annual_handle != blank
+    assign annual = all_products[section.settings.annual_handle]
+  endif
+
+  assign scholar = section.settings.product_scholar
+  if scholar == blank and section.settings.scholar_handle != blank
+    assign scholar = all_products[section.settings.scholar_handle]
+  endif
+
+  assign standard_url = standard.url | default: '/products/membership-standard'
+  assign annual_url = annual.url | default: '/products/membership-annual'
+  assign scholar_url = scholar.url | default: '/products/membership-scholar'
+
+  assign standard_variant = standard.selected_or_first_available_variant
+  assign annual_variant = annual.selected_or_first_available_variant
+  assign scholar_variant = scholar.selected_or_first_available_variant
+-%}
+
+<section class="arzive-pricing">
+  <div class="arzive-shell">
+    <header class="arzive-pricing__head">
+      <p class="arzive-pricing__label">{{ section.settings.label | default: 'Study with Arzive' }}</p>
+      <h1 class="arzive-pricing__title">{{ section.settings.heading | default: 'Choose how you practice.' }}</h1>
+      <p class="arzive-pricing__sub">
+        {{ section.settings.subheading | default: 'Free tastes the loop. Paid unlocks unlimited chats and scans — checkout on Shopify.' }}
+      </p>
+    </header>
+
+    <div class="arzive-pricing__grid">
+      {%- comment -%} Free {%- endcomment -%}
+      <article class="arzive-plan">
+        <p class="arzive-plan__badge">Start here</p>
+        <h2 class="arzive-plan__name">Free</h2>
+        <p class="arzive-plan__note">Taste the loop. Feel the limit.</p>
+        <p class="arzive-plan__price">
+          <span class="arzive-plan__amount">$0</span>
+        </p>
+        <ul class="arzive-plan__features">
+          <li>3 Study chats per week</li>
+          <li>Up to 5 scans</li>
+          <li>Cream Cornell &amp; Green Math tagging</li>
+          <li>Practice exams &amp; flashcards</li>
+        </ul>
+        <a class="arzive-btn arzive-btn--outline arzive-plan__cta" href="{{ study_url }}" rel="noopener">
+          Open Study free
+        </a>
+      </article>
+
+      {%- comment -%} Standard {%- endcomment -%}
+      <article class="arzive-plan arzive-plan--featured">
+        <p class="arzive-plan__badge">Most chosen</p>
+        <h2 class="arzive-plan__name">Standard</h2>
+        <p class="arzive-plan__note">The study loop, unlocked.</p>
+        <p class="arzive-plan__price">
+          <span class="arzive-plan__amount">$12</span>
+          <span class="arzive-plan__cadence">/ month</span>
+        </p>
+        <ul class="arzive-plan__features">
+          <li>Unlimited practice exams &amp; flashcards</li>
+          <li>Unlimited scans</li>
+          <li>No weekly chat caps</li>
+          <li>Priority in exam week</li>
+        </ul>
+        {% if standard_variant %}
+          <form class="arzive-plan__form" action="{{ routes.cart_add_url }}" method="post">
+            <input type="hidden" name="id" value="{{ standard_variant.id }}">
+            <input type="hidden" name="quantity" value="1">
+            <input type="hidden" name="return_to" value="/checkout">
+            <button type="submit" class="arzive-btn arzive-btn--forest arzive-plan__cta">
+              Buy Standard · $12
+            </button>
+          </form>
+        {% else %}
+          <a class="arzive-btn arzive-btn--forest arzive-plan__cta" href="{{ standard_url }}">
+            Buy Standard · $12
+          </a>
+        {% endif %}
+      </article>
+
+      {%- comment -%} Annual {%- endcomment -%}
+      <article class="arzive-plan">
+        <p class="arzive-plan__badge">Best value</p>
+        <h2 class="arzive-plan__name">Annual</h2>
+        <p class="arzive-plan__note">Eight dollars a month — save 33%.</p>
+        <p class="arzive-plan__price">
+          <span class="arzive-plan__amount">$96</span>
+          <span class="arzive-plan__cadence">/ year</span>
+        </p>
+        <ul class="arzive-plan__features">
+          <li>Everything in Standard</li>
+          <li>Billed once yearly</li>
+          <li>Early access to new recall formats</li>
+          <li>Semester reset rituals</li>
+        </ul>
+        {% if annual_variant %}
+          <form class="arzive-plan__form" action="{{ routes.cart_add_url }}" method="post">
+            <input type="hidden" name="id" value="{{ annual_variant.id }}">
+            <input type="hidden" name="quantity" value="1">
+            <input type="hidden" name="return_to" value="/checkout">
+            <button type="submit" class="arzive-btn arzive-btn--outline arzive-plan__cta">
+              Buy Annual · $96
+            </button>
+          </form>
+        {% else %}
+          <a class="arzive-btn arzive-btn--outline arzive-plan__cta" href="{{ annual_url }}">
+            Buy Annual · $96
+          </a>
+        {% endif %}
+      </article>
+
+      {%- comment -%} Scholar {%- endcomment -%}
+      <article class="arzive-plan">
+        <p class="arzive-plan__badge">Notebook + Study</p>
+        <h2 class="arzive-plan__name">Scholar</h2>
+        <p class="arzive-plan__note">Unlimited Study + stationery credit.</p>
+        <p class="arzive-plan__price">
+          <span class="arzive-plan__amount">$29</span>
+          <span class="arzive-plan__cadence">/ month</span>
+        </p>
+        <ul class="arzive-plan__features">
+          <li>Unlimited chats &amp; scans</li>
+          <li>$25 notebook credit / semester</li>
+          <li>Concierge first-scan setup</li>
+          <li>Cornell or Math credit</li>
+        </ul>
+        {% if scholar_variant %}
+          <form class="arzive-plan__form" action="{{ routes.cart_add_url }}" method="post">
+            <input type="hidden" name="id" value="{{ scholar_variant.id }}">
+            <input type="hidden" name="quantity" value="1">
+            <input type="hidden" name="return_to" value="/checkout">
+            <button type="submit" class="arzive-btn arzive-btn--outline arzive-plan__cta">
+              Buy Scholar · $29
+            </button>
+          </form>
+        {% else %}
+          <a class="arzive-btn arzive-btn--outline arzive-plan__cta" href="{{ scholar_url }}">
+            Buy Scholar · $29
+          </a>
+        {% endif %}
+      </article>
+    </div>
+
+    <div class="arzive-pricing__compare">
+      <h2 class="arzive-pricing__compare-title">Compare plans</h2>
+      <div class="arzive-pricing__table-wrap">
+        <table class="arzive-pricing__table">
+          <thead>
+            <tr>
+              <th scope="col">Include</th>
+              <th scope="col">Free</th>
+              <th scope="col">Standard</th>
+              <th scope="col">Annual</th>
+              <th scope="col">Scholar</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">Study chats / week</th>
+              <td>3</td>
+              <td>Unlimited</td>
+              <td>Unlimited</td>
+              <td>Unlimited</td>
+            </tr>
+            <tr>
+              <th scope="row">Scans</th>
+              <td>5</td>
+              <td>Unlimited</td>
+              <td>Unlimited</td>
+              <td>Unlimited</td>
+            </tr>
+            <tr>
+              <th scope="row">Practice exams &amp; flashcards</th>
+              <td>✓</td>
+              <td>✓</td>
+              <td>✓</td>
+              <td>✓</td>
+            </tr>
+            <tr>
+              <th scope="row">Notebook credit</th>
+              <td>—</td>
+              <td>—</td>
+              <td>—</td>
+              <td>$25 / semester</td>
+            </tr>
+            <tr>
+              <th scope="row">Checkout</th>
+              <td>Open Study</td>
+              <td>Shopify · $12/mo</td>
+              <td>Shopify · $96/yr</td>
+              <td>Shopify · $29/mo</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <p class="arzive-pricing__admin">
+      Create products in Admin with handles
+      <code>membership-standard</code>,
+      <code>membership-annual</code>,
+      <code>membership-scholar</code>
+      — then assign them in this section’s settings. Buy buttons post to Shopify checkout.
+    </p>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Pricing",
+  "tag": "section",
+  "class": "section-pricing",
+  "settings": [
+    { "type": "text", "id": "label", "label": "Eyebrow", "default": "Study with Arzive" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Choose how you practice." },
+    { "type": "textarea", "id": "subheading", "label": "Subheading", "default": "Free tastes the loop. Paid unlocks unlimited chats and scans — checkout on Shopify." },
+    { "type": "text", "id": "study_url", "label": "Free plan Study URL", "default": "https://arzive-web.onrender.com/study" },
+    { "type": "header", "content": "Membership products" },
+    { "type": "product", "id": "product_standard", "label": "Standard product" },
+    { "type": "product", "id": "product_annual", "label": "Annual product" },
+    { "type": "product", "id": "product_scholar", "label": "Scholar product" },
+    { "type": "text", "id": "standard_handle", "label": "Standard handle fallback", "default": "membership-standard" },
+    { "type": "text", "id": "annual_handle", "label": "Annual handle fallback", "default": "membership-annual" },
+    { "type": "text", "id": "scholar_handle", "label": "Scholar handle fallback", "default": "membership-scholar" }
+  ],
+  "presets": [{ "name": "ARZIVE pricing" }]
+}
+{% endschema %}

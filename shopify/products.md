@@ -86,3 +86,47 @@ NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN=your-store.myshopify.com
 ```
 
 Shop buttons then open `/products/<handle>` on that domain.
+
+---
+
+## Membership products (Study pricing checkout)
+
+Create these three products so the **Pricing** page (`page.pricing`) Buy buttons go to Shopify checkout. Handles must match exactly (or assign products in the Pricing section settings).
+
+### Standard — $12/month
+
+| Field | Value |
+| --- | --- |
+| **Title** | Study Standard Membership |
+| **Handle** | `membership-standard` |
+| **Price** | 12.00 USD |
+| **Product type** | Membership |
+| **Tags** | membership, study, standard |
+| **Selling plan** | Optional Shopify subscription (monthly). Until then, sell as one-time and renew manually. |
+
+### Annual — $96/year
+
+| Field | Value |
+| --- | --- |
+| **Title** | Study Annual Membership |
+| **Handle** | `membership-annual` |
+| **Price** | 96.00 USD |
+| **Product type** | Membership |
+| **Tags** | membership, study, annual |
+
+### Scholar — $29/month
+
+| Field | Value |
+| --- | --- |
+| **Title** | Study Scholar Membership |
+| **Handle** | `membership-scholar` |
+| **Price** | 29.00 USD |
+| **Product type** | Membership |
+| **Tags** | membership, study, scholar |
+
+**Checkout path:** Pricing page → Buy → `/cart/add` → `/checkout` (variant id from product).  
+Fallback links if products aren’t assigned yet:  
+`/products/membership-standard` · `/products/membership-annual` · `/products/membership-scholar`
+
+Free plan does **not** use a product — CTA opens `https://arzive-web.onrender.com/study`.
+
