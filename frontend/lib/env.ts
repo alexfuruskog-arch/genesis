@@ -5,8 +5,9 @@ export const apiUrl = "/backend";
 export const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 export const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
 
+/** Always the live Shopify shop — logo / Shop / bag never point at Next. */
 export const shopifyStoreDomain =
-  process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN ?? "";
+  process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN || "sexb4g-xw.myshopify.com";
 export const shopifyCornellHandle =
   process.env.NEXT_PUBLIC_SHOPIFY_CORNELL_HANDLE ?? "cornell-notebook";
 export const shopifyMathHandle =

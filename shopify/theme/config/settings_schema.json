@@ -14,15 +14,22 @@
         "type": "text",
         "id": "study_app_url",
         "label": "Study with Arzive URL",
-        "default": "https://study.arzive.com/study",
-        "info": "Next.js Study app (account, scan, AI). Opens from the header."
+        "default": "https://arzive-web.onrender.com/study",
+        "info": "Only used for the Study with Arzive nav link. Logo/home always stay on this Shopify shop."
+      },
+      {
+        "type": "text",
+        "id": "pricing_app_url",
+        "label": "Pricing URL",
+        "default": "https://arzive-web.onrender.com/pricing",
+        "info": "Next.js /pricing. Separate from Study — do not paste the shop URL here."
       },
       {
         "type": "text",
         "id": "account_app_url",
         "label": "Account URL",
-        "default": "https://study.arzive.com/account",
-        "info": "Next.js account page. Leave blank to use Shopify customer account."
+        "default": "https://arzive-web.onrender.com/account",
+        "info": "Next.js /account. Separate from Study."
       },
       {
         "type": "text",

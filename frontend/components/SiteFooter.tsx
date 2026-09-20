@@ -3,8 +3,9 @@ import Link from "next/link";
 import { shopifyStoreDomain } from "@/lib/env";
 
 function shopUrl(path = "") {
-  const domain = (shopifyStoreDomain || "").replace(/^https?:\/\//, "").replace(/\/$/, "");
-  if (!domain) return path || "/shop";
+  const domain = (shopifyStoreDomain || "sexb4g-xw.myshopify.com")
+    .replace(/^https?:\/\//, "")
+    .replace(/\/$/, "");
   return `https://${domain}${path}`;
 }
 

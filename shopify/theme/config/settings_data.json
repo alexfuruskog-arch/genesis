@@ -1,7 +1,8 @@
 {
   "current": {
-    "study_app_url": "https://study.arzive.com/study",
-    "account_app_url": "https://study.arzive.com/account",
+    "study_app_url": "https://arzive-web.onrender.com/study",
+    "pricing_app_url": "https://arzive-web.onrender.com/pricing",
+    "account_app_url": "https://arzive-web.onrender.com/account",
     "story_heading": "Our story",
     "story_body": "Two research-backed notebooks and Study with Arzive — scan your pages, then generate practice exams and flashcards.",
     "color_forest": "#0B2421",

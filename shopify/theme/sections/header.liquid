@@ -1,7 +1,7 @@
 {%- liquid
-  assign study_url = settings.study_app_url | default: 'https://study.arzive.com/study'
-  assign account_url = settings.account_app_url | default: study_url | replace: '/study', '/account'
-  assign pricing_url = study_url | replace: '/study', '/pricing'
+  assign study_url = settings.study_app_url | default: 'https://arzive-web.onrender.com/study'
+  assign account_url = settings.account_app_url | default: 'https://arzive-web.onrender.com/account'
+  assign pricing_url = settings.pricing_app_url | default: 'https://arzive-web.onrender.com/pricing'
   assign story_url = pages['our-story'].url | default: '/pages/our-story'
 -%}
 
@@ -24,6 +24,7 @@
       </a>
     </nav>
 
+    {%- comment -%} Logo always stays on the Shopify shop — never Study. {%- endcomment -%}
     <a class="arzive-wordmark" href="{{ routes.root_url }}">ARZIVE</a>
 
     <div class="arzive-header__right">

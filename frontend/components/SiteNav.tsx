@@ -6,8 +6,9 @@ import { usePathname } from "next/navigation";
 import { shopifyStoreDomain } from "@/lib/env";
 
 function shopUrl(path = "") {
-  const domain = (shopifyStoreDomain || "").replace(/^https?:\/\//, "").replace(/\/$/, "");
-  if (!domain) return path || "/shop";
+  const domain = (shopifyStoreDomain || "sexb4g-xw.myshopify.com")
+    .replace(/^https?:\/\//, "")
+    .replace(/\/$/, "");
   return `https://${domain}${path}`;
 }
 
@@ -48,14 +49,14 @@ export function SiteNav() {
             </Link>
           </nav>
 
-          <Link
-            href="/"
+          <a
+            href={shopUrl()}
             className={`font-display text-center text-[1.45rem] tracking-[0.3em] sm:text-[1.75rem] sm:tracking-[0.34em] ${
               onForest ? "text-cream" : "text-forest"
             }`}
           >
             ARZIVE
-          </Link>
+          </a>
 
           <div className="flex items-center justify-end gap-3 sm:gap-6 lg:gap-7">
             <Link
