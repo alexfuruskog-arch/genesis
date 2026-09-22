@@ -24,5 +24,5 @@ def health() -> dict:
 @router.get("/hello")
 def hello() -> dict:
     return {
-        "message": "Hello from ARZIVE. Scan notebook pages and generate practice exams or flashcards."
+        "message": "Hello from ARZIVE. Scan notebook pages or upload lecture files, then generate practice exams or flashcards."
     }

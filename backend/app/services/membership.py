@@ -388,7 +388,8 @@ class MembershipService:
             return snap
         if snap["scans_used"] + extra > FREE_SCAN_CAP:
             raise PlanLimitError(
-                f"Free plan allows {FREE_SCAN_CAP} scans. You've used {snap['scans_used']}. "
+                f"Free plan allows {FREE_SCAN_CAP} library items (notebook scans or lecture files). "
+                f"You've used {snap['scans_used']}. "
                 "Upgrade to Standard ($12/mo) on Shopify for unlimited.",
                 kind="scan",
                 used=snap["scans_used"],

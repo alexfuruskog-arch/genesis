@@ -73,7 +73,7 @@ Cross-service URLs from `render.yaml` are usually wired automatically. Still set
 | --- | --- |
 | `OPENAI_API_KEY` **or** `ANTHROPIC_API_KEY` | Study generation |
 | `LLM_PROVIDER` | `auto` is fine |
-| `SUPABASE_URL` / `SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY` | Auth + cloud scans (optional for first publish — local fallback works) |
+| `SUPABASE_URL` / `SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY` | Auth + cloud library (optional for first publish — local fallback works) |
 | `SHOPIFY_STORE_URL` | e.g. `sexb4g-xw.myshopify.com` |
 
 ### arzive-web
@@ -84,7 +84,7 @@ Cross-service URLs from `render.yaml` are usually wired automatically. Still set
 | `NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN` | Same shop domain for buy links |
 | `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Match API if using Supabase |
 
-Without LLM keys, Study still loads; generation returns a clear error. Without Supabase, Account + scans use the local fallback.
+Without LLM keys, Study still loads; generation returns a clear error. Without Supabase, Account + library files use the local fallback.
 
 ---
 
@@ -94,7 +94,7 @@ Live at `/pricing` on the Study app:
 
 | Plan | Price | Limit |
 | --- | --- | --- |
-| **Free** | $0 | **3 chats / week**, **5 scans** — hard gates in Study |
+| **Free** | $0 | **3 chats / week**, **5 library items** (scans or lecture files) — hard gates in Study |
 | **Standard** | **$12 / month** | Unlimited Study |
 | **Annual** | **$96 / year** | Standard, billed yearly (~$8/mo) |
 | **Scholar** | **$29 / month** | Unlimited + notebook credit |

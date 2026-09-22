@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
+  fetchDocumentFile,
   fetchHealth,
   fetchMembership,
   generateStudy,
@@ -15,6 +16,14 @@ import {
 } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { shopifyMembershipUrl } from "@/lib/env";
+import {
+  CAMERA_ACCEPT,
+  LIBRARY_ACCEPT,
+  formatBytes,
+  isAllowedLibraryFile,
+  sourceLabel,
+  type SourceKind,
+} from "@/lib/library";
 import {
   canScan,
   canStartStudySession,
@@ -34,18 +43,18 @@ type NotebookModel = "math" | "cornell";
 const HOW_STEPS = [
   {
     n: "01",
-    title: "Capture",
-    copy: "Photograph a Cornell or Math notebook page into your private library.",
+    title: "Add",
+    copy: "Photograph a Cornell or Math page, or upload a lecture PDF, slide deck, or photo.",
   },
   {
     n: "02",
     title: "Practice",
-    copy: "Generate a practice exam or flashcards from the notes you actually wrote.",
+    copy: "Generate a practice exam or flashcards from the notes and files you actually have.",
   },
   {
     n: "03",
     title: "Learn",
-    copy: "Force active recall — then return to the page with sharper questions.",
+    copy: "Force active recall — then return to the page or lecture with sharper questions.",
   },
 ] as const;
 
@@ -53,6 +62,7 @@ export default function StudyPage() {
   const { user, ready, authHeaders } = useAuth();
   const fileRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
+  const lectureRef = useRef<HTMLInputElement>(null);
   const [health, setHealth] = useState<HealthResponse | null>(null);
   const [cloudEnabled, setCloudEnabled] = useState(false);
   const [backendError, setBackendError] = useState<string | null>(null);
@@ -63,6 +73,11 @@ export default function StudyPage() {
   const [uploadBusy, setUploadBusy] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [uploadNotice, setUploadNotice] = useState<string | null>(null);
+  const [dropActive, setDropActive] = useState(false);
+  const [previewId, setPreviewId] = useState<string | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewBusy, setPreviewBusy] = useState(false);
+  const [previewError, setPreviewError] = useState<string | null>(null);
   const [generateBusy, setGenerateBusy] = useState(false);
   const [generateError, setGenerateError] = useState<string | null>(null);
   const [result, setResult] = useState<StudyResponse | null>(null);
@@ -138,16 +153,30 @@ export default function StudyPage() {
     return () => window.clearTimeout(timer);
   }, [ready, refresh]);
 
-  async function onUpload(fileList: FileList | null) {
-    if (!fileList?.length) return;
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
+
+  async function onUpload(fileList: FileList | File[] | null, sourceKind: SourceKind) {
+    const files = fileList ? Array.from(fileList) : [];
+    if (!files.length) return;
     if (!signedIn) {
-      setUploadError("Sign in on Account first — scans are saved under your account.");
+      setUploadError("Sign in on Account first — files are saved under your account.");
       return;
     }
-    const gate = canScan(plan, fileList.length);
+    const blocked = files.find((file) => !isAllowedLibraryFile(file));
+    if (blocked) {
+      setUploadError(
+        `${blocked.name} is not supported. Use PDF, image, Word (.docx), PowerPoint (.pptx), or text.`,
+      );
+      return;
+    }
+    const gate = canScan(plan, files.length);
     if (!gate.ok) {
       setUploadError(
-        `Free plan allows ${FREE_SCAN_CAP} scans. You’ve used ${gate.used}. Upgrade to Standard ($12/mo) for unlimited.`,
+        `Free plan allows ${FREE_SCAN_CAP} library items (scans or lecture files). You’ve used ${gate.used}. Upgrade to Standard ($12/mo) for unlimited.`,
       );
       return;
     }
@@ -156,8 +185,13 @@ export default function StudyPage() {
     setUploadNotice(null);
     try {
       const uploaded: UploadedDocument[] = [];
-      for (const file of Array.from(fileList)) {
-        uploaded.push(await uploadDocument(file, authHeaders, notebookModel));
+      for (const file of files) {
+        uploaded.push(
+          await uploadDocument(file, authHeaders, {
+            sourceKind,
+            notebookModel: sourceKind === "scan" ? notebookModel : null,
+          }),
+        );
       }
       setDocuments((current) => [...uploaded, ...current]);
       setSelected((current) => [...uploaded.map((doc) => doc.id), ...current]);
@@ -176,10 +210,11 @@ export default function StudyPage() {
         /* keep local count */
       }
       const backend = uploaded[0]?.storage_backend;
+      const noun = sourceKind === "lecture" ? "lecture file" : "scan";
       setUploadNotice(
         backend === "supabase"
-          ? `${uploaded.length} scan(s) saved to your cloud library.`
-          : `${uploaded.length} scan(s) saved locally under your account.`,
+          ? `${uploaded.length} ${noun}${uploaded.length === 1 ? "" : "s"} saved to your cloud library.`
+          : `${uploaded.length} ${noun}${uploaded.length === 1 ? "" : "s"} saved locally under your account (cloud storage is not configured).`,
       );
     } catch (err) {
       setUploadError(err instanceof Error ? err.message : "Upload failed.");
@@ -194,9 +229,31 @@ export default function StudyPage() {
     );
   }
 
+  async function openPreview(doc: UploadedDocument) {
+    setPreviewError(null);
+    setPreviewBusy(true);
+    setPreviewId(doc.id);
+    try {
+      const { blob } = await fetchDocumentFile(doc.id, authHeaders);
+      const url = URL.createObjectURL(blob);
+      setPreviewUrl((current) => {
+        if (current) URL.revokeObjectURL(current);
+        return url;
+      });
+    } catch (err) {
+      setPreviewUrl((current) => {
+        if (current) URL.revokeObjectURL(current);
+        return null;
+      });
+      setPreviewError(err instanceof Error ? err.message : "Could not open this file.");
+    } finally {
+      setPreviewBusy(false);
+    }
+  }
+
   async function onGenerate() {
     if (selected.length === 0) {
-      setGenerateError("Select at least one scan.");
+      setGenerateError("Select at least one item in your library.");
       return;
     }
     const gate = canStartStudySession(plan);
@@ -237,6 +294,10 @@ export default function StudyPage() {
     }
   }
 
+  const captureDisabled =
+    !signedIn || Boolean(backendError) || uploadBusy || !scanGate.ok;
+  const previewDoc = documents.find((doc) => doc.id === previewId) ?? null;
+
   return (
     <main className="bg-cream">
       <section className="bg-forest text-cream">
@@ -248,8 +309,8 @@ export default function StudyPage() {
             Read once. Recall hard. Remember longer.
           </h1>
           <p className="animate-fade-up-delay mt-5 max-w-xl text-[0.98rem] font-light leading-7 text-cream/72 sm:text-lg">
-            Capture Cornell or Math notebook pages, then force active recall with
-            practice exams and flashcards — the fast study loop, ARZIVE-designed.
+            Scan Cornell or Math notebook pages, or upload lecture PDFs and
+            slides — then force active recall with practice exams and flashcards.
           </p>
 
           <div className="mt-10 grid gap-8 border-t border-cream/15 pt-8 sm:grid-cols-[1fr_auto] sm:items-end">
@@ -258,12 +319,12 @@ export default function StudyPage() {
                 <span>Signed in · {user?.email}</span>
               ) : (
                 <Link href="/account" className="underline underline-offset-4 text-cream/80">
-                  Log in to save scans
+                  Log in to save your library
                 </Link>
               )}
               {health ? (
                 <span>
-                  {cloudEnabled ? "Cloud library" : "Private library"}
+                  {cloudEnabled ? "Cloud library" : "Private library · local fallback"}
                   {health.integrations.llm &&
                   health.integrations.llm !== "mock"
                     ? ` · ${health.integrations.llm}`
@@ -290,7 +351,7 @@ export default function StudyPage() {
                 </div>
                 <div className="plan-meter-row">
                   <span className="text-[0.62rem] uppercase tracking-[0.14em] text-cream/65">
-                    Scans
+                    Library
                   </span>
                   <div className="plan-meter-track" aria-hidden>
                     <div className="plan-meter-fill" style={{ width: `${scanPct}%` }} />
@@ -332,7 +393,8 @@ export default function StudyPage() {
           <div className="mb-10 study-panel animate-soft-in">
             <p className="study-label">Account required</p>
             <p className="mt-3 max-w-xl font-light leading-7 text-forest/75">
-              Scans belong to your ARZIVE account — the same place you manage Study.
+              Notebook scans and lecture files belong to your ARZIVE account — the
+              same place you manage Study.
             </p>
             <Link href="/account" className="btn-ink mt-5 inline-flex">
               Log in / create account
@@ -369,20 +431,21 @@ export default function StudyPage() {
         {signedIn && plan === "free" && sessionGate.ok && !scanGate.ok ? (
           <div className="mb-10 animate-soft-in border border-forest/15 bg-[#f0ebe3] px-5 py-7 sm:px-8">
             <p className="text-[0.62rem] uppercase tracking-[0.18em] text-forest/50">
-              Free plan · scan limit
+              Free plan · library limit
             </p>
             <h2 className="mt-3 font-display text-2xl tracking-[0.02em] text-forest sm:text-3xl">
-              {FREE_SCAN_CAP} scans used — library is full on Free.
+              {FREE_SCAN_CAP} library items used — Free is full.
             </h2>
             <p className="mt-3 max-w-xl text-sm font-light leading-7 text-forest/70">
-              You can still practice from notes already in your library (
+              Scans and lecture uploads share this cap. You can still practice from
+              files already in your library (
               {sessionGate.remaining} chat
               {sessionGate.remaining === 1 ? "" : "s"} left this week). Upgrade for
               unlimited captures.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
               <a href={shopifyMembershipUrl("standard")} className="btn-ink">
-                Unlock unlimited scans
+                Unlock unlimited library
               </a>
               <Link
                 href="/pricing"
@@ -405,81 +468,122 @@ export default function StudyPage() {
             <section className="study-panel">
               <p className="study-label">01 · Capture</p>
               <h2 className="mt-3 font-display text-2xl tracking-[0.03em] text-forest">
-                Photograph a page
+                Add to your library
               </h2>
               <p className="mt-2 text-sm font-light leading-6 text-forest/70">
-                Tag the notebook model, then open the camera or upload a photo / PDF.
+                Same account, same shelf. Photograph a notebook page or upload a
+                lecture file.
               </p>
 
-              <div className="mt-5 flex flex-wrap gap-2">
-                {(
-                  [
-                    { id: "cornell" as const, label: "Cornell" },
-                    { id: "math" as const, label: "Math" },
-                  ] as const
-                ).map((option) => (
+              <div className="mt-6 border border-forest/10 bg-cream/60 px-4 py-4">
+                <p className="text-[0.62rem] uppercase tracking-[0.14em] text-forest/50">
+                  Notebook scan
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {(
+                    [
+                      { id: "cornell" as const, label: "Cornell" },
+                      { id: "math" as const, label: "Math" },
+                    ] as const
+                  ).map((option) => (
+                    <button
+                      key={option.id}
+                      type="button"
+                      onClick={() => setNotebookModel(option.id)}
+                      className={`px-3 py-2 text-[0.62rem] tracking-[0.14em] uppercase transition ${
+                        notebookModel === option.id
+                          ? "bg-forest text-cream"
+                          : "border border-forest/20 text-forest hover:border-forest/40"
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
                   <button
-                    key={option.id}
                     type="button"
-                    onClick={() => setNotebookModel(option.id)}
-                    className={`px-3 py-2 text-[0.62rem] tracking-[0.14em] uppercase transition ${
-                      notebookModel === option.id
-                        ? "bg-forest text-cream"
-                        : "border border-forest/20 text-forest hover:border-forest/40"
-                    }`}
+                    disabled={captureDisabled}
+                    onClick={() => cameraRef.current?.click()}
+                    className="bg-cream px-4 py-8 text-center text-[0.65rem] tracking-[0.16em] uppercase text-forest transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-45"
                   >
-                    {option.label}
+                    {uploadBusy
+                      ? "Uploading…"
+                      : !scanGate.ok
+                        ? "Library full"
+                        : "Open camera"}
                   </button>
-                ))}
+                  <button
+                    type="button"
+                    disabled={captureDisabled}
+                    onClick={() => fileRef.current?.click()}
+                    className="bg-cream px-4 py-8 text-center text-[0.65rem] tracking-[0.16em] uppercase text-forest transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-45"
+                  >
+                    {uploadBusy
+                      ? "Uploading…"
+                      : !scanGate.ok
+                        ? "Library full"
+                        : "Upload page photo"}
+                  </button>
+                </div>
+                <p className="mt-3 text-xs font-light text-forest/55">
+                  Tagged as {notebookModel === "cornell" ? "Cornell" : "Math"} · jpg png
+                </p>
               </div>
 
-              <div className="mt-5 grid gap-3 sm:grid-cols-2">
+              <div
+                className={`mt-4 border px-4 py-4 transition ${
+                  dropActive
+                    ? "border-forest bg-white"
+                    : "border-dashed border-forest/20 bg-cream/40"
+                }`}
+                onDragOver={(event) => {
+                  event.preventDefault();
+                  setDropActive(true);
+                }}
+                onDragLeave={() => setDropActive(false)}
+                onDrop={(event) => {
+                  event.preventDefault();
+                  setDropActive(false);
+                  void onUpload(event.dataTransfer.files, "lecture");
+                }}
+              >
+                <p className="text-[0.62rem] uppercase tracking-[0.14em] text-forest/50">
+                  Lecture file
+                </p>
+                <p className="mt-2 text-sm font-light leading-6 text-forest/70">
+                  PDF slides, Word notes, PowerPoint, or a photo of the board. Drop
+                  a file here or choose one.
+                </p>
                 <button
                   type="button"
-                  disabled={
-                    !signedIn ||
-                    Boolean(backendError) ||
-                    uploadBusy ||
-                    !scanGate.ok
-                  }
-                  onClick={() => cameraRef.current?.click()}
-                  className="bg-cream px-4 py-10 text-center text-[0.65rem] tracking-[0.16em] uppercase text-forest transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-45"
+                  disabled={captureDisabled}
+                  onClick={() => lectureRef.current?.click()}
+                  className="mt-4 w-full bg-forest px-4 py-8 text-center text-[0.65rem] tracking-[0.16em] uppercase text-cream transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-45"
                 >
                   {uploadBusy
                     ? "Uploading…"
                     : !scanGate.ok
-                      ? "Scan limit reached"
-                      : "Open camera"}
+                      ? "Library full"
+                      : dropActive
+                        ? "Drop to add"
+                        : "Upload PDF or lecture file"}
                 </button>
-                <button
-                  type="button"
-                  disabled={
-                    !signedIn ||
-                    Boolean(backendError) ||
-                    uploadBusy ||
-                    !scanGate.ok
-                  }
-                  onClick={() => fileRef.current?.click()}
-                  className="bg-cream px-4 py-10 text-center text-[0.65rem] tracking-[0.16em] uppercase text-forest transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-45"
-                >
-                  {uploadBusy
-                    ? "Uploading…"
-                    : !scanGate.ok
-                      ? "Scan limit reached"
-                      : "Upload files"}
-                </button>
+                <p className="mt-3 text-xs font-light text-forest/55">
+                  .pdf .docx .pptx .jpg .png .txt · max 10 MB · counts toward the
+                  Free library cap
+                </p>
               </div>
+
               <input
                 ref={cameraRef}
                 type="file"
-                accept="image/*"
+                accept={CAMERA_ACCEPT}
                 capture="environment"
                 className="sr-only"
-                disabled={
-                  !signedIn || Boolean(backendError) || uploadBusy || !scanGate.ok
-                }
+                disabled={captureDisabled}
                 onChange={(event) => {
-                  void onUpload(event.target.files);
+                  void onUpload(event.target.files, "scan");
                   event.target.value = "";
                 }}
               />
@@ -487,20 +591,26 @@ export default function StudyPage() {
                 ref={fileRef}
                 type="file"
                 multiple
-                accept=".txt,.md,.pdf,image/*,text/plain,application/pdf"
+                accept="image/*,.pdf,application/pdf"
                 className="sr-only"
-                disabled={
-                  !signedIn || Boolean(backendError) || uploadBusy || !scanGate.ok
-                }
+                disabled={captureDisabled}
                 onChange={(event) => {
-                  void onUpload(event.target.files);
+                  void onUpload(event.target.files, "scan");
                   event.target.value = "";
                 }}
               />
-              <p className="mt-4 text-xs font-light text-forest/55">
-                .jpg .png .pdf .txt · max 10 MB · tagged as{" "}
-                {notebookModel === "cornell" ? "Cornell" : "Math"}
-              </p>
+              <input
+                ref={lectureRef}
+                type="file"
+                multiple
+                accept={LIBRARY_ACCEPT}
+                className="sr-only"
+                disabled={captureDisabled}
+                onChange={(event) => {
+                  void onUpload(event.target.files, "lecture");
+                  event.target.value = "";
+                }}
+              />
               {uploadError ? <p className="mt-3 text-sm text-red-800">{uploadError}</p> : null}
               {uploadNotice ? <p className="mt-3 text-sm text-forest/75">{uploadNotice}</p> : null}
             </section>
@@ -510,7 +620,7 @@ export default function StudyPage() {
                 <div>
                   <p className="study-label">02 · Library</p>
                   <h2 className="mt-3 font-display text-2xl tracking-[0.03em] text-forest">
-                    Your scans
+                    Scans &amp; lecture files
                   </h2>
                 </div>
                 <button
@@ -533,8 +643,9 @@ export default function StudyPage() {
                   <p className="font-display text-[1.35rem] tracking-[0.02em] text-forest">
                     Empty shelf
                   </p>
-                  <p className="mx-auto mt-2 max-w-[16rem] text-sm font-light leading-6 text-forest/55">
-                    Capture one Cornell or Math page — practice starts from what you wrote.
+                  <p className="mx-auto mt-2 max-w-[18rem] text-sm font-light leading-6 text-forest/55">
+                    Photograph one notebook page or upload a lecture PDF. Practice
+                    starts from what you add.
                   </p>
                 </div>
               ) : null}
@@ -542,39 +653,108 @@ export default function StudyPage() {
               <ul className="mt-5 space-y-2">
                 {documents.map((doc) => {
                   const checked = selected.includes(doc.id);
-                  const model =
-                    doc.notebook_model === "math"
-                      ? "Math"
-                      : doc.notebook_model === "cornell"
-                        ? "Cornell"
-                        : null;
+                  const size = formatBytes(doc.byte_size);
+                  const label = sourceLabel(doc.source_kind, doc.notebook_model);
+                  const kind = doc.kind_label || "File";
                   return (
                     <li key={doc.id}>
-                      <label
-                        className={`flex cursor-pointer items-start gap-3 px-3 py-3 text-sm transition ${
+                      <div
+                        className={`flex items-start gap-3 px-3 py-3 text-sm transition ${
                           checked ? "bg-forest text-cream" : "bg-cream hover:bg-white"
                         }`}
                       >
-                        <input
-                          type="checkbox"
-                          checked={checked}
-                          onChange={() => toggleDoc(doc.id)}
-                          className="mt-1 accent-current"
-                        />
-                        <span className="min-w-0 flex-1">
-                          <span className="block truncate font-medium">{doc.filename}</span>
-                          <span
-                            className={`mt-0.5 block text-xs ${checked ? "text-cream/65" : "text-forest/55"}`}
-                          >
-                            {doc.storage_backend === "supabase" ? "Cloud" : "Local"}
-                            {model ? ` · ${model}` : ""} · {doc.chunk_count} chunks
+                        <label className="flex min-w-0 flex-1 cursor-pointer items-start gap-3">
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={() => toggleDoc(doc.id)}
+                            className="mt-1 accent-current"
+                          />
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate font-medium">{doc.filename}</span>
+                            <span
+                              className={`mt-0.5 block text-xs ${checked ? "text-cream/65" : "text-forest/55"}`}
+                            >
+                              {doc.storage_backend === "supabase" ? "Cloud" : "Local"}
+                              {` · ${label} · ${kind}`}
+                              {size ? ` · ${size}` : ""}
+                              {` · ${doc.chunk_count} chunks`}
+                            </span>
                           </span>
-                        </span>
-                      </label>
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => void openPreview(doc)}
+                          className={`shrink-0 pt-0.5 text-[0.58rem] uppercase tracking-[0.12em] ${
+                            checked ? "text-cream/80" : "text-forest/55 hover:text-forest"
+                          }`}
+                        >
+                          View
+                        </button>
+                      </div>
                     </li>
                   );
                 })}
               </ul>
+
+              {previewId ? (
+                <div className="mt-5 border border-forest/10 bg-cream px-4 py-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-[0.62rem] uppercase tracking-[0.14em] text-forest/50">
+                        Preview
+                      </p>
+                      <p className="mt-1 truncate text-sm font-medium text-forest">
+                        {previewDoc?.filename || "File"}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPreviewId(null);
+                        setPreviewError(null);
+                        setPreviewUrl((current) => {
+                          if (current) URL.revokeObjectURL(current);
+                          return null;
+                        });
+                      }}
+                      className="text-[0.58rem] uppercase tracking-[0.12em] text-forest/50"
+                    >
+                      Close
+                    </button>
+                  </div>
+                  {previewBusy ? (
+                    <p className="mt-4 text-sm font-light text-forest/55">Opening file…</p>
+                  ) : null}
+                  {previewError ? (
+                    <p className="mt-4 text-sm text-red-800">{previewError}</p>
+                  ) : null}
+                  {!previewBusy && previewUrl && previewDoc?.mime_type?.startsWith("image/") ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={previewUrl}
+                      alt={previewDoc.filename}
+                      className="mt-4 max-h-72 w-full object-contain"
+                    />
+                  ) : null}
+                  {!previewBusy && previewUrl && previewDoc?.mime_type === "application/pdf" ? (
+                    <iframe
+                      title={previewDoc.filename}
+                      src={previewUrl}
+                      className="mt-4 h-72 w-full bg-white"
+                    />
+                  ) : null}
+                  {!previewBusy && previewUrl ? (
+                    <a
+                      href={previewUrl}
+                      download={previewDoc?.filename}
+                      className="mt-4 inline-block text-[0.62rem] uppercase tracking-[0.14em] text-forest/70 underline underline-offset-4"
+                    >
+                      Download original
+                    </a>
+                  ) : null}
+                </div>
+              ) : null}
             </section>
           </div>
 
@@ -585,7 +765,8 @@ export default function StudyPage() {
                 Generate from your notes
               </h2>
               <p className="mt-2 text-sm font-light leading-6 text-forest/70">
-                Select scans, then ask for a practice exam or flashcards.
+                Select scans or lecture files, then ask for a practice exam or
+                flashcards.
               </p>
               <p className="mt-3 text-[0.62rem] uppercase tracking-[0.14em] text-forest/50">
                 Selected · {selected.length}
@@ -661,7 +842,8 @@ export default function StudyPage() {
                     Waiting on a chat
                   </p>
                   <p className="mx-auto mt-2 max-w-[17rem] text-sm font-light leading-6 text-forest/55">
-                    Pick scans, then generate a practice exam or a deck of flashcards.
+                    Pick library items, then generate a practice exam or a deck of
+                    flashcards.
                   </p>
                 </div>
               ) : null}

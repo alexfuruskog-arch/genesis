@@ -15,8 +15,8 @@ export default function StoryPage() {
         <p className="mt-6 text-base font-light leading-7 text-cream/72 sm:text-lg sm:leading-8">
           ARZIVE makes research-backed notebooks — Cornell for structured notes,
           Math for problem-solving — and Study with Arzive, where scanned pages
-          become practice exams and flashcards. One brand: buy the tools, then
-          study with them.
+          and uploaded lecture files become practice exams and flashcards. One
+          brand: buy the tools, then study with them.
         </p>
         <div className="mt-10 flex flex-wrap gap-3">
           <a href={shopifyStoreUrl()} className="btn-solid">

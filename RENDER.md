@@ -37,7 +37,8 @@ Cross-service-URL:er (`FRONTEND_ORIGIN`, `NEXT_PUBLIC_API_URL`, `API_PROXY_TARGE
 
 | Key | Vad |
 | --- | --- |
-| `SUPABASE_URL` / `SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY` | Auth + scans |
+| `SUPABASE_URL` / `SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY` | Auth + library files (scans and lecture uploads). If unset, files stay on the API disk (`LOCAL_UPLOAD_DIR`, default `.local_uploads`) — a mock fallback, wiped on Render deploys. |
+| `LOCAL_UPLOAD_DIR` | Optional. Only needed to override the local fallback path. Do **not** rely on this on Render without a persistent disk. |
 | `OPENAI_API_KEY` eller `ANTHROPIC_API_KEY` | LLM |
 | `LLM_PROVIDER` | redan `auto` |
 | `SHOPIFY_STORE_URL` | `din-shop.myshopify.com` |

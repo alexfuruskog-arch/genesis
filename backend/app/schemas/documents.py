@@ -17,6 +17,11 @@ class DocumentResponse(BaseModel):
         description="supabase (cloud) or local (mock fallback)",
     )
     notebook_model: str | None = None
+    source_kind: str | None = Field(
+        default=None,
+        description="scan (notebook photo) or lecture (uploaded file)",
+    )
+    kind_label: str | None = None
 
 
 class UploadDocumentResponse(DocumentResponse):

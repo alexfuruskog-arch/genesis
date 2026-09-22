@@ -45,6 +45,7 @@ create table if not exists public.documents (
   extraction_status text not null default 'pending',
   storage_backend text not null default 'supabase',
   notebook_model text,
+  source_kind text not null default 'scan',
   created_at timestamptz not null default now()
 );
 
@@ -52,6 +53,8 @@ alter table public.documents
   add column if not exists storage_backend text not null default 'supabase';
 alter table public.documents
   add column if not exists notebook_model text;
+alter table public.documents
+  add column if not exists source_kind text not null default 'scan';
 
 create index if not exists documents_user_id_idx on public.documents (user_id);
 

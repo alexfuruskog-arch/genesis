@@ -6,8 +6,8 @@ One brand site: notebooks in the shop, **Study with Arzive** as the logged-in st
 | --- | --- |
 | **Next.js** (`frontend/`) | Brand storefront + Study with Arzive + account |
 | **Shopify** | Source of truth for products and checkout (buy links / Storefront API / theme import later) |
-| **FastAPI** (`backend/`) | Upload scans, retrieval, quiz & flashcards, Shopify connect hooks |
-| **Supabase** | Auth + scanned notes when keys are set; otherwise local memory + MVP email/password |
+| **FastAPI** (`backend/`) | Upload scans and lecture files, retrieval, quiz & flashcards, Shopify connect hooks |
+| **Supabase** | Auth + library files when keys are set; otherwise local memory + MVP email/password |
 
 Nav: **SHOP** · **STUDY WITH ARZIVE** · centered **ARZIVE** · **ACCOUNT** · bag.
 
@@ -43,8 +43,8 @@ Open [http://127.0.0.1:43123](http://127.0.0.1:43123). The UI calls `/backend/*`
 ## Architecture (why one site)
 
 - **Shop** deep-links to Shopify product pages when `NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN` is set (handles: `arzive-cornell-notebook`, `arzive-math-notebook` — see [`shopify/products.md`](shopify/products.md)).
-- **Study with Arzive** is `/study` on the same origin — camera/upload scans under your account, multi-note selection, practice exam or flashcards. Files land in Supabase Storage with RLS when configured.
-- **Pricing** (`/pricing`): Free (3 chats/week, 5 scans), Standard **$12/mo**, Annual **$96/yr**, Scholar **$29/mo**. Paid CTAs check out on Shopify. Free limits are enforced in the Study UI **and** the API.
+- **Study with Arzive** is `/study` on the same origin — camera scans **and** lecture file uploads (PDF, images, Word, PowerPoint) under your account, multi-note selection, practice exam or flashcards. Files land in Supabase Storage with RLS when configured; otherwise a local-disk fallback.
+- **Pricing** (`/pricing`): Free (3 chats/week, 5 library items — notebook scans or lecture files), Standard **$12/mo**, Annual **$96/yr**, Scholar **$29/mo**. Paid CTAs check out on Shopify. Free limits are enforced in the Study UI **and** the API.
 - Later: import the Shopify theme into this Next app or use Hydrogen/Storefront API; still one ARZIVE brand.
 
 ## Environment variables
@@ -66,6 +66,7 @@ Open [http://127.0.0.1:43123](http://127.0.0.1:43123). The UI calls `/backend/*`
 | `SHOPIFY_ADMIN_API_TOKEN` | Admin API (customers, products, draft orders) |
 | `SHOPIFY_WEBHOOK_SECRET` | HMAC verification for `/shopify/webhooks/{topic}` |
 | `SHOPIFY_API_VERSION` | Default `2025-01` |
+| `LOCAL_UPLOAD_DIR` | Optional. Directory for the local file fallback when Supabase Storage is not configured (default `.local_uploads` under `backend/`). On Render this disk is ephemeral — set the Supabase keys for a durable library. |
 
 ### Frontend (`frontend/.env.local`)
 
@@ -87,7 +88,7 @@ Open [http://127.0.0.1:43123](http://127.0.0.1:43123). The UI calls `/backend/*`
 2. Open **SQL Editor**.
 3. Paste and run [`supabase/schema.sql`](supabase/schema.sql).
 
-Auth is JWT-ready: send `Authorization: Bearer <supabase access token>`. Without Supabase, use **Account** sign-up (local profiles). Scans are scoped by `user_id` and stored at `{user_id}/…` in the private `documents` bucket (RLS). Without Supabase keys the API keeps a local disk + memory fallback so Study still works.
+Auth is JWT-ready: send `Authorization: Bearer <supabase access token>`. Without Supabase, use **Account** sign-up (local profiles). Library files are scoped by `user_id` and stored at `{user_id}/…` in the private `documents` bucket (RLS). Without Supabase keys the API keeps a local disk + memory fallback so Study still works. Re-run [`supabase/schema.sql`](supabase/schema.sql) to add `source_kind` (`scan` or `lecture`) if the project already existed.
 
 ## Shopify Online Store theme
 
@@ -119,8 +120,9 @@ Then set `NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN` so Shop buy buttons hit those produc
 | `POST` | `/auth/login` | Local session token |
 | `POST` | `/auth/logout` | Clear local session |
 | `GET` | `/auth/me` | Current user |
-| `POST` | `/upload-document` | Multipart file → storage + chunks |
-| `GET` | `/documents` | List scans for the current user |
+| `POST` | `/upload-document` | Multipart file (scan or lecture) → storage + chunks. Form: `source_kind=scan\|lecture`, optional `notebook_model` |
+| `GET` | `/documents` | List library items for the current user (scans + lecture files) |
+| `GET` | `/documents/{id}/file` | Original file bytes (inline preview / download) |
 | `POST` | `/generate-quiz` or `/generate-study` | `{ document_ids[], output_type: quiz\|flashcards\|ovningstenta, question_count? }` |
 | `GET` | `/shopify/status` | Connected shop + linked customer |
 | `POST` | `/shopify/connect` | OAuth start **or** Admin API token install |
@@ -140,7 +142,7 @@ Then set `NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN` so Shop buy buttons hit those produc
 | --- | --- |
 | `/` | Brand home — hero + Cornell / Math |
 | `/shop` | Two notebooks, Shopify buy links |
-| `/study` | Upload, multi-select, practice exam / flashcards |
+| `/study` | Scan a notebook page or upload a lecture PDF/docx/pptx, then practice exam / flashcards |
 | `/account` | Sign in / up / out + optional Shopify merchant connect |
 | `/story` | Short brand story |
 

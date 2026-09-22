@@ -9,7 +9,7 @@ settings = get_settings()
 app = FastAPI(
     title=settings.app_name,
     version="0.1.0",
-    description="ARZIVE — notebooks in the shop, Study with Arzive for scanned notes and AI practice.",
+    description="ARZIVE — notebooks in the shop, Study with Arzive for notebook scans, lecture files, and AI practice.",
 )
 
 app.add_middleware(

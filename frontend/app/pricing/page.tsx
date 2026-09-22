@@ -15,8 +15,8 @@ const plans = [
     href: "/account",
     points: [
       "3 chats per week (practice exam or flashcards)",
-      "Up to 5 scans saved under your account",
-      "Cornell & Math notebook tagging",
+      "Up to 5 library items (notebook scans or lecture files)",
+      "Cornell & Math tagging plus PDF / Word / PowerPoint uploads",
       "Private library · cloud when Supabase is connected",
     ],
   },
@@ -32,7 +32,7 @@ const plans = [
     href: shopifyMembershipUrl("standard"),
     points: [
       "Unlimited practice exams & flashcards",
-      "Unlimited scans to your private library",
+      "Unlimited library items — scans and lecture files",
       "Active-recall chats without weekly caps",
       "Priority when exam week spikes traffic",
     ],
@@ -174,7 +174,8 @@ export default function PricingPage() {
               Free means free — and finite
             </h3>
             <p className="mt-3 text-sm font-light leading-7 text-forest/68">
-              Three chats a week. Five scans. When you hit the gate,
+              Three chats a week. Five library items (scans or lecture files).
+              When you hit the gate,
               Study blocks the action and offers Standard — no dark patterns,
               no infinite soft trial.
             </p>

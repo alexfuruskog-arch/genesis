@@ -22,7 +22,7 @@ const body = Source_Sans_3({
 export const metadata: Metadata = {
   title: "ARZIVE — notebooks & Study with Arzive",
   description:
-    "Research-backed notebooks and Study with Arzive: scan notes, generate practice exams and flashcards.",
+    "Research-backed notebooks and Study with Arzive: scan notes or upload lecture files, then generate practice exams and flashcards.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

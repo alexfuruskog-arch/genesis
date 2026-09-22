@@ -21,6 +21,8 @@ export type UploadedDocument = {
   created_at: string;
   storage_backend?: string | null;
   notebook_model?: string | null;
+  source_kind?: "scan" | "lecture" | null;
+  kind_label?: string | null;
   store?: string;
   extraction_mode?: string;
   message?: string;
@@ -177,18 +179,41 @@ export async function fetchHealth(): Promise<HealthResponse> {
 export async function uploadDocument(
   file: File,
   authHeaders?: Record<string, string>,
-  notebookModel?: "math" | "cornell" | null,
+  options?: {
+    notebookModel?: "math" | "cornell" | null;
+    sourceKind?: "scan" | "lecture";
+  },
 ): Promise<UploadedDocument> {
   const body = new FormData();
   body.append("file", file);
-  if (notebookModel) {
-    body.append("notebook_model", notebookModel);
+  if (options?.notebookModel) {
+    body.append("notebook_model", options.notebookModel);
+  }
+  if (options?.sourceKind) {
+    body.append("source_kind", options.sourceKind);
   }
   return request("/upload-document", {
     method: "POST",
     body,
     authHeaders,
   });
+}
+
+export async function fetchDocumentFile(
+  documentId: string,
+  authHeaders?: Record<string, string>,
+): Promise<{ blob: Blob; filename: string }> {
+  const response = await fetch(`${apiUrl}/documents/${documentId}/file`, {
+    cache: "no-store",
+    headers: { ...(authHeaders || {}) },
+  });
+  if (!response.ok) {
+    throw new Error(await parseError(response));
+  }
+  const disposition = response.headers.get("content-disposition") || "";
+  const match = /filename="([^"]+)"/.exec(disposition);
+  const blob = await response.blob();
+  return { blob, filename: match?.[1] || "file" };
 }
 
 export async function listDocuments(
