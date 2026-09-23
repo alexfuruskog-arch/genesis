@@ -3,15 +3,14 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { StudyChat } from "@/components/study/StudyChat";
 import {
   fetchDocumentFile,
   fetchHealth,
   fetchMembership,
-  generateStudy,
   listDocuments,
   uploadDocument,
   type HealthResponse,
-  type StudyResponse,
   type UploadedDocument,
 } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
@@ -34,7 +33,6 @@ import {
   getScanCount,
   getWeeklySessionsUsed,
   recordScan,
-  recordStudySession,
   type PlanId,
 } from "@/lib/plan";
 
@@ -48,13 +46,13 @@ const HOW_STEPS = [
   },
   {
     n: "02",
-    title: "Practice",
-    copy: "Generate a practice exam or flashcards from the notes and files you actually have.",
+    title: "Ask",
+    copy: "Pick one file. Tap a chip or type a question — flashcards, a short quiz, an explanation, or a summary.",
   },
   {
     n: "03",
     title: "Learn",
-    copy: "Force active recall — then return to the page or lecture with sharper questions.",
+    copy: "Flip cards, mark Know or Still learning, and check quiz answers against your own notes.",
   },
 ] as const;
 
@@ -67,7 +65,7 @@ export default function StudyPage() {
   const [cloudEnabled, setCloudEnabled] = useState(false);
   const [backendError, setBackendError] = useState<string | null>(null);
   const [documents, setDocuments] = useState<UploadedDocument[]>([]);
-  const [selected, setSelected] = useState<string[]>([]);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [notebookModel, setNotebookModel] = useState<NotebookModel>("cornell");
   const [listLoading, setListLoading] = useState(true);
   const [uploadBusy, setUploadBusy] = useState(false);
@@ -78,12 +76,6 @@ export default function StudyPage() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewBusy, setPreviewBusy] = useState(false);
   const [previewError, setPreviewError] = useState<string | null>(null);
-  const [generateBusy, setGenerateBusy] = useState(false);
-  const [generateError, setGenerateError] = useState<string | null>(null);
-  const [result, setResult] = useState<StudyResponse | null>(null);
-  const [outputType, setOutputType] = useState<"quiz" | "flashcards">("quiz");
-  const [flipped, setFlipped] = useState<Record<string, boolean>>({});
-  const [answers, setAnswers] = useState<Record<string, number>>({});
   const [plan, setPlanState] = useState<PlanId>("free");
   const [sessionsUsed, setSessionsUsed] = useState(0);
   const [scansUsed, setScansUsed] = useState(0);
@@ -93,6 +85,7 @@ export default function StudyPage() {
   const scanGate = canScan(plan);
   const chatPct = Math.min(100, (sessionsUsed / FREE_SESSION_CAP) * 100);
   const scanPct = Math.min(100, (scansUsed / FREE_SCAN_CAP) * 100);
+  const selectedDoc = documents.find((doc) => doc.id === selectedId) ?? null;
 
   useEffect(() => {
     setPlanState(getPlan());
@@ -100,28 +93,27 @@ export default function StudyPage() {
     setScansUsed(getScanCount());
   }, []);
 
+  const syncUsage = useCallback(async () => {
+    if (!signedIn) return;
+    try {
+      const next = await fetchMembership(authHeaders);
+      applyServerUsage({
+        plan: next.plan,
+        chats_used: next.chats_used,
+        scans_used: next.scans_used,
+      });
+      setPlanState(next.plan);
+      setSessionsUsed(next.chats_used);
+      setScansUsed(next.scans_used);
+    } catch {
+      /* keep cached plan if the API is down */
+    }
+  }, [signedIn, authHeaders]);
+
   useEffect(() => {
     if (!ready || !signedIn) return;
-    let cancelled = false;
-    void fetchMembership(authHeaders)
-      .then((next) => {
-        if (cancelled) return;
-        applyServerUsage({
-          plan: next.plan,
-          chats_used: next.chats_used,
-          scans_used: next.scans_used,
-        });
-        setPlanState(next.plan);
-        setSessionsUsed(next.chats_used);
-        setScansUsed(next.scans_used);
-      })
-      .catch(() => {
-        /* keep cached plan if the API is down */
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [ready, signedIn, authHeaders]);
+    void syncUsage();
+  }, [ready, signedIn, syncUsage]);
 
   const refresh = useCallback(async () => {
     setListLoading(true);
@@ -194,21 +186,9 @@ export default function StudyPage() {
         );
       }
       setDocuments((current) => [...uploaded, ...current]);
-      setSelected((current) => [...uploaded.map((doc) => doc.id), ...current]);
+      setSelectedId(uploaded[0]?.id ?? null);
       setScansUsed(recordScan(uploaded.length));
-      try {
-        const next = await fetchMembership(authHeaders);
-        applyServerUsage({
-          plan: next.plan,
-          chats_used: next.chats_used,
-          scans_used: next.scans_used,
-        });
-        setPlanState(next.plan);
-        setSessionsUsed(next.chats_used);
-        setScansUsed(next.scans_used);
-      } catch {
-        /* keep local count */
-      }
+      await syncUsage();
       const backend = uploaded[0]?.storage_backend;
       const noun = sourceKind === "lecture" ? "lecture file" : "scan";
       setUploadNotice(
@@ -221,12 +201,6 @@ export default function StudyPage() {
     } finally {
       setUploadBusy(false);
     }
-  }
-
-  function toggleDoc(id: string) {
-    setSelected((current) =>
-      current.includes(id) ? current.filter((item) => item !== id) : [...current, id],
-    );
   }
 
   async function openPreview(doc: UploadedDocument) {
@@ -251,49 +225,6 @@ export default function StudyPage() {
     }
   }
 
-  async function onGenerate() {
-    if (selected.length === 0) {
-      setGenerateError("Select at least one item in your library.");
-      return;
-    }
-    const gate = canStartStudySession(plan);
-    if (!gate.ok) {
-      setGenerateError(
-        `Free plan: ${FREE_SESSION_CAP} chats per week. You’ve used ${gate.used}. Upgrade to Standard — $12/month — for unlimited practice.`,
-      );
-      return;
-    }
-    setGenerateBusy(true);
-    setGenerateError(null);
-    setAnswers({});
-    setFlipped({});
-    try {
-      const study = await generateStudy(
-        { documentIds: selected, outputType },
-        authHeaders,
-      );
-      setSessionsUsed(recordStudySession());
-      setResult(study);
-      try {
-        const next = await fetchMembership(authHeaders);
-        applyServerUsage({
-          plan: next.plan,
-          chats_used: next.chats_used,
-          scans_used: next.scans_used,
-        });
-        setPlanState(next.plan);
-        setSessionsUsed(next.chats_used);
-        setScansUsed(next.scans_used);
-      } catch {
-        /* keep local count */
-      }
-    } catch (err) {
-      setGenerateError(err instanceof Error ? err.message : "Generation failed.");
-    } finally {
-      setGenerateBusy(false);
-    }
-  }
-
   const captureDisabled =
     !signedIn || Boolean(backendError) || uploadBusy || !scanGate.ok;
   const previewDoc = documents.find((doc) => doc.id === previewId) ?? null;
@@ -309,8 +240,8 @@ export default function StudyPage() {
             Read once. Recall hard. Remember longer.
           </h1>
           <p className="animate-fade-up-delay mt-5 max-w-xl text-[0.98rem] font-light leading-7 text-cream/72 sm:text-lg">
-            Scan Cornell or Math notebook pages, or upload lecture PDFs and
-            slides — then force active recall with practice exams and flashcards.
+            Scan Cornell or Math pages, or upload lecture files — then ask, make
+            flashcards, or take a short quiz grounded on that file.
           </p>
 
           <div className="mt-10 grid gap-8 border-t border-cream/15 pt-8 sm:grid-cols-[1fr_auto] sm:items-end">
@@ -411,8 +342,8 @@ export default function StudyPage() {
               You&apos;ve used your {FREE_SESSION_CAP} chats this week.
             </h2>
             <p className="mt-3 max-w-xl text-sm font-light leading-7 text-forest/70">
-              Free is honest about its limits. Standard unlocks unlimited practice
-              exams and flashcards for $12/month — or save with Annual.
+              Free is honest about its limits. Standard unlocks unlimited study
+              chats for $12/month — or save with Annual.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
               <a href={shopifyMembershipUrl("standard")} className="btn-ink">
@@ -437,7 +368,7 @@ export default function StudyPage() {
               {FREE_SCAN_CAP} library items used — Free is full.
             </h2>
             <p className="mt-3 max-w-xl text-sm font-light leading-7 text-forest/70">
-              Scans and lecture uploads share this cap. You can still practice from
+              Scans and lecture uploads share this cap. You can still study from
               files already in your library (
               {sessionGate.remaining} chat
               {sessionGate.remaining === 1 ? "" : "s"} left this week). Upgrade for
@@ -622,6 +553,9 @@ export default function StudyPage() {
                   <h2 className="mt-3 font-display text-2xl tracking-[0.03em] text-forest">
                     Scans &amp; lecture files
                   </h2>
+                  <p className="mt-2 text-sm font-light leading-6 text-forest/70">
+                    Select one file. Study AI works on that file only.
+                  </p>
                 </div>
                 <button
                   type="button"
@@ -644,7 +578,7 @@ export default function StudyPage() {
                     Empty shelf
                   </p>
                   <p className="mx-auto mt-2 max-w-[18rem] text-sm font-light leading-6 text-forest/55">
-                    Photograph one notebook page or upload a lecture PDF. Practice
+                    Photograph one notebook page or upload a lecture PDF. Chat
                     starts from what you add.
                   </p>
                 </div>
@@ -652,10 +586,11 @@ export default function StudyPage() {
 
               <ul className="mt-5 space-y-2">
                 {documents.map((doc) => {
-                  const checked = selected.includes(doc.id);
+                  const checked = selectedId === doc.id;
                   const size = formatBytes(doc.byte_size);
                   const label = sourceLabel(doc.source_kind, doc.notebook_model);
                   const kind = doc.kind_label || "File";
+                  const readyText = doc.extraction_status === "ready" && doc.chunk_count > 0;
                   return (
                     <li key={doc.id}>
                       <div
@@ -665,9 +600,10 @@ export default function StudyPage() {
                       >
                         <label className="flex min-w-0 flex-1 cursor-pointer items-start gap-3">
                           <input
-                            type="checkbox"
+                            type="radio"
+                            name="library-item"
                             checked={checked}
-                            onChange={() => toggleDoc(doc.id)}
+                            onChange={() => setSelectedId(doc.id)}
                             className="mt-1 accent-current"
                           />
                           <span className="min-w-0 flex-1">
@@ -678,7 +614,7 @@ export default function StudyPage() {
                               {doc.storage_backend === "supabase" ? "Cloud" : "Local"}
                               {` · ${label} · ${kind}`}
                               {size ? ` · ${size}` : ""}
-                              {` · ${doc.chunk_count} chunks`}
+                              {readyText ? " · text ready" : " · no extractable text"}
                             </span>
                           </span>
                         </label>
@@ -758,178 +694,15 @@ export default function StudyPage() {
             </section>
           </div>
 
-          <div className="space-y-8">
-            <section className="study-panel">
-              <p className="study-label">03 · Practice</p>
-              <h2 className="mt-3 font-display text-2xl tracking-[0.03em] text-forest">
-                Generate from your notes
-              </h2>
-              <p className="mt-2 text-sm font-light leading-6 text-forest/70">
-                Select scans or lecture files, then ask for a practice exam or
-                flashcards.
-              </p>
-              <p className="mt-3 text-[0.62rem] uppercase tracking-[0.14em] text-forest/50">
-                Selected · {selected.length}
-              </p>
-
-              <div className="mt-5 flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={() => setOutputType("quiz")}
-                  className={`px-3 py-2 text-[0.62rem] tracking-[0.14em] uppercase ${
-                    outputType === "quiz"
-                      ? "bg-forest text-cream"
-                      : "border border-forest/20 text-forest"
-                  }`}
-                >
-                  Practice exam
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setOutputType("flashcards")}
-                  className={`px-3 py-2 text-[0.62rem] tracking-[0.14em] uppercase ${
-                    outputType === "flashcards"
-                      ? "bg-forest text-cream"
-                      : "border border-forest/20 text-forest"
-                  }`}
-                >
-                  Flashcards
-                </button>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => void onGenerate()}
-                disabled={
-                  Boolean(backendError) ||
-                  generateBusy ||
-                  selected.length === 0 ||
-                  !sessionGate.ok
-                }
-                className="btn-ink mt-6"
-              >
-                {generateBusy
-                  ? "Generating…"
-                  : !sessionGate.ok
-                    ? "Weekly limit reached"
-                    : outputType === "quiz"
-                      ? "Generate practice exam"
-                      : "Generate flashcards"}
-              </button>
-              {plan === "free" && sessionGate.ok ? (
-                <p className="mt-3 text-xs font-light text-forest/55">
-                  {sessionGate.remaining} of {FREE_SESSION_CAP} Free chats left this week.
-                </p>
-              ) : null}
-              {generateError ? <p className="mt-3 text-sm text-red-800">{generateError}</p> : null}
-            </section>
-
-            <section className="study-panel min-h-[20rem]">
-              <p className="study-label">04 · Learn</p>
-              <h2 className="mt-3 font-display text-2xl tracking-[0.03em] text-forest">
-                Your chat
-              </h2>
-
-              {generateBusy ? (
-                <div className="mt-8 border border-dashed border-forest/12 px-4 py-14 text-center text-sm font-light text-forest/55">
-                  Retrieving your notes…
-                </div>
-              ) : null}
-
-              {!generateBusy && !result && !generateError ? (
-                <div className="mt-8 border border-dashed border-forest/15 px-5 py-14 text-center">
-                  <p className="font-display text-[1.35rem] tracking-[0.02em] text-forest">
-                    Waiting on a chat
-                  </p>
-                  <p className="mx-auto mt-2 max-w-[17rem] text-sm font-light leading-6 text-forest/55">
-                    Pick library items, then generate a practice exam or a deck of
-                    flashcards.
-                  </p>
-                </div>
-              ) : null}
-
-              {result && !generateBusy ? (
-                <div className="mt-6 space-y-4">
-                  <p className="text-[0.62rem] uppercase tracking-[0.14em] text-forest/50">
-                    {result.output_type} · {result.provider} · {result.document_ids.length} notes
-                  </p>
-
-                  {result.output_type === "quiz" ? (
-                    <ol className="space-y-4">
-                      {result.questions.map((question, index) => {
-                        const selectedAnswer = answers[question.id];
-                        const revealed = selectedAnswer !== undefined;
-                        return (
-                          <li key={question.id} className="bg-cream p-4">
-                            <p className="text-sm font-medium text-forest">
-                              {index + 1}. {question.question}
-                            </p>
-                            <ul className="mt-3 space-y-2">
-                              {question.choices.map((choice, choiceIndex) => {
-                                const isSelected = selectedAnswer === choiceIndex;
-                                const isCorrect = question.correct_index === choiceIndex;
-                                let tone = "bg-white hover:bg-cream-soft";
-                                if (revealed && isCorrect) tone = "bg-forest text-cream";
-                                else if (revealed && isSelected) tone = "bg-red-50 text-red-900";
-                                return (
-                                  <li key={choiceIndex}>
-                                    <button
-                                      type="button"
-                                      onClick={() =>
-                                        setAnswers((current) => ({
-                                          ...current,
-                                          [question.id]: choiceIndex,
-                                        }))
-                                      }
-                                      className={`w-full px-3 py-2.5 text-left text-sm ${tone}`}
-                                    >
-                                      {choice}
-                                    </button>
-                                  </li>
-                                );
-                              })}
-                            </ul>
-                            {revealed ? (
-                              <p className="mt-3 text-sm font-light text-forest/70">
-                                {question.explanation}
-                              </p>
-                            ) : null}
-                          </li>
-                        );
-                      })}
-                    </ol>
-                  ) : (
-                    <ul className="space-y-3">
-                      {result.flashcards.map((card) => {
-                        const isFlipped = flipped[card.id];
-                        return (
-                          <li key={card.id}>
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setFlipped((current) => ({
-                                  ...current,
-                                  [card.id]: !current[card.id],
-                                }))
-                              }
-                              className="w-full bg-cream px-4 py-5 text-left transition hover:bg-white"
-                            >
-                              <p className="text-[0.62rem] tracking-[0.14em] uppercase text-forest/45">
-                                {isFlipped ? "Back" : "Front"} · tap to flip
-                              </p>
-                              <p className="mt-2 text-sm leading-6 text-forest">
-                                {isFlipped ? card.back : card.front}
-                              </p>
-                            </button>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  )}
-                </div>
-              ) : null}
-            </section>
-          </div>
+          <StudyChat
+            document={selectedDoc}
+            authHeaders={authHeaders}
+            signedIn={signedIn}
+            sessionGate={sessionGate}
+            plan={plan}
+            backendError={backendError}
+            onUsageChange={syncUsage}
+          />
         </div>
       </section>
     </main>

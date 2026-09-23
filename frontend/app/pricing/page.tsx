@@ -14,7 +14,7 @@ const plans = [
     cta: "Create free account",
     href: "/account",
     points: [
-      "3 chats per week (practice exam or flashcards)",
+      "3 chats per week (flashcards, short quiz, or a question about one file)",
       "Up to 5 library items (notebook scans or lecture files)",
       "Cornell & Math tagging plus PDF / Word / PowerPoint uploads",
       "Private library · cloud when Supabase is connected",
@@ -31,7 +31,7 @@ const plans = [
     cta: "Buy Standard on Shopify",
     href: shopifyMembershipUrl("standard"),
     points: [
-      "Unlimited practice exams & flashcards",
+      "Unlimited flashcards, quizzes, and questions on your library",
       "Unlimited library items — scans and lecture files",
       "Active-recall chats without weekly caps",
       "Priority when exam week spikes traffic",

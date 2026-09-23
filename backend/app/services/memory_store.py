@@ -19,6 +19,7 @@ class MemoryStore:
         self.documents: dict[str, dict[str, Any]] = {}
         self.chunks: dict[str, dict[str, Any]] = {}
         self.quiz_sessions: dict[str, dict[str, Any]] = {}
+        self.study_messages: dict[str, dict[str, Any]] = {}
         self.shopify_customers: dict[str, dict[str, Any]] = {}
         self.shopify_installs: dict[str, dict[str, Any]] = {}
         self.oauth_states: dict[str, dict[str, Any]] = {}
@@ -33,6 +34,7 @@ class MemoryStore:
             self.documents.clear()
             self.chunks.clear()
             self.quiz_sessions.clear()
+            self.study_messages.clear()
             self.shopify_customers.clear()
             self.shopify_installs.clear()
             self.oauth_states.clear()
@@ -133,6 +135,39 @@ class MemoryStore:
             self.quiz_sessions[row["id"]] = row
             return row
 
+    def get_quiz_session(self, user_id: str, session_id: str) -> dict[str, Any] | None:
+        row = self.quiz_sessions.get(session_id)
+        if not row or row.get("user_id") != user_id:
+            return None
+        return row
+
+    def update_quiz_session(self, row: dict[str, Any]) -> dict[str, Any]:
+        with self._lock:
+            self.quiz_sessions[row["id"]] = row
+            return row
+
+    def create_study_message(self, row: dict[str, Any]) -> dict[str, Any]:
+        with self._lock:
+            self.study_messages[row["id"]] = row
+            return row
+
+    def list_study_messages(self, user_id: str, document_id: str) -> list[dict[str, Any]]:
+        rows = [
+            message
+            for message in self.study_messages.values()
+            if message.get("user_id") == user_id and message.get("document_id") == document_id
+        ]
+        return sorted(rows, key=lambda item: item.get("created_at") or "")
+
+    def count_ask_messages_in_week(self, user_id: str, week_id: str) -> int:
+        count = 0
+        for row in self.study_messages.values():
+            if not _is_ask_message(row, user_id):
+                continue
+            if _iso_week_of(row.get("created_at")) == week_id:
+                count += 1
+        return count
+
     def upsert_shopify_customer(self, user_id: str, payload: dict[str, Any]) -> dict[str, Any]:
         with self._lock:
             existing = self.shopify_customers.get(user_id)
@@ -211,13 +246,7 @@ class MemoryStore:
         for row in self.quiz_sessions.values():
             if row.get("user_id") != user_id:
                 continue
-            created = row.get("created_at") or ""
-            try:
-                moment = datetime.fromisoformat(created.replace("Z", "+00:00"))
-            except ValueError:
-                continue
-            year, week, _ = moment.isocalendar()
-            if f"{year}-W{week:02d}" == week_id:
+            if _iso_week_of(row.get("created_at")) == week_id:
                 count += 1
         return count
 
@@ -252,6 +281,30 @@ class MemoryStore:
             if str(row.get("shopify_customer_id") or "") == target:
                 return row
         return None
+
+
+ASK_CHIP_IDS = {"explain", "summarize"}
+
+
+def _iso_week_of(created: Any) -> str | None:
+    if not created:
+        return None
+    raw = str(created)
+    try:
+        moment = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    year, week, _ = moment.isocalendar()
+    return f"{year}-W{week:02d}"
+
+
+def _is_ask_message(row: dict[str, Any], user_id: str) -> bool:
+    if row.get("user_id") != user_id or row.get("role") != "user":
+        return False
+    chip_id = row.get("chip_id")
+    if row.get("prompt_kind") == "free_text":
+        return True
+    return chip_id in ASK_CHIP_IDS
 
 
 def _cosine(left: list[float], right: list[float]) -> float:

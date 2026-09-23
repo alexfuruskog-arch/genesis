@@ -7,7 +7,7 @@ import httpx
 from app.config import get_settings
 from app.schemas.quizzes import Flashcard, QuizQuestion
 
-QUIZ_JSON_INSTRUCTIONS = """You are a study coach for ARZIVE. Create practice-exam questions from the source notes.
+QUIZ_JSON_INSTRUCTIONS = """You are a study coach for ARZIVE. Create short multiple-choice quiz questions from the source notes.
 Reply ONLY with valid JSON shaped like:
 {"questions":[{"id":"q1","question":"...","choices":["A","B","C","D"],"correct_index":0,"explanation":"..."}]}
 Rules:
@@ -16,6 +16,7 @@ Rules:
 - correct_index is 0-based.
 - Explain briefly why the correct answer fits, grounded in the notes.
 - Do not invent facts missing from the source text.
+- This is a short quiz, not a full practice exam.
 """
 
 FLASHCARD_JSON_INSTRUCTIONS = """You are a study coach for ARZIVE. Create flashcards from the source notes.
@@ -25,6 +26,14 @@ Rules:
 - Front is a short prompt or term; back is the answer or explanation.
 - Stay faithful to the notes; do not invent facts.
 - Prefer English unless the notes are clearly in another language.
+"""
+
+ASK_INSTRUCTIONS = """You are a study coach for ARZIVE. Answer using ONLY the student's uploaded notes.
+Rules:
+- Stay grounded in the source text. If the notes do not cover it, say so.
+- Prefer English unless the notes are clearly in another language.
+- Be concise and useful for studying. Use short paragraphs or bullets.
+- Do not invent facts, citations, or pages that are not in the notes.
 """
 
 
@@ -90,6 +99,15 @@ class LLMClient:
             return _parse_flashcards(raw, card_count, source_text)
         return _mock_flashcards(source_text, card_count)
 
+    def generate_answer(self, source_text: str, question: str) -> str:
+        provider = self.provider_name
+        user_prompt = self._ask_user_prompt(source_text, question)
+        if provider == "openai":
+            return self._openai_chat(ASK_INSTRUCTIONS, user_prompt, json_mode=False).strip()
+        if provider == "anthropic":
+            return self._anthropic_chat(ASK_INSTRUCTIONS, user_prompt).strip()
+        return _mock_answer(source_text, question)
+
     def embed(self, texts: list[str]) -> list[list[float]] | None:
         if not texts or not self.settings.openai_api_key:
             return None
@@ -116,15 +134,29 @@ class LLMClient:
     def _quiz_user_prompt(self, source_text: str, question_count: int, topic: str | None) -> str:
         focus = f"\nFocus on: {topic}" if topic else ""
         clipped = source_text[:12000]
-        return f"Create {question_count} practice-exam questions.{focus}\n\nSource notes:\n{clipped}"
+        return f"Create {question_count} short quiz questions.{focus}\n\nSource notes:\n{clipped}"
 
     def _flashcard_user_prompt(self, source_text: str, card_count: int, topic: str | None) -> str:
         focus = f"\nFocus on: {topic}" if topic else ""
         clipped = source_text[:12000]
         return f"Create {card_count} flashcards.{focus}\n\nSource notes:\n{clipped}"
 
-    def _openai_chat(self, system: str, user: str) -> str:
+    def _ask_user_prompt(self, source_text: str, question: str) -> str:
+        clipped = source_text[:12000]
+        return f"Student question:\n{question}\n\nSource notes:\n{clipped}"
+
+    def _openai_chat(self, system: str, user: str, json_mode: bool = True) -> str:
         model = self.settings.llm_model or "gpt-4.1-mini"
+        payload: dict = {
+            "model": model,
+            "temperature": 0.2,
+            "messages": [
+                {"role": "system", "content": system},
+                {"role": "user", "content": user},
+            ],
+        }
+        if json_mode:
+            payload["response_format"] = {"type": "json_object"}
         with httpx.Client(timeout=45.0) as http:
             response = http.post(
                 "https://api.openai.com/v1/chat/completions",
@@ -132,15 +164,7 @@ class LLMClient:
                     "Authorization": f"Bearer {self.settings.openai_api_key}",
                     "Content-Type": "application/json",
                 },
-                json={
-                    "model": model,
-                    "temperature": 0.2,
-                    "response_format": {"type": "json_object"},
-                    "messages": [
-                        {"role": "system", "content": system},
-                        {"role": "user", "content": user},
-                    ],
-                },
+                json=payload,
             )
         response.raise_for_status()
         return response.json()["choices"][0]["message"]["content"]
@@ -271,6 +295,19 @@ def _mock_flashcards(source_text: str, card_count: int) -> list[Flashcard]:
             )
         )
     return cards
+
+
+def _mock_answer(source_text: str, question: str) -> str:
+    snippets = [part.strip() for part in re.split(r"[.\n]+", source_text) if len(part.strip()) > 24]
+    if not snippets:
+        snippets = ["The uploaded file did not yield a longer excerpt."]
+    excerpt = " ".join(snippets[:3])[:420]
+    return (
+        f"From this file, here is a grounded answer to: {question.strip()}\n\n"
+        f"{excerpt}\n\n"
+        "Mock mode uses excerpts from your notes. Set OPENAI_API_KEY or "
+        "ANTHROPIC_API_KEY for a live explanation."
+    )
 
 
 llm_client = LLMClient()

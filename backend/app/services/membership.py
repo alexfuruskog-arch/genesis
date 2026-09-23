@@ -317,7 +317,7 @@ class MembershipService:
         entitlement = self._entitlement_for_user(user)
         plan = self.effective_plan(entitlement)
         unlimited = plan != PLAN_FREE
-        chats_used = store.count_quiz_sessions_in_week(user.id, _iso_week_id())
+        chats_used = store.count_chats_in_week(user.id, _iso_week_id())
         scans_used = store.count_documents(user.id)
         chats_cap = None if unlimited else FREE_CHAT_CAP
         scans_cap = None if unlimited else FREE_SCAN_CAP

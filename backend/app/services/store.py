@@ -7,8 +7,39 @@ from typing import Any
 from uuid import uuid4
 
 from app.config import get_settings
-from app.services.memory_store import memory_store
+from app.services.memory_store import _iso_week_of, _is_ask_message, memory_store
 from app.services.supabase_client import get_supabase_client
+
+
+QUIZ_SESSION_COLUMNS = {
+    "id",
+    "user_id",
+    "document_id",
+    "progress",
+    "score",
+    "history",
+    "questions",
+    "flashcards",
+    "output_type",
+    "status",
+    "created_at",
+    "updated_at",
+}
+
+QUIZ_SESSION_CORE_COLUMNS = QUIZ_SESSION_COLUMNS - {"flashcards", "output_type"}
+
+STUDY_MESSAGE_COLUMNS = {
+    "id",
+    "user_id",
+    "document_id",
+    "role",
+    "content",
+    "prompt_kind",
+    "chip_id",
+    "retrieval",
+    "quiz_session_id",
+    "created_at",
+}
 
 
 def _now_iso() -> str:
@@ -145,8 +176,116 @@ class DataStore:
         client = get_supabase_client()
         if not client:
             return memory_store.create_quiz_session(row)
-        response = client.table("quiz_sessions").insert(row).execute()
-        return (response.data or [row])[0]
+        payload = _pick(row, QUIZ_SESSION_COLUMNS)
+        try:
+            response = client.table("quiz_sessions").insert(payload).execute()
+            return {**row, **((response.data or [payload])[0])}
+        except Exception:
+            core = _pick(row, QUIZ_SESSION_CORE_COLUMNS)
+            try:
+                response = client.table("quiz_sessions").insert(core).execute()
+                return {**row, **((response.data or [core])[0])}
+            except Exception:
+                return memory_store.create_quiz_session(row)
+
+    def get_quiz_session(self, user_id: str, session_id: str) -> dict[str, Any] | None:
+        local = memory_store.get_quiz_session(user_id, session_id)
+        if local:
+            return local
+        client = get_supabase_client()
+        if not client:
+            return None
+        try:
+            response = (
+                client.table("quiz_sessions")
+                .select("*")
+                .eq("id", session_id)
+                .eq("user_id", user_id)
+                .limit(1)
+                .execute()
+            )
+            data = response.data or []
+            return data[0] if data else None
+        except Exception:
+            return None
+
+    def update_quiz_session(self, row: dict[str, Any]) -> dict[str, Any]:
+        saved = memory_store.update_quiz_session(row)
+        client = get_supabase_client()
+        if not client:
+            return saved
+        payload = {
+            "history": row.get("history") or [],
+            "progress": row.get("progress") or 0,
+            "status": row.get("status") or "in_progress",
+            "updated_at": row.get("updated_at") or _now_iso(),
+        }
+        try:
+            client.table("quiz_sessions").update(payload).eq("id", row["id"]).eq(
+                "user_id", row["user_id"]
+            ).execute()
+        except Exception:
+            pass
+        return saved
+
+    def create_study_message(self, row: dict[str, Any]) -> dict[str, Any]:
+        local = memory_store.create_study_message(row)
+        client = get_supabase_client()
+        if not client:
+            return local
+        payload = _pick(row, STUDY_MESSAGE_COLUMNS)
+        try:
+            response = client.table("study_messages").insert(payload).execute()
+            return {**row, **((response.data or [payload])[0])}
+        except Exception:
+            return local
+
+    def list_study_messages(self, user_id: str, document_id: str) -> list[dict[str, Any]]:
+        client = get_supabase_client()
+        if not client:
+            return memory_store.list_study_messages(user_id, document_id)
+        try:
+            response = (
+                client.table("study_messages")
+                .select("*")
+                .eq("user_id", user_id)
+                .eq("document_id", document_id)
+                .order("created_at")
+                .execute()
+            )
+            rows = response.data or []
+            if rows:
+                return rows
+        except Exception:
+            pass
+        return memory_store.list_study_messages(user_id, document_id)
+
+    def count_ask_messages_in_week(self, user_id: str, week_id: str) -> int:
+        client = get_supabase_client()
+        if not client:
+            return memory_store.count_ask_messages_in_week(user_id, week_id)
+        try:
+            response = (
+                client.table("study_messages")
+                .select("id, created_at, role, prompt_kind, chip_id, user_id")
+                .eq("user_id", user_id)
+                .eq("role", "user")
+                .execute()
+            )
+            count = 0
+            for row in response.data or []:
+                if not _is_ask_message(row, user_id):
+                    continue
+                if _iso_week_of(row.get("created_at")) == week_id:
+                    count += 1
+            return count
+        except Exception:
+            return memory_store.count_ask_messages_in_week(user_id, week_id)
+
+    def count_chats_in_week(self, user_id: str, week_id: str) -> int:
+        return self.count_quiz_sessions_in_week(user_id, week_id) + self.count_ask_messages_in_week(
+            user_id, week_id
+        )
 
     def upsert_shopify_customer(self, user_id: str, payload: dict[str, Any]) -> dict[str, Any]:
         client = get_supabase_client()
@@ -312,13 +451,7 @@ class DataStore:
             )
             count = 0
             for row in response.data or []:
-                created = row.get("created_at") or ""
-                try:
-                    moment = datetime.fromisoformat(created.replace("Z", "+00:00"))
-                except ValueError:
-                    continue
-                year, week, _ = moment.isocalendar()
-                if f"{year}-W{week:02d}" == week_id:
+                if _iso_week_of(row.get("created_at")) == week_id:
                     count += 1
             return count
         except Exception:
@@ -483,3 +616,7 @@ class DataStore:
 
 
 store = DataStore()
+
+
+def _pick(row: dict[str, Any], keys: set[str]) -> dict[str, Any]:
+    return {key: row[key] for key in keys if key in row and row[key] is not None}

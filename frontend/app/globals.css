@@ -221,6 +221,27 @@ h3,
   transition: width 0.55s ease;
 }
 
+.study-chip {
+  border: 1px solid rgba(11, 36, 33, 0.2);
+  padding: 0.55rem 0.8rem;
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--forest);
+  background: transparent;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.study-chip:hover {
+  border-color: var(--forest);
+  background: #fff;
+}
+
+.study-chip:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 .how-step {
   position: relative;
 }

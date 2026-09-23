@@ -120,12 +120,39 @@ create table if not exists public.quiz_sessions (
   score integer,
   history jsonb not null default '[]'::jsonb,
   questions jsonb not null default '[]'::jsonb,
+  flashcards jsonb not null default '[]'::jsonb,
+  output_type text not null default 'questions',
   status text not null default 'in_progress',
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
 
+alter table public.quiz_sessions
+  add column if not exists flashcards jsonb not null default '[]'::jsonb;
+alter table public.quiz_sessions
+  add column if not exists output_type text not null default 'questions';
+
 create index if not exists quiz_sessions_user_id_idx on public.quiz_sessions (user_id);
+create index if not exists quiz_sessions_document_id_idx on public.quiz_sessions (document_id);
+
+-- ---------------------------------------------------------------------------
+-- Study chat messages (chips + free-text, grounded on one library file)
+-- ---------------------------------------------------------------------------
+create table if not exists public.study_messages (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users (id) on delete cascade,
+  document_id uuid references public.documents (id) on delete set null,
+  role text not null,
+  content text not null,
+  prompt_kind text,
+  chip_id text,
+  retrieval jsonb,
+  quiz_session_id uuid references public.quiz_sessions (id) on delete set null,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists study_messages_user_document_idx
+  on public.study_messages (user_id, document_id, created_at);
 
 -- ---------------------------------------------------------------------------
 -- Shopify customer linkage (app user <-> Shopify customer)
@@ -163,6 +190,7 @@ alter table public.profiles enable row level security;
 alter table public.documents enable row level security;
 alter table public.document_chunks enable row level security;
 alter table public.quiz_sessions enable row level security;
+alter table public.study_messages enable row level security;
 alter table public.shopify_customers enable row level security;
 alter table public.shopify_installs enable row level security;
 
@@ -197,6 +225,12 @@ create policy "document_chunks_own"
 drop policy if exists "quiz_sessions_own" on public.quiz_sessions;
 create policy "quiz_sessions_own"
   on public.quiz_sessions for all
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+drop policy if exists "study_messages_own" on public.study_messages;
+create policy "study_messages_own"
+  on public.study_messages for all
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
 

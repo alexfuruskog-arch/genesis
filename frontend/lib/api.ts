@@ -42,11 +42,19 @@ export type Flashcard = {
   back: string;
 };
 
+export type CardRating = "know" | "still_learning";
+
+export type FlashcardRating = {
+  card_id: string;
+  rating: CardRating;
+  at?: string | null;
+};
+
 export type StudyResponse = {
   quiz_session_id: string;
   document_id: string | null;
   document_ids: string[];
-  output_type: "quiz" | "flashcards";
+  output_type: "quiz" | "flashcards" | "questions";
   provider: string;
   retrieval: {
     mode: string;
@@ -55,6 +63,34 @@ export type StudyResponse = {
   };
   questions: QuizQuestion[];
   flashcards: Flashcard[];
+  history?: FlashcardRating[];
+  store: string;
+};
+
+export type PromptKind = "chip" | "free_text";
+
+export type StudyMessage = {
+  id: string;
+  document_id: string | null;
+  role: "user" | "assistant";
+  content: string;
+  prompt_kind: PromptKind | null;
+  chip_id: string | null;
+  retrieval: Record<string, unknown> | null;
+  quiz_session_id: string | null;
+  created_at: string;
+  quiz_session?: StudyResponse | null;
+};
+
+export type AskResponse = {
+  message: StudyMessage;
+  user_message: StudyMessage;
+  provider: string;
+  retrieval: {
+    mode: string;
+    chunk_count: number;
+    document_count?: number;
+  };
   store: string;
 };
 
@@ -229,7 +265,7 @@ export async function listDocuments(
 export async function generateStudy(
   input: {
     documentIds: string[];
-    outputType: "quiz" | "flashcards";
+    outputType: "quiz" | "flashcards" | "questions";
     questionCount?: number;
   },
   authHeaders?: Record<string, string>,
@@ -239,6 +275,7 @@ export async function generateStudy(
     headers: { "Content-Type": "application/json" },
     authHeaders,
     body: JSON.stringify({
+      document_id: input.documentIds[0],
       document_ids: input.documentIds,
       output_type: input.outputType,
       question_count: input.questionCount ?? 5,
@@ -252,9 +289,62 @@ export async function generateQuiz(
   authHeaders?: Record<string, string>,
 ): Promise<StudyResponse> {
   return generateStudy(
-    { documentIds: [documentId], outputType: "quiz", questionCount },
+    { documentIds: [documentId], outputType: "questions", questionCount },
     authHeaders,
   );
+}
+
+export async function askAboutFile(
+  input: {
+    documentId: string;
+    message: string;
+    promptKind?: PromptKind;
+    chipId?: string;
+  },
+  authHeaders?: Record<string, string>,
+): Promise<AskResponse> {
+  return request("/ask", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    authHeaders,
+    body: JSON.stringify({
+      document_id: input.documentId,
+      message: input.message,
+      prompt_kind: input.promptKind ?? "free_text",
+      chip_id: input.chipId,
+    }),
+  });
+}
+
+export async function listStudyMessages(
+  documentId: string,
+  authHeaders?: Record<string, string>,
+): Promise<{ messages: StudyMessage[]; store: string }> {
+  return request(`/study-messages?document_id=${encodeURIComponent(documentId)}`, {
+    cache: "no-store",
+    authHeaders,
+  });
+}
+
+export async function fetchQuizSession(
+  sessionId: string,
+  authHeaders?: Record<string, string>,
+): Promise<StudyResponse> {
+  return request(`/quiz-sessions/${sessionId}`, { cache: "no-store", authHeaders });
+}
+
+export async function rateFlashcard(
+  sessionId: string,
+  cardId: string,
+  rating: CardRating,
+  authHeaders?: Record<string, string>,
+): Promise<StudyResponse> {
+  return request(`/quiz-sessions/${sessionId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    authHeaders,
+    body: JSON.stringify({ card_id: cardId, rating }),
+  });
 }
 
 export async function authSignup(email: string, password: string): Promise<AuthSession> {

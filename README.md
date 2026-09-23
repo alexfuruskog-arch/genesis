@@ -43,7 +43,7 @@ Open [http://127.0.0.1:43123](http://127.0.0.1:43123). The UI calls `/backend/*`
 ## Architecture (why one site)
 
 - **Shop** deep-links to Shopify product pages when `NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN` is set (handles: `arzive-cornell-notebook`, `arzive-math-notebook` — see [`shopify/products.md`](shopify/products.md)).
-- **Study with Arzive** is `/study` on the same origin — camera scans **and** lecture file uploads (PDF, images, Word, PowerPoint) under your account, multi-note selection, practice exam or flashcards. Files land in Supabase Storage with RLS when configured; otherwise a local-disk fallback.
+- **Study with Arzive** is `/study` on the same origin — camera scans **and** lecture file uploads (PDF, images, Word, PowerPoint) under your account. Pick **one** library file, then chat with chips and a free-text field (flashcards, short quiz, explain, summarize). Files land in Supabase Storage with RLS when configured; otherwise a local-disk fallback.
 - **Pricing** (`/pricing`): Free (3 chats/week, 5 library items — notebook scans or lecture files), Standard **$12/mo**, Annual **$96/yr**, Scholar **$29/mo**. Paid CTAs check out on Shopify. Free limits are enforced in the Study UI **and** the API.
 - Later: import the Shopify theme into this Next app or use Hydrogen/Storefront API; still one ARZIVE brand.
 
@@ -123,7 +123,11 @@ Then set `NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN` so Shop buy buttons hit those produc
 | `POST` | `/upload-document` | Multipart file (scan or lecture) → storage + chunks. Form: `source_kind=scan\|lecture`, optional `notebook_model` |
 | `GET` | `/documents` | List library items for the current user (scans + lecture files) |
 | `GET` | `/documents/{id}/file` | Original file bytes (inline preview / download) |
-| `POST` | `/generate-quiz` or `/generate-study` | `{ document_ids[], output_type: quiz\|flashcards\|ovningstenta, question_count? }` |
+| `POST` | `/generate-quiz` or `/generate-study` | `{ document_id, output_type: questions\|flashcards\|quiz, question_count? }` — Quiz me / Make flashcards |
+| `POST` | `/ask` | `{ document_id, message, prompt_kind: chip\|free_text, chip_id? }` — Explain this, Summarize, or a typed question. Counts as a Free chat |
+| `GET` | `/study-messages?document_id=` | Thread for one library file |
+| `GET` | `/quiz-sessions/{id}` | Resume a flashcard deck or quiz |
+| `PATCH` | `/quiz-sessions/{id}` | `{ card_id, rating: know\|still_learning }` |
 | `GET` | `/shopify/status` | Connected shop + linked customer |
 | `POST` | `/shopify/connect` | OAuth start **or** Admin API token install |
 | `POST` | `/shopify/disconnect` | Clears the saved shop install |
@@ -142,7 +146,7 @@ Then set `NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN` so Shop buy buttons hit those produc
 | --- | --- |
 | `/` | Brand home — hero + Cornell / Math |
 | `/shop` | Two notebooks, Shopify buy links |
-| `/study` | Scan a notebook page or upload a lecture PDF/docx/pptx, then practice exam / flashcards |
+| `/study` | Scan a notebook page or upload a lecture PDF/docx/pptx, pick **one** file, then chat (chips + “Ask about this file…”) |
 | `/account` | Sign in / up / out + optional Shopify merchant connect |
 | `/story` | Short brand story |
 
