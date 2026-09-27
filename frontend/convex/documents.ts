@@ -1,7 +1,7 @@
 import { v } from "convex/values";
 
 import { mutation, query } from "./_generated/server";
-import { requireUser } from "./lib/authHelpers";
+import { requireUser, userFromToken } from "./lib/authHelpers";
 import { utcDateId } from "./lib/plans";
 
 function docToClient(doc: {
@@ -90,9 +90,17 @@ export const saveDocumentRecord = mutation({
 });
 
 export const listDocuments = query({
-  args: { token: v.string() },
+  args: { token: v.optional(v.string()) },
   handler: async (ctx, args) => {
-    const { user } = await requireUser(ctx, args.token);
+    const resolved = await userFromToken(ctx, args.token);
+    if (!resolved) {
+      return {
+        documents: [],
+        store: "convex",
+        cloud_enabled: true,
+      };
+    }
+    const { user } = resolved;
     const docs = await ctx.db
       .query("documents")
       .withIndex("by_owner_created", (q) => q.eq("ownerId", user._id))

@@ -1,13 +1,17 @@
 import { v } from "convex/values";
 
 import { mutation, query } from "./_generated/server";
-import { requireUser } from "./lib/authHelpers";
+import { requireUser, userFromToken } from "./lib/authHelpers";
 import { parseRatings } from "./lib/studyHelpers";
 
 export const listStudyMessages = query({
-  args: { token: v.string(), documentId: v.id("documents") },
+  args: { token: v.optional(v.string()), documentId: v.id("documents") },
   handler: async (ctx, args) => {
-    const { user } = await requireUser(ctx, args.token);
+    const resolved = await userFromToken(ctx, args.token);
+    if (!resolved) {
+      return { messages: [], store: "convex" };
+    }
+    const { user } = resolved;
     const doc = await ctx.db.get(args.documentId);
     if (!doc || doc.ownerId !== user._id) {
       return { messages: [], store: "convex" };

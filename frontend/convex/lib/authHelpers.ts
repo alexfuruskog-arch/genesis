@@ -9,25 +9,40 @@ export async function hashPassword(password: string): Promise<string> {
     .join("");
 }
 
+export async function userFromToken(
+  ctx: QueryCtx | MutationCtx,
+  token: string | undefined,
+) {
+  const trimmed = token?.trim();
+  if (!trimmed) {
+    return null;
+  }
+  const session = await ctx.db
+    .query("sessions")
+    .withIndex("by_token", (q) => q.eq("token", trimmed))
+    .unique();
+  if (!session || session.expiresAt < Date.now()) {
+    return null;
+  }
+  const user = await ctx.db.get(session.userId);
+  if (!user) {
+    return null;
+  }
+  return { user, session };
+}
+
 export async function requireUser(
   ctx: QueryCtx | MutationCtx,
   token: string | undefined,
 ) {
-  if (!token) {
-    throw new Error("Sign in on Account first.");
-  }
-  const session = await ctx.db
-    .query("sessions")
-    .withIndex("by_token", (q) => q.eq("token", token))
-    .unique();
-  if (!session || session.expiresAt < Date.now()) {
+  const resolved = await userFromToken(ctx, token);
+  if (!resolved) {
+    if (!token?.trim()) {
+      throw new Error("Sign in on Account first.");
+    }
     throw new Error("Session expired. Sign in again.");
   }
-  const user = await ctx.db.get(session.userId);
-  if (!user) {
-    throw new Error("Account not found.");
-  }
-  return { user, session };
+  return resolved;
 }
 
 export function newToken(): string {
