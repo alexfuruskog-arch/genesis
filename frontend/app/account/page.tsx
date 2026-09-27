@@ -12,12 +12,17 @@ import { ShopifyConnect } from "@/components/ShopifyConnect";
 
 const PLAN_LABELS: Record<PlanId, string> = {
   free: "Free",
-  standard: "Standard · $12/mo",
-  annual: "Annual · $96/yr",
-  scholar: "Scholar · $29/mo",
+  plus: "Plus · $12/mo",
+  pro: "Pro · $19/mo",
 };
 
-function parsePlan(raw: string | null): Exclude<PlanId, "free"> | null {
+const SHOPIFY_CHECKOUT_LABELS: Record<"standard" | "annual" | "scholar", string> = {
+  standard: "Plus · $12/mo",
+  annual: "Plus Annual · $79/yr",
+  scholar: "Pro · $19/mo",
+};
+
+function parseShopifyPlan(raw: string | null): "standard" | "annual" | "scholar" | null {
   if (raw === "standard" || raw === "annual" || raw === "scholar") {
     return raw;
   }
@@ -34,7 +39,7 @@ function AccountInner() {
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [membership, setMembership] = useState<MembershipSnapshot | null>(null);
-  const intended = parsePlan(searchParams.get("plan"));
+  const intended = parseShopifyPlan(searchParams.get("plan"));
   const plan: PlanId = membership?.plan || (user?.plan as PlanId | undefined) || "free";
 
   useEffect(() => {
@@ -47,11 +52,7 @@ function AccountInner() {
       .then((next) => {
         if (cancelled) return;
         setMembership(next);
-        applyServerUsage({
-          plan: next.plan,
-          chats_used: next.chats_used,
-          scans_used: next.scans_used,
-        });
+        applyServerUsage({ plan: next.plan, uploads_used: next.uploads_used });
         if (next.plan !== "free") {
           setMessage(`${PLAN_LABELS[next.plan]} is active on this Study account.`);
         }
@@ -68,7 +69,7 @@ function AccountInner() {
     if (intended) {
       setMode("signup");
       setMessage(
-        `Checkout ${PLAN_LABELS[intended]} on Shopify with this same email. After the card charge, Study shows the paid plan automatically.`,
+        `Checkout ${SHOPIFY_CHECKOUT_LABELS[intended]} on Shopify with this same email. After the card charge, Study shows the paid plan automatically.`,
       );
     }
   }, [intended]);
@@ -122,7 +123,7 @@ function AccountInner() {
                 href={shopifyMembershipUrl("standard")}
                 className="border border-forest/25 px-4 py-2.5 text-[0.62rem] tracking-[0.14em] uppercase text-forest"
               >
-                Buy Standard · $12/mo
+                Buy Plus · $12/mo
               </a>
             ) : (
               <Link
@@ -219,16 +220,16 @@ function AccountInner() {
         <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
           {(
             [
-              ["standard", "Standard · $12/mo"],
-              ["annual", "Annual · $96/yr"],
-              ["scholar", "Scholar · $29/mo"],
+              ["standard", SHOPIFY_CHECKOUT_LABELS.standard],
+              ["annual", SHOPIFY_CHECKOUT_LABELS.annual],
+              ["scholar", SHOPIFY_CHECKOUT_LABELS.scholar],
             ] as const
           ).map(([id, label]) => (
             <a
               key={id}
               href={shopifyMembershipUrl(id)}
               className={`px-3 py-3 text-center text-[0.58rem] uppercase tracking-[0.12em] transition ${
-                intended === id || plan === id
+                intended === id
                   ? "bg-cream text-forest"
                   : "border border-cream/25 text-cream/80 hover:border-cream/50"
               }`}

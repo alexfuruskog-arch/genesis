@@ -1,9 +1,4 @@
-// Same-origin proxy (next.config.ts rewrites /backend → FastAPI) so Preview
-// and Desktop work even when the page is not opened on 127.0.0.1.
-export const apiUrl = "/backend";
-
-export const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
-export const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
+export const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL ?? "";
 
 /** Custom domain first; myshopify fallback. */
 export const shopifyStoreDomain =
@@ -39,8 +34,7 @@ export function shopifyMembershipUrl(plan: "standard" | "annual" | "scholar"): s
 }
 
 export const publicConfig = {
-  apiUrl,
-  supabaseConfigured: Boolean(supabaseUrl && supabaseAnonKey),
+  convexConfigured: Boolean(convexUrl),
   shopifyConfigured: Boolean(shopifyStoreDomain),
   shopifyStoreDomain,
 };

@@ -58,11 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (session) {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
       if (session.plan) {
-        applyServerUsage({
-          plan: session.plan as PlanId,
-          chats_used: session.chats_used,
-          scans_used: session.scans_used,
-        });
+        applyServerUsage({ plan: session.plan as PlanId });
       }
     } else {
       window.localStorage.removeItem(STORAGE_KEY);

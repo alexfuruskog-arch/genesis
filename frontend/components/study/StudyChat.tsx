@@ -12,8 +12,7 @@ import {
   type StudyResponse,
   type UploadedDocument,
 } from "@/lib/api";
-import { shopifyMembershipUrl } from "@/lib/env";
-import { FREE_SESSION_CAP, type PlanId } from "@/lib/plan";
+import type { PlanId } from "@/lib/plan";
 
 export const STUDY_CHIPS = [
   { id: "flashcards", label: "Make flashcards", run: "flashcards" },
@@ -35,17 +34,10 @@ type ChatItem = {
   quizSession?: StudyResponse | null;
 };
 
-type SessionGate = {
-  ok: boolean;
-  remaining: number;
-  used?: number;
-};
-
 type Props = {
   document: UploadedDocument | null;
   authHeaders: Record<string, string>;
   signedIn: boolean;
-  sessionGate: SessionGate;
   plan: PlanId;
   backendError: string | null;
   onUsageChange: () => Promise<void> | void;
@@ -82,7 +74,6 @@ export function StudyChat({
   document,
   authHeaders,
   signedIn,
-  sessionGate,
   plan,
   backendError,
   onUsageChange,
@@ -164,12 +155,6 @@ export function StudyChat({
       setError(backendError);
       return;
     }
-    if (!sessionGate.ok) {
-      setError(
-        `Free plan: ${FREE_SESSION_CAP} chats per week. You’ve used ${sessionGate.used ?? FREE_SESSION_CAP}. Upgrade to Standard — $12/month — for unlimited practice.`,
-      );
-      return;
-    }
     if (!hasExtractedText(document)) {
       setError(
         "This file has no extractable text yet. Photos are stored, but OCR is not connected. Try a PDF, Word, PowerPoint, or text file.",
@@ -239,12 +224,6 @@ export function StudyChat({
     }
     if (backendError) {
       setError(backendError);
-      return;
-    }
-    if (!sessionGate.ok) {
-      setError(
-        `Free plan: ${FREE_SESSION_CAP} chats per week. You’ve used ${sessionGate.used ?? FREE_SESSION_CAP}. Upgrade to Standard — $12/month — for unlimited practice.`,
-      );
       return;
     }
     if (!hasExtractedText(document)) {
@@ -352,15 +331,6 @@ export function StudyChat({
       </div>
 
       {error ? <p className="mt-3 text-sm text-red-800">{error}</p> : null}
-      {plan === "free" && !sessionGate.ok ? (
-        <p className="mt-3 text-sm font-light text-forest/70">
-          Weekly chat limit reached.{" "}
-          <a href={shopifyMembershipUrl("standard")} className="underline underline-offset-4">
-            Upgrade to Standard · $12
-          </a>
-        </p>
-      ) : null}
-
       <form onSubmit={onSubmit} className="mt-5">
         <div className="flex flex-wrap gap-2">
           {STUDY_CHIPS.map((chip) => (
@@ -390,11 +360,6 @@ export function StudyChat({
             </button>
           </div>
         </label>
-        {plan === "free" && sessionGate.ok ? (
-          <p className="mt-3 text-xs font-light text-forest/55">
-            {sessionGate.remaining} of {FREE_SESSION_CAP} Free chats left this week.
-          </p>
-        ) : null}
       </form>
     </section>
   );

@@ -1,175 +1,46 @@
-# ARZIVE
+# ARZIVE — Study with Arzive (Vercel + Convex)
 
-One brand site: notebooks in the shop, **Study with Arzive** as the logged-in study surface. Not two separate websites.
+Research-backed notebooks ship from [arzive.com](https://arzive.com) (Shopify). **Study with Arzive** is a separate Next.js app in `frontend/` backed by [Convex](https://convex.dev) for auth, file storage, membership, and Study AI.
 
-| Layer | Role |
-| --- | --- |
-| **Next.js** (`frontend/`) | Brand storefront + Study with Arzive + account |
-| **Shopify** | Source of truth for products and checkout (buy links / Storefront API / theme import later) |
-| **FastAPI** (`backend/`) | Upload scans and lecture files, retrieval, quiz & flashcards, Shopify connect hooks |
-| **Supabase** | Auth + library files when keys are set; otherwise local memory + MVP email/password |
+## What Study does
 
-Nav: **SHOP** · **STUDY WITH ARZIVE** · centered **ARZIVE** · **ACCOUNT** · bag.
-
-Local run does **not** require secrets. Missing Supabase, LLM, or Shopify credentials fall back to memory store, mock study output, and placeholder buy links.
+- Email-based accounts (same email as Shopify checkout unlocks Plus/Pro).
+- Upload notebook scans or lecture files; AI chips: flashcards, quiz, explain, summarize, and free-text questions — grounded on **one selected file**.
+- **Free:** one upload per UTC day. **Plus / Pro:** unlimited uploads within fair use (Shopify handles `membership-standard`, `membership-annual` → Plus; `membership-scholar` → Pro).
 
 ## Run locally
-
-### Backend
-
-```bash
-cd backend
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-cp .env.example .env
-uvicorn app.main:app --host 0.0.0.0 --port 48721 --reload
-```
-
-- Health: `GET http://127.0.0.1:48721/health`
-- Hello: `GET http://127.0.0.1:48721/hello`
-
-### Frontend
 
 ```bash
 cd frontend
 cp .env.example .env.local
+# Add NEXT_PUBLIC_CONVEX_URL after convex dev prints it
 npm install
-npm run dev
+npx convex dev --start "npm run dev"
 ```
 
-Open [http://127.0.0.1:43123](http://127.0.0.1:43123). The UI calls `/backend/*`; Next.js rewrites that to FastAPI (`API_PROXY_TARGET` or `NEXT_PUBLIC_API_URL`, default `http://127.0.0.1:48721`).
+- Next.js: [http://127.0.0.1:43123](http://127.0.0.1:43123)
+- Study UI: [http://127.0.0.1:43123/study](http://127.0.0.1:43123/study)
 
-## Architecture (why one site)
-
-- **Shop** deep-links to Shopify product pages when `NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN` is set (handles: `arzive-cornell-notebook`, `arzive-math-notebook` — see [`shopify/products.md`](shopify/products.md)).
-- **Study with Arzive** is `/study` on the same origin — camera scans **and** lecture file uploads (PDF, images, Word, PowerPoint) under your account. Pick **one** library file, then chat with chips and a free-text field (flashcards, short quiz, explain, summarize). Files land in Supabase Storage with RLS when configured; otherwise a local-disk fallback.
-- **Pricing** (`/pricing`): Free (3 chats/week, 5 library items — notebook scans or lecture files), Standard **$12/mo**, Annual **$96/yr**, Scholar **$29/mo**. Paid CTAs check out on Shopify. Free limits are enforced in the Study UI **and** the API.
-- Later: import the Shopify theme into this Next app or use Hydrogen/Storefront API; still one ARZIVE brand.
+Without `OPENAI_API_KEY` or `ANTHROPIC_API_KEY` on the Convex deployment, Study AI runs in **mock** mode (deterministic excerpts).
 
 ## Environment variables
 
-### Backend (`backend/.env`)
+| Variable | Where | Purpose |
+|----------|--------|---------|
+| `NEXT_PUBLIC_CONVEX_URL` | Next.js `.env.local` | Convex client URL |
+| `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` | Convex dashboard | Live LLM (optional) |
+| `NEXT_PUBLIC_SHOPIFY_*` | Next.js | Membership product links |
 
-| Variable | Purpose |
-| --- | --- |
-| `FRONTEND_ORIGIN` | CORS origin for the Next app |
-| `SUPABASE_URL` | Supabase project URL |
-| `SUPABASE_ANON_KEY` | Anon key (JWT validation + optional client) |
-| `SUPABASE_SERVICE_ROLE_KEY` | Preferred server key for inserts after auth |
-| `LLM_PROVIDER` | `auto`, `openai`, `anthropic`, or `mock` |
-| `LLM_MODEL` | Optional model override |
-| `OPENAI_API_KEY` | Study generation + embeddings |
-| `ANTHROPIC_API_KEY` | Study generation |
-| `SHOPIFY_STORE_URL` | `your-shop.myshopify.com` |
-| `SHOPIFY_CLIENT_ID` / `SHOPIFY_CLIENT_SECRET` | Custom app OAuth |
-| `SHOPIFY_ADMIN_API_TOKEN` | Admin API (customers, products, draft orders) |
-| `SHOPIFY_WEBHOOK_SECRET` | HMAC verification for `/shopify/webhooks/{topic}` |
-| `SHOPIFY_API_VERSION` | Default `2025-01` |
-| `LOCAL_UPLOAD_DIR` | Optional. Directory for the local file fallback when Supabase Storage is not configured (default `.local_uploads` under `backend/`). On Render this disk is ephemeral — set the Supabase keys for a durable library. |
+## Deploy
 
-### Frontend (`frontend/.env.local`)
+1. **Convex:** `npx convex deploy` from `frontend/`; copy production URL to Vercel as `NEXT_PUBLIC_CONVEX_URL`.
+2. **Vercel:** Root directory `frontend`, framework Next.js. Set env vars above.
+3. **Webhooks (stubs, HMAC later):** Point Shopify/Stripe to Convex HTTP routes `/webhooks/shopify` and `/webhooks/stripe` on your deployment site URL.
 
-| Variable | Purpose |
-| --- | --- |
-| `API_PROXY_TARGET` | FastAPI origin for the `/backend` rewrite (server-side) |
-| `NEXT_PUBLIC_API_URL` | Fallback API origin used by that rewrite |
-| `NEXT_PUBLIC_SUPABASE_URL` | Public Supabase URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Public anon key |
-| `NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN` | Public shop domain for buy links |
-| `NEXT_PUBLIC_SHOPIFY_CORNELL_HANDLE` | Optional override (default `arzive-cornell-notebook`) |
-| `NEXT_PUBLIC_SHOPIFY_MATH_HANDLE` | Optional override (default `arzive-math-notebook`) |
-| `NEXT_PUBLIC_SHOPIFY_STOREFRONT_ACCESS_TOKEN` | Storefront API (later checkout UI) |
-| `NEXT_PUBLIC_SHOPIFY_API_KEY` | Public Shopify app key |
+## Repo layout
 
-## Apply the SQL in Supabase
+- `frontend/` — Next.js App Router + `convex/` functions
+- `shopify/` — Theme assets for the main shop (unchanged)
+- `docs/` — Publishing notes
 
-1. Create a Supabase project.
-2. Open **SQL Editor**.
-3. Paste and run [`supabase/schema.sql`](supabase/schema.sql).
-
-Auth is JWT-ready: send `Authorization: Bearer <supabase access token>`. Without Supabase, use **Account** sign-up (local profiles). Library files are scoped by `user_id` and stored at `{user_id}/…` in the private `documents` bucket (RLS). Without Supabase keys the API keeps a local disk + memory fallback so Study still works. Re-run [`supabase/schema.sql`](supabase/schema.sql) to add `source_kind` (`scan` or `lecture`) if the project already existed.
-
-## Shopify Online Store theme
-
-Uploadable OS 2.0 theme (ARZIVE homepage + shop design):
-
-- Theme source: [`shopify/theme/`](shopify/theme/)
-- Upload guide (Swedish): [`shopify/THEME.md`](shopify/THEME.md)
-- Zip: run `./shopify/pack-theme.sh` → `shopify/arzive-theme.zip`
-- Admin: **Online Store → Themes → Add theme → Upload zip file**
-
-Study with Arzive stays on Next.js; set **Study with Arzive URL** in theme settings after upload.
-
-## Shopify product paste
-
-Paste-ready titles, descriptions, handles, and CSV for **Cornell Notebook** and **Math Notebook**:
-
-- [`shopify/products.md`](shopify/products.md) — copy into Shopify Admin
-- [`shopify/products.csv`](shopify/products.csv) — Products → Import
-
-Then set `NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN` so Shop buy buttons hit those products.
-
-## API
-
-| Method | Path | What it does |
-| --- | --- |
-| `GET` | `/health` | Liveness + which integrations are live vs mock |
-| `GET` | `/hello` | Short hello payload |
-| `POST` | `/auth/signup` | Local email/password account |
-| `POST` | `/auth/login` | Local session token |
-| `POST` | `/auth/logout` | Clear local session |
-| `GET` | `/auth/me` | Current user |
-| `POST` | `/upload-document` | Multipart file (scan or lecture) → storage + chunks. Form: `source_kind=scan\|lecture`, optional `notebook_model` |
-| `GET` | `/documents` | List library items for the current user (scans + lecture files) |
-| `GET` | `/documents/{id}/file` | Original file bytes (inline preview / download) |
-| `POST` | `/generate-quiz` or `/generate-study` | `{ document_id, output_type: questions\|flashcards\|quiz, question_count? }` — Quiz me / Make flashcards |
-| `POST` | `/ask` | `{ document_id, message, prompt_kind: chip\|free_text, chip_id? }` — Explain this, Summarize, or a typed question. Counts as a Free chat |
-| `GET` | `/study-messages?document_id=` | Thread for one library file |
-| `GET` | `/quiz-sessions/{id}` | Resume a flashcard deck or quiz |
-| `PATCH` | `/quiz-sessions/{id}` | `{ card_id, rating: know\|still_learning }` |
-| `GET` | `/shopify/status` | Connected shop + linked customer |
-| `POST` | `/shopify/connect` | OAuth start **or** Admin API token install |
-| `POST` | `/shopify/disconnect` | Clears the saved shop install |
-| `GET` | `/shopify/oauth/install` | Same as connect without a token (OAuth URL) |
-| `GET` | `/shopify/oauth/callback` | Shopify redirect → save token → frontend |
-| `POST` | `/shopify/oauth/complete` | Frontend callback exchanges `code` |
-| `POST` | `/shopify/customers/link` | App user ↔ Shopify customer |
-| `GET` | `/shopify/products` | Live Admin product list when connected |
-| `POST` | `/shopify/checkout` | Draft order + `invoice_url` |
-| `GET` | `/membership` or `/membership/me` | Current Study plan, chat/scan usage |
-| `POST` | `/shopify/webhooks` or `/shopify/webhooks/{topic}` | HMAC-verified membership webhooks (`orders/paid` → plan) |
-
-## Pages
-
-| Path | Purpose |
-| --- | --- |
-| `/` | Brand home — hero + Cornell / Math |
-| `/shop` | Two notebooks, Shopify buy links |
-| `/study` | Scan a notebook page or upload a lecture PDF/docx/pptx, pick **one** file, then chat (chips + “Ask about this file…”) |
-| `/account` | Sign in / up / out + optional Shopify merchant connect |
-| `/story` | Short brand story |
-
-## Render deploy
-
-Blueprint: [`render.yaml`](render.yaml) → services **arzive-api** (FastAPI) + **arzive-web** (Next.js Study).
-
-Full Swedish steps + env paste list: [`RENDER.md`](RENDER.md). Shopify memberships (clicks only): [`docs/SHOPIFY-SUBSCRIPTIONS.md`](docs/SHOPIFY-SUBSCRIPTIONS.md).
-
-1. **Create repo** in Cursor (GitHub) — required; Render cannot use the Origin temp remote.
-2. Render Dashboard → **New → Blueprint** → connect the GitHub repo → Apply.
-3. Cross-service URLs are wired automatically (`FRONTEND_ORIGIN`, `NEXT_PUBLIC_API_URL`, `API_PROXY_TARGET`).
-4. Paste Supabase / Shopify / LLM secrets in each service’s Environment (see RENDER.md).
-5. After web env changes: **Clear build cache & deploy** so `NEXT_PUBLIC_*` rebuild.
-6. Point the Shopify theme’s **Study with Arzive URL** at `https://<arzive-web>.onrender.com/study`.
-
-## Layout
-
-```
-backend/          FastAPI app, routers, services, clients
-frontend/         Next.js Study app + brand reference UI
-shopify/theme/    Online Store 2.0 theme (upload zip to Shopify)
-shopify/          products.csv/md + THEME.md + pack-theme.sh
-supabase/         schema.sql for the SQL Editor
-render.yaml       Render Blueprint
-```
+Removed from the Render stack: FastAPI `backend/`, `render.yaml`, Supabase schema.

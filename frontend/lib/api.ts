@@ -1,10 +1,12 @@
-import { apiUrl } from "./env";
+import { api } from "../convex/_generated/api";
+import { convexClient } from "./convex";
 
 export type HealthResponse = {
   status: string;
   service: string;
   integrations: {
-    supabase: boolean;
+    convex?: boolean;
+    supabase?: boolean;
     llm: string;
     shopify: string;
   };
@@ -24,8 +26,6 @@ export type UploadedDocument = {
   source_kind?: "scan" | "lecture" | null;
   kind_label?: string | null;
   store?: string;
-  extraction_mode?: string;
-  message?: string;
 };
 
 export type QuizQuestion = {
@@ -94,9 +94,7 @@ export type AskResponse = {
   store: string;
 };
 
-export type QuizResponse = StudyResponse;
-
-export type PlanId = "free" | "standard" | "annual" | "scholar";
+export type PlanId = "free" | "plus" | "pro";
 
 export type AuthSession = {
   id: string;
@@ -107,14 +105,6 @@ export type AuthSession = {
   plan?: PlanId;
   plan_label?: string;
   unlimited?: boolean;
-  billing_status?: string;
-  plan_expires_at?: string | null;
-  chats_used?: number;
-  chats_cap?: number;
-  chats_remaining?: number;
-  scans_used?: number;
-  scans_cap?: number;
-  scans_remaining?: number;
 };
 
 export type MembershipSnapshot = {
@@ -123,12 +113,9 @@ export type MembershipSnapshot = {
   unlimited: boolean;
   billing_status: string;
   plan_expires_at: string | null;
-  chats_used: number;
-  chats_cap: number;
-  chats_remaining: number;
-  scans_used: number;
-  scans_cap: number;
-  scans_remaining: number;
+  uploads_used: number;
+  uploads_cap: number;
+  uploads_remaining: number;
   email: string | null;
 };
 
@@ -141,7 +128,6 @@ export type ShopifyStatus = {
   shop_name: string | null;
   has_oauth_app: boolean;
   has_admin_token: boolean;
-  has_webhook_secret?: boolean;
   oauth_redirect_uri: string | null;
   oauth_scopes: string | null;
   linked_customer: Record<string, unknown> | null;
@@ -176,40 +162,23 @@ export type ShopifyCheckout = {
   linked_customer: Record<string, unknown> | null;
 };
 
-type RequestOptions = RequestInit & {
-  authHeaders?: Record<string, string>;
-};
-
-async function parseError(response: Response): Promise<string> {
-  try {
-    const body = await response.json();
-    if (typeof body?.detail === "string") return body.detail;
-    if (Array.isArray(body?.detail)) {
-      return body.detail.map((item: { msg?: string }) => item.msg).join(" ");
-    }
-    return JSON.stringify(body);
-  } catch {
-    return response.statusText || "Something went wrong talking to the API.";
-  }
-}
-
-async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
-  const { authHeaders, headers, ...rest } = options;
-  const response = await fetch(`${apiUrl}${path}`, {
-    ...rest,
-    headers: {
-      ...(authHeaders || {}),
-      ...(headers || {}),
-    },
-  });
-  if (!response.ok) {
-    throw new Error(await parseError(response));
-  }
-  return response.json();
+function sessionToken(authHeaders?: Record<string, string>): string {
+  const bearer = authHeaders?.Authorization;
+  if (bearer?.startsWith("Bearer ")) return bearer.slice(7);
+  return authHeaders?.["X-Session-Token"] || "";
 }
 
 export async function fetchHealth(): Promise<HealthResponse> {
-  return request("/health", { cache: "no-store" });
+  const body = await convexClient.query(api.documents.health, {});
+  return {
+    status: body.status,
+    service: body.service,
+    integrations: {
+      convex: body.integrations.convex,
+      llm: body.integrations.llm,
+      shopify: body.integrations.shopify,
+    },
+  };
 }
 
 export async function uploadDocument(
@@ -220,18 +189,25 @@ export async function uploadDocument(
     sourceKind?: "scan" | "lecture";
   },
 ): Promise<UploadedDocument> {
-  const body = new FormData();
-  body.append("file", file);
-  if (options?.notebookModel) {
-    body.append("notebook_model", options.notebookModel);
-  }
-  if (options?.sourceKind) {
-    body.append("source_kind", options.sourceKind);
-  }
-  return request("/upload-document", {
+  const token = sessionToken(authHeaders);
+  const uploadUrl = await convexClient.mutation(api.documents.generateUploadUrl, { token });
+  const uploadResult = await fetch(uploadUrl, {
     method: "POST",
-    body,
-    authHeaders,
+    headers: { "Content-Type": file.type || "application/octet-stream" },
+    body: file,
+  });
+  if (!uploadResult.ok) {
+    throw new Error("Could not upload file to storage.");
+  }
+  const { storageId } = (await uploadResult.json()) as { storageId: string };
+  return await convexClient.action(api.documentActions.finalizeUpload, {
+    token,
+    storageId,
+    filename: file.name,
+    mimeType: file.type || undefined,
+    byteSize: file.size,
+    notebookModel: options?.notebookModel ?? undefined,
+    sourceKind: options?.sourceKind,
   });
 }
 
@@ -239,27 +215,25 @@ export async function fetchDocumentFile(
   documentId: string,
   authHeaders?: Record<string, string>,
 ): Promise<{ blob: Blob; filename: string }> {
-  const response = await fetch(`${apiUrl}/documents/${documentId}/file`, {
-    cache: "no-store",
-    headers: { ...(authHeaders || {}) },
+  const token = sessionToken(authHeaders);
+  const meta = await convexClient.query(api.documents.getFileUrl, {
+    token,
+    documentId: documentId as never,
   });
-  if (!response.ok) {
-    throw new Error(await parseError(response));
+  if (!meta.url) {
+    throw new Error("File is not available.");
   }
-  const disposition = response.headers.get("content-disposition") || "";
-  const match = /filename="([^"]+)"/.exec(disposition);
+  const response = await fetch(meta.url);
+  if (!response.ok) {
+    throw new Error("Could not download this file.");
+  }
   const blob = await response.blob();
-  return { blob, filename: match?.[1] || "file" };
+  return { blob, filename: meta.filename };
 }
 
-export async function listDocuments(
-  authHeaders?: Record<string, string>,
-): Promise<{
-  documents: UploadedDocument[];
-  store: string;
-  cloud_enabled?: boolean;
-}> {
-  return request("/documents", { cache: "no-store", authHeaders });
+export async function listDocuments(authHeaders?: Record<string, string>) {
+  const token = sessionToken(authHeaders);
+  return await convexClient.query(api.documents.listDocuments, { token });
 }
 
 export async function generateStudy(
@@ -270,28 +244,13 @@ export async function generateStudy(
   },
   authHeaders?: Record<string, string>,
 ): Promise<StudyResponse> {
-  return request("/generate-study", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    authHeaders,
-    body: JSON.stringify({
-      document_id: input.documentIds[0],
-      document_ids: input.documentIds,
-      output_type: input.outputType,
-      question_count: input.questionCount ?? 5,
-    }),
-  });
-}
-
-export async function generateQuiz(
-  documentId: string,
-  questionCount = 5,
-  authHeaders?: Record<string, string>,
-): Promise<StudyResponse> {
-  return generateStudy(
-    { documentIds: [documentId], outputType: "questions", questionCount },
-    authHeaders,
-  );
+  const token = sessionToken(authHeaders);
+  return (await convexClient.action(api.study.generateStudy, {
+    token,
+    documentId: input.documentIds[0] as never,
+    outputType: input.outputType === "questions" ? "questions" : input.outputType,
+    questionCount: input.questionCount,
+  })) as StudyResponse;
 }
 
 export async function askAboutFile(
@@ -303,34 +262,22 @@ export async function askAboutFile(
   },
   authHeaders?: Record<string, string>,
 ): Promise<AskResponse> {
-  return request("/ask", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    authHeaders,
-    body: JSON.stringify({
-      document_id: input.documentId,
-      message: input.message,
-      prompt_kind: input.promptKind ?? "free_text",
-      chip_id: input.chipId,
-    }),
-  });
+  const token = sessionToken(authHeaders);
+  return (await convexClient.action(api.study.askAboutFile, {
+    token,
+    documentId: input.documentId as never,
+    message: input.message,
+    promptKind: input.promptKind,
+    chipId: input.chipId,
+  })) as AskResponse;
 }
 
-export async function listStudyMessages(
-  documentId: string,
-  authHeaders?: Record<string, string>,
-): Promise<{ messages: StudyMessage[]; store: string }> {
-  return request(`/study-messages?document_id=${encodeURIComponent(documentId)}`, {
-    cache: "no-store",
-    authHeaders,
+export async function listStudyMessages(documentId: string, authHeaders?: Record<string, string>) {
+  const token = sessionToken(authHeaders);
+  return await convexClient.query(api.study.listStudyMessages, {
+    token,
+    documentId: documentId as never,
   });
-}
-
-export async function fetchQuizSession(
-  sessionId: string,
-  authHeaders?: Record<string, string>,
-): Promise<StudyResponse> {
-  return request(`/quiz-sessions/${sessionId}`, { cache: "no-store", authHeaders });
 }
 
 export async function rateFlashcard(
@@ -339,110 +286,95 @@ export async function rateFlashcard(
   rating: CardRating,
   authHeaders?: Record<string, string>,
 ): Promise<StudyResponse> {
-  return request(`/quiz-sessions/${sessionId}`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    authHeaders,
-    body: JSON.stringify({ card_id: cardId, rating }),
-  });
+  const token = sessionToken(authHeaders);
+  return (await convexClient.mutation(api.study.rateFlashcard, {
+    token,
+    sessionId: sessionId as never,
+    cardId,
+    rating,
+  })) as StudyResponse;
 }
 
 export async function authSignup(email: string, password: string): Promise<AuthSession> {
-  return request("/auth/signup", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password }),
-  });
+  const session = await convexClient.mutation(api.auth.signUp, { email, password });
+  return { ...session, unlimited: session.plan !== "free" };
 }
 
 export async function authLogin(email: string, password: string): Promise<AuthSession> {
-  return request("/auth/login", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password }),
-  });
+  const session = await convexClient.mutation(api.auth.signIn, { email, password });
+  return { ...session, unlimited: session.plan !== "free" };
 }
 
 export async function authLogout(token?: string): Promise<void> {
-  await request("/auth/logout", {
-    method: "POST",
-    authHeaders: token ? { Authorization: `Bearer ${token}` } : undefined,
-  });
+  if (token) {
+    await convexClient.mutation(api.auth.signOut, { token });
+  }
 }
 
-export async function fetchMe(
-  authHeaders?: Record<string, string>,
-): Promise<AuthSession> {
-  return request("/auth/me", { cache: "no-store", authHeaders });
+export async function fetchMe(authHeaders?: Record<string, string>): Promise<AuthSession> {
+  const token = sessionToken(authHeaders);
+  const session = await convexClient.query(api.auth.me, { token });
+  if (!session) {
+    throw new Error("Not signed in.");
+  }
+  return { ...session, unlimited: session.plan !== "free" };
 }
 
-export async function fetchMembership(
-  authHeaders?: Record<string, string>,
-): Promise<MembershipSnapshot> {
-  return request("/membership/me", { cache: "no-store", authHeaders });
+export async function fetchMembership(authHeaders?: Record<string, string>): Promise<MembershipSnapshot> {
+  const token = sessionToken(authHeaders);
+  return await convexClient.query(api.membership.snapshot, { token });
 }
 
 export async function fetchShopifyStatus(): Promise<ShopifyStatus> {
-  return request("/shopify/status", { cache: "no-store" });
+  return {
+    configured: Boolean(process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN),
+    connected: false,
+    mode: "shopify-checkout",
+    connection_method: "webhook",
+    shop_domain: process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN || "arzive.com",
+    shop_name: "ARZIVE",
+    has_oauth_app: false,
+    has_admin_token: false,
+    oauth_redirect_uri: null,
+    oauth_scopes: null,
+    linked_customer: null,
+  };
 }
 
-export async function connectShopifyShop(input: {
+export async function connectShopifyShop(_input?: {
   shop: string;
   admin_api_token?: string;
 }): Promise<ShopifyConnectResult> {
-  return request("/shopify/connect", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(input),
-  });
+  return { connected: false, method: "webhook" };
 }
 
 export async function disconnectShopifyShop(): Promise<void> {
-  await request("/shopify/disconnect", { method: "POST" });
+  return;
 }
 
 export async function completeShopifyOAuth(
-  input: {
+  _input?: {
     shop: string;
     code: string;
     state?: string;
     hmac?: string;
   },
-  search = "",
+  _search = "",
 ): Promise<ShopifyConnectResult> {
-  const qs = search.startsWith("?") ? search : search ? `?${search}` : "";
-  return request(`/shopify/oauth/complete${qs}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(input),
-  });
+  return { connected: false, method: "webhook" };
 }
 
 export async function fetchShopifyProducts(): Promise<ShopifyProduct[]> {
-  const body = await request<{ products: ShopifyProduct[] }>("/shopify/products", {
-    cache: "no-store",
-  });
-  return body.products ?? [];
+  return [];
 }
 
-export async function linkShopifyCustomer(input: {
+export async function linkShopifyCustomer(_input?: {
   email: string;
   display_name?: string;
 }): Promise<void> {
-  await request("/shopify/customers/link", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(input),
-  });
+  return;
 }
 
-export async function createShopifyCheckout(
-  variantId: string,
-  quantity = 1,
-): Promise<ShopifyCheckout> {
-  return request("/shopify/checkout", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ variant_id: variantId, quantity }),
-  });
+export async function createShopifyCheckout(_variantId?: string): Promise<ShopifyCheckout> {
+  throw new Error("Use Shopify checkout links on the Pricing page.");
 }

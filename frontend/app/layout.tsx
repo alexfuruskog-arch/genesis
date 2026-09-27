@@ -4,6 +4,7 @@ import { Cormorant_Garamond, Source_Sans_3 } from "next/font/google";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteNav } from "@/components/SiteNav";
 import { AuthProvider } from "@/lib/auth";
+import { ConvexClientProvider } from "@/lib/convex";
 
 import "./globals.css";
 
@@ -32,11 +33,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${display.variable} ${body.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col bg-cream text-ink">
-        <AuthProvider>
-          <SiteNav />
-          <div className="flex-1">{children}</div>
-          <SiteFooter />
-        </AuthProvider>
+        <ConvexClientProvider>
+          <AuthProvider>
+            <SiteNav />
+            <div className="flex-1">{children}</div>
+            <SiteFooter />
+          </AuthProvider>
+        </ConvexClientProvider>
       </body>
     </html>
   );

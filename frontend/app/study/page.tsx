@@ -24,17 +24,14 @@ import {
   type SourceKind,
 } from "@/lib/library";
 import {
-  canScan,
-  canStartStudySession,
   applyServerUsage,
-  FREE_SCAN_CAP,
-  FREE_SESSION_CAP,
+  canUploadToday,
+  FREE_DAILY_UPLOAD_CAP,
   getPlan,
-  getScanCount,
-  getWeeklySessionsUsed,
-  recordScan,
+  planDisplayName,
   type PlanId,
 } from "@/lib/plan";
+import { convexConfigured } from "@/lib/convex";
 
 type NotebookModel = "math" | "cornell";
 
@@ -77,34 +74,24 @@ export default function StudyPage() {
   const [previewBusy, setPreviewBusy] = useState(false);
   const [previewError, setPreviewError] = useState<string | null>(null);
   const [plan, setPlanState] = useState<PlanId>("free");
-  const [sessionsUsed, setSessionsUsed] = useState(0);
-  const [scansUsed, setScansUsed] = useState(0);
+  const [uploadsUsed, setUploadsUsed] = useState(0);
 
   const signedIn = Boolean(user?.email);
-  const sessionGate = canStartStudySession(plan);
-  const scanGate = canScan(plan);
-  const chatPct = Math.min(100, (sessionsUsed / FREE_SESSION_CAP) * 100);
-  const scanPct = Math.min(100, (scansUsed / FREE_SCAN_CAP) * 100);
+  const uploadGate = canUploadToday({ plan, uploadsUsed });
+  const uploadPct = Math.min(100, (uploadsUsed / FREE_DAILY_UPLOAD_CAP) * 100);
   const selectedDoc = documents.find((doc) => doc.id === selectedId) ?? null;
 
   useEffect(() => {
     setPlanState(getPlan());
-    setSessionsUsed(getWeeklySessionsUsed());
-    setScansUsed(getScanCount());
   }, []);
 
   const syncUsage = useCallback(async () => {
     if (!signedIn) return;
     try {
       const next = await fetchMembership(authHeaders);
-      applyServerUsage({
-        plan: next.plan,
-        chats_used: next.chats_used,
-        scans_used: next.scans_used,
-      });
+      applyServerUsage({ plan: next.plan, uploads_used: next.uploads_used });
       setPlanState(next.plan);
-      setSessionsUsed(next.chats_used);
-      setScansUsed(next.scans_used);
+      setUploadsUsed(next.uploads_used);
     } catch {
       /* keep cached plan if the API is down */
     }
@@ -124,13 +111,13 @@ export default function StudyPage() {
       ]);
       setHealth(healthResult);
       setDocuments(docs.documents);
-      setCloudEnabled(Boolean(docs.cloud_enabled || healthResult.integrations.supabase));
+      setCloudEnabled(Boolean(docs.cloud_enabled || healthResult.integrations.convex));
       setBackendError(null);
     } catch (err) {
       setBackendError(
         err instanceof Error
           ? err.message
-          : "Could not reach the API. Start FastAPI on port 48721.",
+          : "Could not reach Convex. Run `npx convex dev` and set NEXT_PUBLIC_CONVEX_URL.",
       );
     } finally {
       setListLoading(false);
@@ -165,10 +152,10 @@ export default function StudyPage() {
       );
       return;
     }
-    const gate = canScan(plan, files.length);
+    const gate = canUploadToday({ plan, uploadsUsed, extra: files.length });
     if (!gate.ok) {
       setUploadError(
-        `Free plan allows ${FREE_SCAN_CAP} library items (scans or lecture files). You’ve used ${gate.used}. Upgrade to Standard ($12/mo) for unlimited.`,
+        `Free plan includes ${FREE_DAILY_UPLOAD_CAP} upload per day (UTC). You’ve used today’s upload. Upgrade to Plus ($12/mo) or Pro ($19/mo) on Shopify for unlimited uploads within fair use.`,
       );
       return;
     }
@@ -187,14 +174,10 @@ export default function StudyPage() {
       }
       setDocuments((current) => [...uploaded, ...current]);
       setSelectedId(uploaded[0]?.id ?? null);
-      setScansUsed(recordScan(uploaded.length));
       await syncUsage();
-      const backend = uploaded[0]?.storage_backend;
       const noun = sourceKind === "lecture" ? "lecture file" : "scan";
       setUploadNotice(
-        backend === "supabase"
-          ? `${uploaded.length} ${noun}${uploaded.length === 1 ? "" : "s"} saved to your cloud library.`
-          : `${uploaded.length} ${noun}${uploaded.length === 1 ? "" : "s"} saved locally under your account (cloud storage is not configured).`,
+        `${uploaded.length} ${noun}${uploaded.length === 1 ? "" : "s"} saved to your Convex library.`,
       );
     } catch (err) {
       setUploadError(err instanceof Error ? err.message : "Upload failed.");
@@ -226,7 +209,7 @@ export default function StudyPage() {
   }
 
   const captureDisabled =
-    !signedIn || Boolean(backendError) || uploadBusy || !scanGate.ok;
+    !signedIn || Boolean(backendError) || uploadBusy || !uploadGate.ok || !convexConfigured;
   const previewDoc = documents.find((doc) => doc.id === previewId) ?? null;
 
   return (
@@ -255,11 +238,10 @@ export default function StudyPage() {
               )}
               {health ? (
                 <span>
-                  {cloudEnabled ? "Cloud library" : "Private library · local fallback"}
-                  {health.integrations.llm &&
-                  health.integrations.llm !== "mock"
+                  {cloudEnabled ? "Convex library" : "Convex"}
+                  {health.integrations.llm && health.integrations.llm !== "mock"
                     ? ` · ${health.integrations.llm}`
-                    : " · ready"}
+                    : " · mock AI ready"}
                 </span>
               ) : null}
             </div>
@@ -267,34 +249,23 @@ export default function StudyPage() {
             {plan === "free" ? (
               <div className="plan-meter w-full max-w-xs sm:justify-self-end">
                 <p className="mb-1 text-[0.58rem] uppercase tracking-[0.2em] text-cream/45">
-                  Free · this week
+                  Free · today (UTC)
                 </p>
                 <div className="plan-meter-row">
                   <span className="text-[0.62rem] uppercase tracking-[0.14em] text-cream/65">
-                    Chats
+                    Uploads
                   </span>
                   <div className="plan-meter-track" aria-hidden>
-                    <div className="plan-meter-fill" style={{ width: `${chatPct}%` }} />
+                    <div className="plan-meter-fill" style={{ width: `${uploadPct}%` }} />
                   </div>
                   <span className="text-[0.62rem] tabular-nums tracking-[0.08em] text-cream/70">
-                    {sessionsUsed}/{FREE_SESSION_CAP}
-                  </span>
-                </div>
-                <div className="plan-meter-row">
-                  <span className="text-[0.62rem] uppercase tracking-[0.14em] text-cream/65">
-                    Library
-                  </span>
-                  <div className="plan-meter-track" aria-hidden>
-                    <div className="plan-meter-fill" style={{ width: `${scanPct}%` }} />
-                  </div>
-                  <span className="text-[0.62rem] tabular-nums tracking-[0.08em] text-cream/70">
-                    {scansUsed}/{FREE_SCAN_CAP}
+                    {uploadsUsed}/{FREE_DAILY_UPLOAD_CAP}
                   </span>
                 </div>
               </div>
             ) : (
               <p className="text-[0.62rem] uppercase tracking-[0.16em] text-cream/55">
-                Plan · {plan} · unlimited
+                Plan · {planDisplayName[plan]} · unlimited uploads
               </p>
             )}
           </div>
@@ -333,21 +304,22 @@ export default function StudyPage() {
           </div>
         ) : null}
 
-        {signedIn && plan === "free" && !sessionGate.ok ? (
+        {signedIn && plan === "free" && !uploadGate.ok ? (
           <div className="mb-10 animate-soft-in border border-forest/15 bg-[#f0ebe3] px-5 py-7 sm:px-8">
             <p className="text-[0.62rem] uppercase tracking-[0.18em] text-forest/50">
-              Free plan · weekly gate
+              Free plan · daily upload cap
             </p>
             <h2 className="mt-3 font-display text-2xl tracking-[0.02em] text-forest sm:text-3xl">
-              You&apos;ve used your {FREE_SESSION_CAP} chats this week.
+              Today&apos;s free upload is used.
             </h2>
             <p className="mt-3 max-w-xl text-sm font-light leading-7 text-forest/70">
-              Free is honest about its limits. Standard unlocks unlimited study
-              chats for $12/month — or save with Annual.
+              Free includes one upload per day (UTC). You can still study from files
+              already in your library. Plus and Pro unlock unlimited uploads within
+              fair use.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
               <a href={shopifyMembershipUrl("standard")} className="btn-ink">
-                Upgrade to Standard · $12
+                Upgrade to Plus · $12/mo
               </a>
               <Link
                 href="/pricing"
@@ -359,32 +331,11 @@ export default function StudyPage() {
           </div>
         ) : null}
 
-        {signedIn && plan === "free" && sessionGate.ok && !scanGate.ok ? (
-          <div className="mb-10 animate-soft-in border border-forest/15 bg-[#f0ebe3] px-5 py-7 sm:px-8">
-            <p className="text-[0.62rem] uppercase tracking-[0.18em] text-forest/50">
-              Free plan · library limit
-            </p>
-            <h2 className="mt-3 font-display text-2xl tracking-[0.02em] text-forest sm:text-3xl">
-              {FREE_SCAN_CAP} library items used — Free is full.
-            </h2>
-            <p className="mt-3 max-w-xl text-sm font-light leading-7 text-forest/70">
-              Scans and lecture uploads share this cap. You can still study from
-              files already in your library (
-              {sessionGate.remaining} chat
-              {sessionGate.remaining === 1 ? "" : "s"} left this week). Upgrade for
-              unlimited captures.
-            </p>
-            <div className="mt-6 flex flex-wrap gap-3">
-              <a href={shopifyMembershipUrl("standard")} className="btn-ink">
-                Unlock unlimited library
-              </a>
-              <Link
-                href="/pricing"
-                className="border border-forest/25 px-4 py-2.5 text-[0.62rem] uppercase tracking-[0.14em] text-forest"
-              >
-                See Pricing
-              </Link>
-            </div>
+        {!convexConfigured ? (
+          <div className="mb-8 border border-amber-800/20 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+            Set <code className="text-xs">NEXT_PUBLIC_CONVEX_URL</code> and run{" "}
+            <code className="text-xs">npx convex dev</code> to connect Study to your Convex
+            backend.
           </div>
         ) : null}
 
@@ -440,8 +391,8 @@ export default function StudyPage() {
                   >
                     {uploadBusy
                       ? "Uploading…"
-                      : !scanGate.ok
-                        ? "Library full"
+                      : !uploadGate.ok
+                        ? "Upload cap reached"
                         : "Open camera"}
                   </button>
                   <button
@@ -452,7 +403,7 @@ export default function StudyPage() {
                   >
                     {uploadBusy
                       ? "Uploading…"
-                      : !scanGate.ok
+                      : !uploadGate.ok
                         ? "Library full"
                         : "Upload page photo"}
                   </button>
@@ -494,15 +445,14 @@ export default function StudyPage() {
                 >
                   {uploadBusy
                     ? "Uploading…"
-                    : !scanGate.ok
+                    : !uploadGate.ok
                       ? "Library full"
                       : dropActive
                         ? "Drop to add"
                         : "Upload PDF or lecture file"}
                 </button>
                 <p className="mt-3 text-xs font-light text-forest/55">
-                  .pdf .docx .pptx .jpg .png .txt · max 10 MB · counts toward the
-                  Free library cap
+                  .pdf .docx .pptx .jpg .png .txt · max 10 MB · Free: 1 upload/day
                 </p>
               </div>
 
@@ -611,7 +561,7 @@ export default function StudyPage() {
                             <span
                               className={`mt-0.5 block text-xs ${checked ? "text-cream/65" : "text-forest/55"}`}
                             >
-                              {doc.storage_backend === "supabase" ? "Cloud" : "Local"}
+                              Convex
                               {` · ${label} · ${kind}`}
                               {size ? ` · ${size}` : ""}
                               {readyText ? " · text ready" : " · no extractable text"}
@@ -698,7 +648,6 @@ export default function StudyPage() {
             document={selectedDoc}
             authHeaders={authHeaders}
             signedIn={signedIn}
-            sessionGate={sessionGate}
             plan={plan}
             backendError={backendError}
             onUsageChange={syncUsage}
