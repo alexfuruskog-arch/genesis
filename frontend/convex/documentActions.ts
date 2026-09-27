@@ -4,6 +4,7 @@ import { v } from "convex/values";
 
 import { action } from "./_generated/server";
 import { api } from "./_generated/api";
+import type { Id } from "./_generated/dataModel";
 import type {
   AuthMeRow,
   MembershipSnapshotRow,
@@ -56,7 +57,7 @@ export const finalizeUpload = action({
       extractionStatus: extracted.status === "ready" ? "ready" : extracted.status,
       chunkCount: extracted.chunkCount,
       incrementDailyUsage: !membership.unlimited,
-    })) as string;
+    })) as Id<"documents">;
     return (await ctx.runQuery(api.documents.getDocument, {
       token: args.token,
       documentId: docId,
