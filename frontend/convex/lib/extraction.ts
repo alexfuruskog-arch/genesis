@@ -30,12 +30,11 @@ export async function extractTextFromBytes(
 
   if (name.endsWith(".pdf") || mime === "application/pdf") {
     try {
-      const pdfParse = (await import("pdf-parse")).default as (
-        buffer: Buffer,
-      ) => Promise<{ text: string }>;
-      const buffer = Buffer.from(bytes);
-      const parsed = await pdfParse(buffer);
-      const text = (parsed.text || "").trim();
+      const { PDFParse } = await import("pdf-parse");
+      const parser = new PDFParse({ data: Buffer.from(bytes) });
+      const textResult = await parser.getText();
+      await parser.destroy();
+      const text = (textResult.text || "").trim();
       if (text) {
         return { text, status: "ready", chunkCount: chunkText(text) };
       }

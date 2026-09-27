@@ -4,6 +4,16 @@ import { v } from "convex/values";
 
 import { action } from "./_generated/server";
 import { api } from "./_generated/api";
+import type {
+  AiCacheRow,
+  AskAboutFileResult,
+  DocumentTextRow,
+  Flashcard,
+  PersistAskIds,
+  QuizQuestion,
+  StudyGenerateResult,
+  StudyMessagePayload,
+} from "./lib/apiTypes";
 import {
   cacheKey,
   generateAnswer,
@@ -19,21 +29,26 @@ export const generateStudy = action({
     outputType: v.union(v.literal("quiz"), v.literal("flashcards"), v.literal("questions")),
     questionCount: v.optional(v.number()),
   },
-  handler: async (ctx, args) => {
-    const docRow = await ctx.runQuery(api.study.getDocumentText, {
+  handler: async (ctx, args): Promise<StudyGenerateResult> => {
+    const docRow = (await ctx.runQuery(api.study.getDocumentText, {
       token: args.token,
       documentId: args.documentId,
-    });
+    })) as DocumentTextRow;
     const count = args.questionCount ?? 5;
     const promptKind = args.outputType === "flashcards" ? "flashcards" : "quiz";
     const fingerprint = `${args.outputType}:${count}`;
     const key = cacheKey(args.documentId, promptKind, fingerprint);
-    const cached = await ctx.runQuery(api.study.getAiCache, { cacheKey: key });
-    let questions: unknown[] = [];
-    let flashcards: unknown[] = [];
-    const provider = cached?.provider ?? providerName();
+    const cached = (await ctx.runQuery(api.study.getAiCache, {
+      cacheKey: key,
+    })) as AiCacheRow | null;
+    let questions: QuizQuestion[] = [];
+    let flashcards: Flashcard[] = [];
+    const provider: string = cached?.provider ?? providerName();
     if (cached) {
-      const payload = JSON.parse(cached.resultJson);
+      const payload = JSON.parse(cached.resultJson) as {
+        questions?: QuizQuestion[];
+        flashcards?: Flashcard[];
+      };
       questions = payload.questions ?? [];
       flashcards = payload.flashcards ?? [];
     } else {
@@ -50,7 +65,7 @@ export const generateStudy = action({
         provider,
       });
     }
-    const sessionId = await ctx.runMutation(api.study.persistStudySession, {
+    const sessionId = (await ctx.runMutation(api.study.persistStudySession, {
       token: args.token,
       documentId: args.documentId,
       outputType: args.outputType === "flashcards" ? "flashcards" : "questions",
@@ -63,7 +78,7 @@ export const generateStudy = action({
           ? "Flashcards from this file."
           : "Short quiz from this file.",
       chipId: args.outputType === "flashcards" ? "flashcards" : "quiz",
-    });
+    })) as string;
     return {
       quiz_session_id: sessionId,
       document_id: args.documentId,
@@ -87,19 +102,21 @@ export const askAboutFile = action({
     promptKind: v.optional(v.string()),
     chipId: v.optional(v.string()),
   },
-  handler: async (ctx, args) => {
-    const docRow = await ctx.runQuery(api.study.getDocumentText, {
+  handler: async (ctx, args): Promise<AskAboutFileResult> => {
+    const docRow = (await ctx.runQuery(api.study.getDocumentText, {
       token: args.token,
       documentId: args.documentId,
-    });
+    })) as DocumentTextRow;
     const kind = args.promptKind ?? "free_text";
     const fingerprint = `${kind}:${args.chipId ?? ""}:${args.message}`;
     const key = cacheKey(args.documentId, kind, fingerprint);
-    const cached = await ctx.runQuery(api.study.getAiCache, { cacheKey: key });
+    const cached = (await ctx.runQuery(api.study.getAiCache, {
+      cacheKey: key,
+    })) as AiCacheRow | null;
     let answer: string;
-    const provider = cached?.provider ?? providerName();
+    const provider: string = cached?.provider ?? providerName();
     if (cached) {
-      const payload = JSON.parse(cached.resultJson);
+      const payload = JSON.parse(cached.resultJson) as { answer?: string };
       answer = payload.answer ?? "";
     } else {
       answer = await generateAnswer(docRow.text, args.message);
@@ -111,18 +128,18 @@ export const askAboutFile = action({
         provider,
       });
     }
-    const ids = await ctx.runMutation(api.study.persistAskMessages, {
+    const ids = (await ctx.runMutation(api.study.persistAskMessages, {
       token: args.token,
       documentId: args.documentId,
       userMessage: args.message,
       assistantMessage: answer,
       promptKind: kind,
       chipId: args.chipId,
-    });
-    const user_message = {
+    })) as PersistAskIds;
+    const user_message: StudyMessagePayload = {
       id: ids.userId,
       document_id: args.documentId,
-      role: "user" as const,
+      role: "user",
       content: args.message,
       prompt_kind: kind,
       chip_id: args.chipId ?? null,
@@ -131,10 +148,10 @@ export const askAboutFile = action({
       created_at: new Date().toISOString(),
       quiz_session: null,
     };
-    const message = {
+    const message: StudyMessagePayload = {
       id: ids.assistantId,
       document_id: args.documentId,
-      role: "assistant" as const,
+      role: "assistant",
       content: answer,
       prompt_kind: kind,
       chip_id: args.chipId ?? null,
