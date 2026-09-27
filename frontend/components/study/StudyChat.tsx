@@ -12,6 +12,7 @@ import {
   type StudyResponse,
   type UploadedDocument,
 } from "@/lib/api";
+import { studyTextBlockedMessage } from "@/lib/library";
 import type { PlanId } from "@/lib/plan";
 
 export const STUDY_CHIPS = [
@@ -156,9 +157,7 @@ export function StudyChat({
       return;
     }
     if (!hasExtractedText(document)) {
-      setError(
-        "This file has no extractable text yet. Photos are stored, but OCR is not connected. Try a PDF, Word, PowerPoint, or text file.",
-      );
+      setError(studyTextBlockedMessage(document.filename, document.mime_type));
       return;
     }
 
@@ -227,9 +226,7 @@ export function StudyChat({
       return;
     }
     if (!hasExtractedText(document)) {
-      setError(
-        "This file has no extractable text yet. Photos are stored, but OCR is not connected. Try a PDF, Word, PowerPoint, or text file.",
-      );
+      setError(studyTextBlockedMessage(document.filename, document.mime_type));
       return;
     }
     setBusy(true);

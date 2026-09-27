@@ -6,6 +6,36 @@ export type ExtractionResult = {
   chunkCount: number;
 };
 
+async function extractPptxText(buffer: Buffer): Promise<string> {
+  const JSZip = (await import("jszip")).default;
+  const zip = await JSZip.loadAsync(buffer);
+  const slidePaths = Object.keys(zip.files)
+    .filter((name) => /^ppt\/slides\/slide\d+\.xml$/i.test(name))
+    .sort((a, b) => {
+      const na = Number(/slide(\d+)/i.exec(a)?.[1] ?? 0);
+      const nb = Number(/slide(\d+)/i.exec(b)?.[1] ?? 0);
+      return na - nb;
+    });
+  const parts: string[] = [];
+  for (const path of slidePaths) {
+    const file = zip.file(path);
+    if (!file) continue;
+    const xml = await file.async("string");
+    const slideTexts: string[] = [];
+    const re = /<a:t[^>]*>([^<]*)<\/a:t>/g;
+    let match = re.exec(xml);
+    while (match) {
+      const piece = match[1].replace(/\s+/g, " ").trim();
+      if (piece) slideTexts.push(piece);
+      match = re.exec(xml);
+    }
+    if (slideTexts.length) {
+      parts.push(slideTexts.join(" "));
+    }
+  }
+  return parts.join("\n\n").trim();
+}
+
 function chunkText(text: string): number {
   const trimmed = text.trim();
   if (!trimmed) return 0;
@@ -59,6 +89,21 @@ export async function extractTextFromBytes(
       return { text: stub, status: "stubbed", chunkCount: 0 };
     } catch {
       const stub = `[Word extraction failed for ${filename}. The file is stored in your library.]`;
+      return { text: stub, status: "stubbed", chunkCount: 0 };
+    }
+  }
+
+  if (name.endsWith(".pptx") || mime.includes("presentationml")) {
+    try {
+      const buffer = Buffer.from(bytes);
+      const text = await extractPptxText(buffer);
+      if (text) {
+        return { text, status: "ready", chunkCount: chunkText(text) };
+      }
+      const stub = `[PowerPoint file ${filename} has no extractable text on its slides. The file is stored in your library.]`;
+      return { text: stub, status: "stubbed", chunkCount: 0 };
+    } catch {
+      const stub = `[PowerPoint extraction failed for ${filename}. The file is stored in your library.]`;
       return { text: stub, status: "stubbed", chunkCount: 0 };
     }
   }
