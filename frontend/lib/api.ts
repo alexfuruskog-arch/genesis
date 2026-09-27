@@ -245,7 +245,7 @@ export async function generateStudy(
   authHeaders?: Record<string, string>,
 ): Promise<StudyResponse> {
   const token = sessionToken(authHeaders);
-  return (await convexClient.action(api.study.generateStudy, {
+  return (await convexClient.action(api.studyActions.generateStudy, {
     token,
     documentId: input.documentIds[0] as never,
     outputType: input.outputType === "questions" ? "questions" : input.outputType,
@@ -263,7 +263,7 @@ export async function askAboutFile(
   authHeaders?: Record<string, string>,
 ): Promise<AskResponse> {
   const token = sessionToken(authHeaders);
-  return (await convexClient.action(api.study.askAboutFile, {
+  return (await convexClient.action(api.studyActions.askAboutFile, {
     token,
     documentId: input.documentId as never,
     message: input.message,
