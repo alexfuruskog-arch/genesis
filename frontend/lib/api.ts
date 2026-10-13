@@ -119,49 +119,6 @@ export type MembershipSnapshot = {
   email: string | null;
 };
 
-export type ShopifyStatus = {
-  configured: boolean;
-  connected: boolean;
-  mode: string;
-  connection_method: string | null;
-  shop_domain: string | null;
-  shop_name: string | null;
-  has_oauth_app: boolean;
-  has_admin_token: boolean;
-  oauth_redirect_uri: string | null;
-  oauth_scopes: string | null;
-  linked_customer: Record<string, unknown> | null;
-};
-
-export type ShopifyProduct = {
-  id: string;
-  title: string;
-  status: string;
-  variants: { id: string; title: string; price: string }[];
-};
-
-export type ShopifyConnectResult = {
-  connected: boolean;
-  method: string;
-  authorize_url?: string;
-  install?: {
-    shop_domain: string;
-    shop_name: string | null;
-    connection_method: string;
-  };
-};
-
-export type ShopifyCheckout = {
-  checkout: {
-    id: string | number | null;
-    invoice_url: string | null;
-    status: string;
-    source: string;
-    detail?: string;
-  };
-  linked_customer: Record<string, unknown> | null;
-};
-
 function sessionToken(authHeaders?: Record<string, string>): string {
   const bearer = authHeaders?.Authorization;
   if (bearer?.startsWith("Bearer ")) return bearer.slice(7);
@@ -323,58 +280,4 @@ export async function fetchMe(authHeaders?: Record<string, string>): Promise<Aut
 export async function fetchMembership(authHeaders?: Record<string, string>): Promise<MembershipSnapshot> {
   const token = sessionToken(authHeaders);
   return await convexClient.query(api.membership.snapshot, { token });
-}
-
-export async function fetchShopifyStatus(): Promise<ShopifyStatus> {
-  return {
-    configured: Boolean(process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN),
-    connected: false,
-    mode: "shopify-checkout",
-    connection_method: "webhook",
-    shop_domain: process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN || "arzive.com",
-    shop_name: "ARZIVE",
-    has_oauth_app: false,
-    has_admin_token: false,
-    oauth_redirect_uri: null,
-    oauth_scopes: null,
-    linked_customer: null,
-  };
-}
-
-export async function connectShopifyShop(_input?: {
-  shop: string;
-  admin_api_token?: string;
-}): Promise<ShopifyConnectResult> {
-  return { connected: false, method: "webhook" };
-}
-
-export async function disconnectShopifyShop(): Promise<void> {
-  return;
-}
-
-export async function completeShopifyOAuth(
-  _input?: {
-    shop: string;
-    code: string;
-    state?: string;
-    hmac?: string;
-  },
-  _search = "",
-): Promise<ShopifyConnectResult> {
-  return { connected: false, method: "webhook" };
-}
-
-export async function fetchShopifyProducts(): Promise<ShopifyProduct[]> {
-  return [];
-}
-
-export async function linkShopifyCustomer(_input?: {
-  email: string;
-  display_name?: string;
-}): Promise<void> {
-  return;
-}
-
-export async function createShopifyCheckout(_variantId?: string): Promise<ShopifyCheckout> {
-  throw new Error("Use Shopify checkout links on the Pricing page.");
 }

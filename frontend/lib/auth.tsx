@@ -14,6 +14,7 @@ import {
   authLogin,
   authLogout,
   authSignup,
+  fetchMe,
   type AuthSession,
 } from "@/lib/api";
 import { applyServerUsage, type PlanId } from "@/lib/plan";
@@ -47,9 +48,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthSession | null>(null);
   const [ready, setReady] = useState(false);
 
+  // Restore the saved session, then confirm it with the server so an expired
+  // token (or a plan that changed since last visit) doesn't linger in the UI.
   useEffect(() => {
-    setUser(readStored());
-    setReady(true);
+    let cancelled = false;
+    const stored = readStored();
+    const finish = (session: AuthSession | null) => {
+      if (cancelled) return;
+      setUser(session);
+      setReady(true);
+    };
+    if (!stored?.token) {
+      void Promise.resolve().then(() => finish(null));
+      return () => {
+        cancelled = true;
+      };
+    }
+    // Don't keep the page waiting if the backend is slow or unreachable.
+    const timeout = new Promise<never>((_, reject) =>
+      window.setTimeout(() => reject(new Error("timeout")), 6000),
+    );
+    Promise.race([fetchMe({ Authorization: `Bearer ${stored.token}` }), timeout])
+      .then((fresh) => {
+        const next = { ...stored, ...fresh };
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+        if (next.plan) applyServerUsage({ plan: next.plan as PlanId });
+        finish(next);
+      })
+      .catch((err: unknown) => {
+        if (err instanceof Error && err.message === "Not signed in.") {
+          // Session expired or was revoked on the server.
+          window.localStorage.removeItem(STORAGE_KEY);
+          applyServerUsage({ plan: "free" });
+          finish(null);
+        } else {
+          // Offline / backend unreachable: keep the cached session.
+          finish(stored);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const persist = useCallback((session: AuthSession | null) => {
@@ -62,6 +101,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     } else {
       window.localStorage.removeItem(STORAGE_KEY);
+      applyServerUsage({ plan: "free" });
     }
   }, []);
 

@@ -1,8 +1,8 @@
 import { v } from "convex/values";
 
-import { mutation, query } from "./_generated/server";
+import { internalMutation, mutation, query } from "./_generated/server";
 import { requireUser, userFromToken } from "./lib/authHelpers";
-import { utcDateId } from "./lib/plans";
+import { FREE_DAILY_UPLOAD_CAP, utcDateId } from "./lib/plans";
 
 function docToClient(doc: {
   _id: string;
@@ -41,7 +41,8 @@ export const generateUploadUrl = mutation({
   },
 });
 
-export const saveDocumentRecord = mutation({
+/** Internal: only finalizeUpload may write records and count daily usage. */
+export const saveDocumentRecord = internalMutation({
   args: {
     token: v.string(),
     storageId: v.id("_storage"),
@@ -58,6 +59,23 @@ export const saveDocumentRecord = mutation({
   handler: async (ctx, args) => {
     const { user } = await requireUser(ctx, args.token);
     const now = Date.now();
+    if (args.incrementDailyUsage) {
+      // Re-check the cap inside the transaction so parallel uploads can't slip past it.
+      const email = user.email.toLowerCase();
+      const utcDate = utcDateId();
+      const row = await ctx.db
+        .query("dailyUploadUsage")
+        .withIndex("by_email_date", (q) => q.eq("email", email).eq("utcDate", utcDate))
+        .unique();
+      if ((row?.count ?? 0) >= FREE_DAILY_UPLOAD_CAP) {
+        throw new Error("The free plan includes 1 upload per day (UTC), and today's is used.");
+      }
+      if (row) {
+        await ctx.db.patch(row._id, { count: row.count + 1 });
+      } else {
+        await ctx.db.insert("dailyUploadUsage", { email, utcDate, count: 1 });
+      }
+    }
     const docId = await ctx.db.insert("documents", {
       ownerId: user._id,
       ownerEmail: user.email.toLowerCase(),
@@ -72,19 +90,6 @@ export const saveDocumentRecord = mutation({
       sourceKind: args.sourceKind,
       createdAt: now,
     });
-    if (args.incrementDailyUsage) {
-      const email = user.email.toLowerCase();
-      const utcDate = utcDateId();
-      const row = await ctx.db
-        .query("dailyUploadUsage")
-        .withIndex("by_email_date", (q) => q.eq("email", email).eq("utcDate", utcDate))
-        .unique();
-      if (row) {
-        await ctx.db.patch(row._id, { count: row.count + 1 });
-      } else {
-        await ctx.db.insert("dailyUploadUsage", { email, utcDate, count: 1 });
-      }
-    }
     return docId;
   },
 });

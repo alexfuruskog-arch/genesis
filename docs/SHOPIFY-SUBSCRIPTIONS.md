@@ -1,10 +1,10 @@
 # Shopify-prenumerationer → Study (en väg)
 
-Alexander: inga Terminal-kommandon. Bara klick i Shopify Admin och Render.
+Alexander: inga Terminal-kommandon. Bara klick i Shopify Admin och Convex.
 
 **Butik:** arzive.org (`sexb4g-xw.myshopify.com`)  
-**Study:** https://arzive-web.onrender.com/study  
-**API:** https://arzive-api.onrender.com  
+**Study:** https://arzive.vercel.app/study  
+**API:** Convex HTTP Actions (`https://DIN-DEPLOYMENT.convex.site`)  
 
 Produkterna finns redan: `membership-standard` ($12), `membership-annual` ($96), `membership-scholar` ($29). Skapa inga nya SKU:er.
 
@@ -87,7 +87,7 @@ Klart när varje medlemsprodukt visar en prenumeration under **Köpalternativ**.
 | --- | --- |
 | Händelse | **Order payment** / **Orderbetalning** |
 | Format | **JSON** |
-| URL | `https://arzive-api.onrender.com/shopify/webhooks` |
+| URL | `https://DIN-DEPLOYMENT.convex.site/webhooks/shopify` (Convex → Settings → URL & Deploy Key → **HTTP Actions URL**, lägg till `/webhooks/shopify`) |
 | API-version | **2025-01** (eller den som står närmast) |
 
 5. **Spara webhook**.
@@ -99,37 +99,26 @@ Klart när varje medlemsprodukt visar en prenumeration under **Köpalternativ**.
 | **Refund create** / **Återbetalning skapad** | Återbetalning → Free |
 
 7. På samma Webhooks-sida finns **Signing secret** / **Signeringshemlighet**.  
-   Klicka **Visa** och **kopiera** den. Du klistrar in den i Render i nästa steg.
+   Klicka **Visa** och **kopiera** den. Du klistrar in den i Convex i nästa steg.
 
 En URL räcker. API:t läser headern `X-Shopify-Topic` och mappar SKU:erna `ARZ-MEM-STANDARD` / `ANNUAL` / `SCHOLAR` till plan.
 
 ---
 
-## Steg 5 — Render (arzive-api)
+## Steg 5 — Convex (miljövariabel)
 
-1. Öppna [dashboard.render.com](https://dashboard.render.com).
-2. Klicka tjänsten **arzive-api** (inte arzive-web).
-3. **Environment** → **Add Environment Variable** för varje rad:
+1. Öppna [dashboard.convex.dev](https://dashboard.convex.dev) och välj **production**-deploymenten.
+2. **Settings** → **Environment Variables** → **Add**:
 
 | Key (exakt namn) | Value |
 | --- | --- |
 | `SHOPIFY_WEBHOOK_SECRET` | signeringshemligheten från steg 4 |
-| `SHOPIFY_STORE_URL` | `sexb4g-xw.myshopify.com` |
 
-Valfritt, om du redan har en custom app:
+3. Spara. Ingen omstart behövs.
 
-| Key | Value |
-| --- | --- |
-| `SHOPIFY_ADMIN_API_TOKEN` | Admin API-token |
-| `SHOPIFY_CLIENT_ID` | appens Client ID |
-| `SHOPIFY_CLIENT_SECRET` | appens Client secret |
+**Viktigt:** utan `SHOPIFY_WEBHOOK_SECRET` avvisar Study alla webhooks (svarar 401). Det är med flit — annars kan vem som helst skicka ett falskt "betalt"-anrop och låsa upp Pro gratis.
 
-4. **Save changes**. Render startar om API:t.
-5. Vänta tills tjänsten är **Live**.
-
-Utan `SHOPIFY_WEBHOOK_SECRET` tar API:t emot händelser i mock-läge (bra lokalt, osäkert live). Med hemligheten krävs Shopifys HMAC.
-
-Om du använder Supabase: kör om SQL från `supabase/schema.sql` i SQL Editor (lägger till `plan` på profiler). Saknas tabellen faller API:t tillbaka till minnet — Render kraschar inte.
+Använder du Stripe också: lägg till `STRIPE_WEBHOOK_SECRET` (börjar med `whsec_`) och peka Stripe-webhooken till `https://DIN-DEPLOYMENT.convex.site/webhooks/stripe`.
 
 ---
 
@@ -153,10 +142,10 @@ Utan den här zippen går Buy till kassan som **engångsköp**, även om prenume
 3. Kassan ska visa **månadsvis** / subscription (inte bara “12 en gång”).
 4. Betala med testkort (om butiken är i testläge) eller ett riktigt kort.
 5. Använd **samma e-post** som du vill ha i Study.
-6. Öppna https://arzive-web.onrender.com/account  
-   - Har du redan Study: logga in med den e-posten → **Plan · Standard · $12/mo**.  
+6. Öppna https://arzive.vercel.app/account  
+   - Har du redan Study: logga in med den e-posten → **Plan · Plus**.  
    - Har du inte Study: skapa konto med **samma e-post** → Standard låses upp direkt.
-7. Öppna https://arzive-web.onrender.com/study — Free-mätaren (3 chattar) är borta. Det står **Plan · standard · unlimited**.
+7. Öppna https://arzive.vercel.app/study — Free-mätaren är borta och det står **Plan · Plus · unlimited uploads**.
 
 Avbryt i Shopify (kundportal eller Admin → prenumerationer / order): Study går tillbaka till **Free** (genast vid avbruten order/återbetalning, annars när perioden löper ut).
 
@@ -171,8 +160,9 @@ Avbryt i Shopify (kundportal eller Admin → prenumerationer / order): Study gå
 ## Om Study fortfarande visar Free efter betald order
 
 - E-post i Shopify-kassan ≠ e-post i Study. De måste vara identiska.
-- `SHOPIFY_WEBHOOK_SECRET` saknas eller är fel i **arzive-api**.
-- Webhook-URL:n är inte `https://arzive-api.onrender.com/shopify/webhooks`.
-- I Shopify → Aviseringar → Webhooks: skicka en testnotis om knappen finns. API:t ska svara 200.
+- `SHOPIFY_WEBHOOK_SECRET` saknas eller är fel i **Convex** (då svarar webhooken 401).
+- Webhook-URL:n pekar fortfarande på gamla `arzive-api.onrender.com` i stället för `https://DIN-DEPLOYMENT.convex.site/webhooks/shopify`.
+- Convex-funktionerna är inte deployade: kör `npx convex deploy` i `frontend/`.
+- I Shopify → Aviseringar → Webhooks: skicka en testnotis om knappen finns. Svaret ska vara 200.
 
 Ingen GitHub, ingen Terminal, ingen Recharge.

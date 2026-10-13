@@ -1,8 +1,23 @@
 import { v } from "convex/values";
 
-import { mutation, query } from "./_generated/server";
+import { internalMutation, internalQuery, mutation, query } from "./_generated/server";
+import type { MutationCtx } from "./_generated/server";
+import type { Id } from "./_generated/dataModel";
 import { requireUser, userFromToken } from "./lib/authHelpers";
 import { parseRatings } from "./lib/studyHelpers";
+
+async function requireOwnedDocument(
+  ctx: MutationCtx,
+  token: string,
+  documentId: Id<"documents">,
+) {
+  const { user } = await requireUser(ctx, token);
+  const doc = await ctx.db.get(documentId);
+  if (!doc || doc.ownerId !== user._id) {
+    throw new Error("Document not found.");
+  }
+  return user;
+}
 
 export const listStudyMessages = query({
   args: { token: v.optional(v.string()), documentId: v.id("documents") },
@@ -61,7 +76,7 @@ export const listStudyMessages = query({
   },
 });
 
-export const getDocumentText = query({
+export const getDocumentText = internalQuery({
   args: { token: v.string(), documentId: v.id("documents") },
   handler: async (ctx, args) => {
     const { user } = await requireUser(ctx, args.token);
@@ -73,7 +88,7 @@ export const getDocumentText = query({
   },
 });
 
-export const getAiCache = query({
+export const getAiCache = internalQuery({
   args: { cacheKey: v.string() },
   handler: async (ctx, args) => {
     return await ctx.db
@@ -83,7 +98,7 @@ export const getAiCache = query({
   },
 });
 
-export const writeAiCache = mutation({
+export const writeAiCache = internalMutation({
   args: {
     cacheKey: v.string(),
     documentId: v.id("documents"),
@@ -108,7 +123,7 @@ export const writeAiCache = mutation({
   },
 });
 
-export const persistStudySession = mutation({
+export const persistStudySession = internalMutation({
   args: {
     token: v.string(),
     documentId: v.id("documents"),
@@ -121,7 +136,7 @@ export const persistStudySession = mutation({
     chipId: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const { user } = await requireUser(ctx, args.token);
+    const user = await requireOwnedDocument(ctx, args.token, args.documentId);
     const now = Date.now();
     const sessionId = await ctx.db.insert("quizSessions", {
       documentId: args.documentId,
@@ -155,7 +170,7 @@ export const persistStudySession = mutation({
   },
 });
 
-export const persistAskMessages = mutation({
+export const persistAskMessages = internalMutation({
   args: {
     token: v.string(),
     documentId: v.id("documents"),
@@ -165,7 +180,7 @@ export const persistAskMessages = mutation({
     chipId: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const { user } = await requireUser(ctx, args.token);
+    const user = await requireOwnedDocument(ctx, args.token, args.documentId);
     const now = Date.now();
     const userId = await ctx.db.insert("studyMessages", {
       documentId: args.documentId,

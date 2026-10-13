@@ -3,7 +3,7 @@
 import { v } from "convex/values";
 
 import { action } from "./_generated/server";
-import { api } from "./_generated/api";
+import { internal } from "./_generated/api";
 import type {
   AiCacheRow,
   AskAboutFileResult,
@@ -22,6 +22,8 @@ import {
   providerName,
 } from "./lib/llm";
 
+const MAX_QUESTION_CHARS = 2000;
+
 export const generateStudy = action({
   args: {
     token: v.string(),
@@ -30,15 +32,15 @@ export const generateStudy = action({
     questionCount: v.optional(v.number()),
   },
   handler: async (ctx, args): Promise<StudyGenerateResult> => {
-    const docRow = (await ctx.runQuery(api.study.getDocumentText, {
+    const docRow = (await ctx.runQuery(internal.study.getDocumentText, {
       token: args.token,
       documentId: args.documentId,
     })) as DocumentTextRow;
-    const count = args.questionCount ?? 5;
+    const count = Math.min(15, Math.max(1, Math.round(args.questionCount ?? 5)));
     const promptKind = args.outputType === "flashcards" ? "flashcards" : "quiz";
     const fingerprint = `${args.outputType}:${count}`;
     const key = cacheKey(args.documentId, promptKind, fingerprint);
-    const cached = (await ctx.runQuery(api.study.getAiCache, {
+    const cached = (await ctx.runQuery(internal.study.getAiCache, {
       cacheKey: key,
     })) as AiCacheRow | null;
     let questions: QuizQuestion[] = [];
@@ -57,7 +59,7 @@ export const generateStudy = action({
       } else {
         questions = await generateQuiz(docRow.text, count);
       }
-      await ctx.runMutation(api.study.writeAiCache, {
+      await ctx.runMutation(internal.study.writeAiCache, {
         cacheKey: key,
         documentId: args.documentId,
         promptKind,
@@ -65,7 +67,7 @@ export const generateStudy = action({
         provider,
       });
     }
-    const sessionId = (await ctx.runMutation(api.study.persistStudySession, {
+    const sessionId = (await ctx.runMutation(internal.study.persistStudySession, {
       token: args.token,
       documentId: args.documentId,
       outputType: args.outputType === "flashcards" ? "flashcards" : "questions",
@@ -103,14 +105,21 @@ export const askAboutFile = action({
     chipId: v.optional(v.string()),
   },
   handler: async (ctx, args): Promise<AskAboutFileResult> => {
-    const docRow = (await ctx.runQuery(api.study.getDocumentText, {
+    const question = args.message.trim();
+    if (!question) {
+      throw new Error("Type a question first.");
+    }
+    if (question.length > MAX_QUESTION_CHARS) {
+      throw new Error(`Keep questions under ${MAX_QUESTION_CHARS} characters.`);
+    }
+    const docRow = (await ctx.runQuery(internal.study.getDocumentText, {
       token: args.token,
       documentId: args.documentId,
     })) as DocumentTextRow;
     const kind = args.promptKind ?? "free_text";
-    const fingerprint = `${kind}:${args.chipId ?? ""}:${args.message}`;
+    const fingerprint = `${kind}:${args.chipId ?? ""}:${question}`;
     const key = cacheKey(args.documentId, kind, fingerprint);
-    const cached = (await ctx.runQuery(api.study.getAiCache, {
+    const cached = (await ctx.runQuery(internal.study.getAiCache, {
       cacheKey: key,
     })) as AiCacheRow | null;
     let answer: string;
@@ -119,8 +128,8 @@ export const askAboutFile = action({
       const payload = JSON.parse(cached.resultJson) as { answer?: string };
       answer = payload.answer ?? "";
     } else {
-      answer = await generateAnswer(docRow.text, args.message);
-      await ctx.runMutation(api.study.writeAiCache, {
+      answer = await generateAnswer(docRow.text, question);
+      await ctx.runMutation(internal.study.writeAiCache, {
         cacheKey: key,
         documentId: args.documentId,
         promptKind: kind,
@@ -128,10 +137,10 @@ export const askAboutFile = action({
         provider,
       });
     }
-    const ids = (await ctx.runMutation(api.study.persistAskMessages, {
+    const ids = (await ctx.runMutation(internal.study.persistAskMessages, {
       token: args.token,
       documentId: args.documentId,
-      userMessage: args.message,
+      userMessage: question,
       assistantMessage: answer,
       promptKind: kind,
       chipId: args.chipId,
@@ -140,7 +149,7 @@ export const askAboutFile = action({
       id: ids.userId,
       document_id: args.documentId,
       role: "user",
-      content: args.message,
+      content: question,
       prompt_kind: kind,
       chip_id: args.chipId ?? null,
       retrieval: null,

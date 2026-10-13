@@ -2,7 +2,7 @@ export const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL ?? "";
 
 /** Custom domain first; myshopify fallback. */
 export const shopifyStoreDomain =
-  process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN || "arzive.org";
+  process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN || "arzive.com";
 
 export const shopifyCornellHandle =
   process.env.NEXT_PUBLIC_SHOPIFY_CORNELL_HANDLE ?? "arzive-cornell-notebook";

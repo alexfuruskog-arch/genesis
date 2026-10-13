@@ -59,7 +59,7 @@ export function shopifyProductUrl(
   const domain = (
     storeDomain ||
     process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN ||
-    "arzive.org"
+    "arzive.com"
   )
     .replace(/^https?:\/\//, "")
     .replace(/\/$/, "");

@@ -6,6 +6,7 @@ import {
   hashPassword,
   newToken,
   requireUser,
+  verifyPassword,
 } from "./lib/authHelpers";
 import { PLAN_LABELS } from "./lib/plans";
 
@@ -18,11 +19,14 @@ export const signUp = mutation({
   },
   handler: async (ctx, args) => {
     const email = args.email.trim().toLowerCase();
-    if (!email.includes("@")) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254) {
       throw new Error("Enter a valid email.");
     }
-    if (args.password.length < 6) {
-      throw new Error("Password must be at least 6 characters.");
+    if (args.password.length < 8) {
+      throw new Error("Password must be at least 8 characters.");
+    }
+    if (args.password.length > 200) {
+      throw new Error("Password is too long.");
     }
     const existing = await ctx.db
       .query("users")
@@ -70,14 +74,20 @@ export const signIn = mutation({
       .query("users")
       .withIndex("by_email", (q) => q.eq("email", email))
       .unique();
-    if (!user || !user.passwordHash) {
-      throw new Error("No account found for this email.");
+    if (!user || !user.passwordHash || args.password.length > 200) {
+      throw new Error("Incorrect email or password.");
     }
-    const passwordHash = await hashPassword(args.password);
-    if (passwordHash !== user.passwordHash) {
-      throw new Error("Incorrect password.");
+    const check = await verifyPassword(args.password, user.passwordHash);
+    if (!check.ok) {
+      throw new Error("Incorrect email or password.");
     }
     const now = Date.now();
+    if (check.needsRehash) {
+      await ctx.db.patch(user._id, {
+        passwordHash: await hashPassword(args.password),
+        updatedAt: now,
+      });
+    }
     const token = newToken();
     await ctx.db.insert("sessions", {
       userId: user._id,
