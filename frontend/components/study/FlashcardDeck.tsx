@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
+import { friendlyError } from "@/lib/errors";
 import { rateFlashcard, type CardRating, type Flashcard, type FlashcardRating } from "@/lib/api";
 
 type Props = {
@@ -35,17 +36,10 @@ export function FlashcardDeck({ sessionId, cards, history = [], authHeaders }: P
   const knownCount = deck.filter((card) => ratings[card.id] === "know").length;
   const card = deck[index];
 
-  useEffect(() => {
-    setDeck(cards);
-    setIndex(0);
-    setFlipped(false);
-    setRatings(latestRatings(history));
-    setRoundOver(false);
-  }, [sessionId]);
 
   if (!card && !roundOver) {
     return (
-      <p className="text-sm font-light text-forest/60">No flashcards in this deck.</p>
+      <p className="text-forest/60">No flashcards could be made from this file.</p>
     );
   }
 
@@ -64,7 +58,7 @@ export function FlashcardDeck({ sessionId, cards, history = [], authHeaders }: P
         setFlipped(false);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not save that rating.");
+      setError(friendlyError(err, "Could not save that. Try again."));
     } finally {
       setBusy(false);
     }
@@ -82,22 +76,19 @@ export function FlashcardDeck({ sessionId, cards, history = [], authHeaders }: P
   if (roundOver) {
     const remaining = stillLearning.length;
     return (
-      <div className="border border-forest/10 bg-cream px-4 py-5">
-        <p className="text-[0.62rem] uppercase tracking-[0.14em] text-forest/50">Deck</p>
+      <div className="border border-forest/10 bg-white px-4 py-5">
         <p className="mt-2 font-display text-xl text-forest">
-          {remaining === 0 ? "You know this deck." : "Round complete."}
+          {remaining === 0 ? "You know every card in this deck." : "Round complete"}
         </p>
-        <p className="mt-2 text-sm font-light leading-6 text-forest/70">
-          {knownCount} known · {remaining} still learning
+        <p className="mt-2 text-[0.95rem] leading-6 text-forest/70">
+          {knownCount} known, {remaining} still learning
         </p>
         {remaining > 0 ? (
           <button type="button" onClick={startNextRound} className="btn-ink mt-4">
-            Next round · {remaining} still learning
+            Practise the {remaining} you&apos;re still learning
           </button>
         ) : (
-          <p className="mt-3 text-sm font-light text-forest/60">
-            Every card in this round is marked Know.
-          </p>
+          <p className="mt-3 text-[0.95rem] text-forest/60">Come back tomorrow to check it stuck.</p>
         )}
       </div>
     );
@@ -105,38 +96,38 @@ export function FlashcardDeck({ sessionId, cards, history = [], authHeaders }: P
 
   return (
     <div>
-      <p className="text-[0.62rem] uppercase tracking-[0.14em] text-forest/50">
-        Flashcards · {index + 1} / {deck.length}
+      <p className="text-sm text-forest/60">
+        Card {index + 1} of {deck.length}
       </p>
       <button
         type="button"
         onClick={() => setFlipped((value) => !value)}
-        className="mt-3 w-full bg-cream px-4 py-8 text-left transition hover:bg-white"
+        aria-label={flipped ? "Show the question" : "Show the answer"}
+        className="ruled mt-2 min-h-[9rem] w-full border border-forest/15 bg-white px-5 py-6 text-left transition hover:border-forest/40"
       >
-        <p className="text-[0.62rem] uppercase tracking-[0.14em] text-forest/45">
-          {flipped ? "Back" : "Front"} · tap to flip
-        </p>
-        <p className="mt-3 text-base leading-7 text-forest">{flipped ? card.back : card.front}</p>
+        <p className="text-sm text-brass">{flipped ? "Answer" : "Question"}</p>
+        <p className="mt-2 text-[1.05rem] leading-8 text-forest">{flipped ? card.back : card.front}</p>
+        <p className="mt-3 text-sm text-forest/45">{flipped ? "Tap to see the question" : "Tap to see the answer"}</p>
       </button>
       <div className="mt-3 flex flex-wrap gap-2">
         <button
           type="button"
           disabled={busy}
           onClick={() => void rate("know")}
-          className="bg-forest px-4 py-2.5 text-[0.62rem] uppercase tracking-[0.14em] text-cream disabled:opacity-45"
+          className="btn-ink"
         >
-          Know
+          I know this
         </button>
         <button
           type="button"
           disabled={busy}
           onClick={() => void rate("still_learning")}
-          className="border border-forest/25 px-4 py-2.5 text-[0.62rem] uppercase tracking-[0.14em] text-forest disabled:opacity-45"
+          className="btn-line"
         >
           Still learning
         </button>
       </div>
-      {error ? <p className="mt-3 text-sm text-red-800">{error}</p> : null}
+      {error ? <p className="mt-3 text-[0.95rem] text-red-800">{error}</p> : null}
     </div>
   );
 }

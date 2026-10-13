@@ -1,12 +1,21 @@
 @import "tailwindcss";
 
+/*
+ * ARZIVE design tokens.
+ * Forest + cream match the Shopify store; brass is the one accent and is used
+ * only for "cue" words — the left column of a Cornell page.
+ */
 :root {
   --forest: #0b2421;
   --forest-deep: #061614;
   --forest-mid: #143530;
   --cream: #f5f5f0;
   --cream-soft: #ebe6dc;
+  --paper: #fbfaf6;
+  --brass: #8a6b3d;
+  --brass-light: #c9ab78;
   --ink: #0b2421;
+  --rule: rgba(11, 36, 33, 0.14);
   --muted: rgba(11, 36, 33, 0.68);
 }
 
@@ -16,6 +25,9 @@
   --color-forest-mid: var(--forest-mid);
   --color-cream: var(--cream);
   --color-cream-soft: var(--cream-soft);
+  --color-paper: var(--paper);
+  --color-brass: var(--brass);
+  --color-brass-light: var(--brass-light);
   --color-ink: var(--ink);
   --font-sans: var(--font-body), "Source Sans 3", system-ui, sans-serif;
   --font-display: var(--font-display), "Cormorant Garamond", Georgia, serif;
@@ -30,6 +42,8 @@ body {
   background: var(--cream);
   color: var(--ink);
   font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -39,57 +53,76 @@ h3,
 .font-display {
   font-family: var(--font-display);
   font-weight: 500;
-  letter-spacing: 0.01em;
+  letter-spacing: 0;
+  text-wrap: balance;
 }
 
-@keyframes fade-up {
+p {
+  text-wrap: pretty;
+}
+
+::selection {
+  background: var(--forest);
+  color: var(--cream);
+}
+
+:focus-visible {
+  outline: 2px solid var(--brass);
+  outline-offset: 3px;
+}
+
+/* ── Motion: one entrance on the hero, nothing else moves on its own. ── */
+
+@keyframes rise {
   from {
     opacity: 0;
-    transform: translateY(14px);
+    transform: translateY(10px);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: none;
   }
 }
 
-@keyframes soft-in {
-  from {
-    opacity: 0;
+.rise {
+  animation: rise 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.rise-2 {
+  animation: rise 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) 0.12s both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
-  to {
-    opacity: 1;
-  }
 }
 
-.animate-fade-up {
-  animation: fade-up 0.75s ease-out both;
-}
-
-.animate-fade-up-delay {
-  animation: fade-up 0.85s ease-out 0.1s both;
-}
-
-.animate-soft-in {
-  animation: soft-in 0.8s ease-out both;
-}
+/* ── Chrome ── */
 
 .arzive-announce {
-  background: var(--cream);
-  color: var(--forest);
+  background: var(--forest-deep);
+  color: rgba(245, 245, 240, 0.82);
   text-align: center;
-  font-size: 0.62rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  padding: 0.55rem 1rem;
-  border-bottom: 1px solid rgba(11, 36, 33, 0.08);
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+  padding: 0.5rem 1rem;
+}
+
+.arzive-announce a:hover {
+  color: var(--cream);
 }
 
 .nav-link {
-  font-size: 0.65rem;
-  letter-spacing: 0.16em;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  font-weight: 400;
+  font-weight: 500;
   transition: opacity 0.2s ease;
   white-space: nowrap;
 }
@@ -98,39 +131,56 @@ h3,
   opacity: 0.65;
 }
 
-.btn-solid {
+.nav-link[aria-current="page"] {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.45em;
+}
+
+/* ── Buttons: sentence case, readable size, square corners like the store. ── */
+
+.btn-ink,
+.btn-solid,
+.btn-ghost,
+.btn-line {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.85rem 1.35rem;
+  gap: 0.5rem;
+  min-height: 2.9rem;
+  padding: 0.7rem 1.4rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  line-height: 1.2;
+  border-radius: 0;
+  border: 1px solid transparent;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.btn-ink {
+  background: var(--forest);
+  color: var(--cream);
+}
+
+.btn-ink:hover {
+  background: var(--forest-mid);
+}
+
+.btn-solid {
   background: var(--cream);
   color: var(--forest);
-  font-size: 0.65rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  font-weight: 500;
-  border-radius: 0;
-  transition: background 0.2s ease, transform 0.2s ease;
 }
 
 .btn-solid:hover {
-  background: #fffdf8;
-  transform: translateY(-1px);
+  background: #fff;
 }
 
 .btn-ghost {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.85rem 1.35rem;
-  border: 1px solid rgba(245, 245, 240, 0.5);
+  border-color: rgba(245, 245, 240, 0.45);
   color: var(--cream);
-  font-size: 0.65rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  font-weight: 500;
-  border-radius: 0;
-  transition: border-color 0.2s ease, background 0.2s ease;
 }
 
 .btn-ghost:hover {
@@ -138,103 +188,153 @@ h3,
   background: rgba(245, 245, 240, 0.06);
 }
 
-.btn-ink {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.85rem 1.35rem;
-  background: var(--forest);
-  color: var(--cream);
-  font-size: 0.65rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  font-weight: 500;
-  border-radius: 0;
-  transition: background 0.2s ease;
+.btn-line {
+  border-color: rgba(11, 36, 33, 0.3);
+  color: var(--forest);
 }
 
-.btn-ink:hover {
-  background: var(--forest-mid);
+.btn-line:hover {
+  border-color: var(--forest);
+  background: rgba(255, 255, 255, 0.6);
 }
 
 .btn-ink:disabled,
-.btn-solid:disabled {
-  opacity: 0.55;
+.btn-solid:disabled,
+.btn-line:disabled {
+  opacity: 0.5;
   cursor: not-allowed;
-  transform: none;
 }
 
+.text-link {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.25em;
+  text-decoration-color: rgba(11, 36, 33, 0.35);
+  transition: text-decoration-color 0.2s ease;
+}
+
+.text-link:hover {
+  text-decoration-color: currentColor;
+}
+
+/* ── The Cornell page: cue column · notes · summary. Used as a layout device. ── */
+
+.cornell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  border-top: 1px solid var(--rule);
+}
+
+.cornell-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.35rem;
+  padding: 1.6rem 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.cornell-cue {
+  font-family: var(--font-display);
+  font-size: 1.55rem;
+  line-height: 1.15;
+  color: var(--brass);
+}
+
+@media (min-width: 768px) {
+  .cornell-row {
+    grid-template-columns: 13rem minmax(0, 1fr);
+    gap: 0;
+    padding: 0;
+  }
+
+  .cornell-cue {
+    padding: 1.7rem 1.5rem 1.7rem 0;
+    border-right: 1px solid var(--rule);
+  }
+
+  .cornell-notes {
+    padding: 1.7rem 0 1.7rem 2rem;
+  }
+}
+
+.cornell-summary {
+  padding: 1.6rem 0 0;
+}
+
+.dark .cornell,
+.dark .cornell-row,
+.dark .cornell-cue {
+  border-color: rgba(245, 245, 240, 0.16);
+}
+
+.dark .cornell-cue {
+  color: var(--brass-light);
+}
+
+/* Ruled-paper texture for quiet surfaces. */
+.ruled {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 31px,
+    rgba(11, 36, 33, 0.06) 31px,
+    rgba(11, 36, 33, 0.06) 32px
+  );
+}
+
+/* ── Study workspace ── */
+
 .study-panel {
-  background: #f0ebe3;
-  padding: 1.5rem 1.35rem;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  padding: 1.5rem 1.25rem;
 }
 
 @media (min-width: 640px) {
   .study-panel {
-    padding: 1.75rem 1.65rem;
+    padding: 1.75rem 1.75rem;
   }
 }
 
 .study-label {
-  font-size: 0.62rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: rgba(11, 36, 33, 0.5);
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: rgba(11, 36, 33, 0.6);
 }
 
 .study-input {
   width: 100%;
-  border: 0;
-  border-bottom: 1px solid rgba(11, 36, 33, 0.3);
-  background: transparent;
-  padding: 0.65rem 0;
+  border: 1px solid rgba(11, 36, 33, 0.22);
+  background: #fff;
+  padding: 0.7rem 0.85rem;
   color: var(--forest);
-  outline: none;
+  font-size: 1rem;
+  border-radius: 0;
+  transition: border-color 0.2s ease;
 }
 
 .study-input:focus {
-  border-bottom-color: var(--forest);
+  outline: none;
+  border-color: var(--forest);
 }
 
-.plan-meter {
-  display: grid;
-  gap: 0.65rem;
-}
-
-.plan-meter-row {
-  display: grid;
-  grid-template-columns: 5rem 1fr auto;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.plan-meter-track {
-  height: 2px;
-  background: rgba(245, 245, 240, 0.18);
-  overflow: hidden;
-}
-
-.plan-meter-fill {
-  height: 100%;
-  background: var(--cream);
-  transform-origin: left center;
-  transition: width 0.55s ease;
+.study-input::placeholder {
+  color: rgba(11, 36, 33, 0.4);
 }
 
 .study-chip {
-  border: 1px solid rgba(11, 36, 33, 0.2);
-  padding: 0.55rem 0.8rem;
-  font-size: 0.62rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  border: 1px solid rgba(11, 36, 33, 0.22);
+  padding: 0.5rem 0.85rem;
+  font-size: 0.88rem;
   color: var(--forest);
-  background: transparent;
-  transition: border-color 0.2s ease, background 0.2s ease;
+  background: #fff;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease;
 }
 
-.study-chip:hover {
+.study-chip:hover:not(:disabled) {
   border-color: var(--forest);
-  background: #fff;
 }
 
 .study-chip:disabled {
@@ -242,23 +342,32 @@ h3,
   cursor: not-allowed;
 }
 
-.how-step {
-  position: relative;
+.segmented {
+  display: inline-flex;
+  border: 1px solid rgba(11, 36, 33, 0.22);
 }
 
-.how-step + .how-step::before {
-  content: "";
-  display: none;
+.segmented button {
+  padding: 0.45rem 0.95rem;
+  font-size: 0.88rem;
+  color: var(--forest);
+  transition: background 0.2s ease;
 }
 
-@media (min-width: 768px) {
-  .how-step + .how-step::before {
-    display: block;
-    position: absolute;
-    left: -1.15rem;
-    top: 0.55rem;
-    width: 1.5rem;
-    height: 1px;
-    background: rgba(11, 36, 33, 0.18);
-  }
+.segmented button[aria-pressed="true"] {
+  background: var(--forest);
+  color: var(--cream);
+}
+
+.meter {
+  height: 3px;
+  background: rgba(11, 36, 33, 0.12);
+  overflow: hidden;
+}
+
+.meter > span {
+  display: block;
+  height: 100%;
+  background: var(--brass);
+  transition: width 0.5s ease;
 }

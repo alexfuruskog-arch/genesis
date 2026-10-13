@@ -1,37 +1,72 @@
 import Link from "next/link";
 
 import { shopifyStoreUrl } from "@/lib/env";
+import { products } from "@/lib/products";
 
 export function SiteFooter() {
+  const year = new Date().getFullYear();
   return (
-    <footer className="border-t border-forest/10 bg-cream text-forest">
-      <div className="mx-auto flex max-w-6xl flex-col gap-8 px-5 py-10 sm:flex-row sm:items-end sm:justify-between sm:px-8 sm:py-12 lg:px-10">
+    <footer className="bg-forest-deep text-cream">
+      <div className="mx-auto grid max-w-6xl gap-10 px-5 py-14 sm:px-8 md:grid-cols-[1.4fr_1fr_1fr] lg:px-10">
         <div>
-          <p className="font-display text-[1.15rem] tracking-[0.28em]">ARZIVE</p>
-          <p className="mt-3 max-w-xs text-sm font-light leading-6 text-forest/60">
-            Notebooks built for recall — and Study with Arzive to practice what you wrote.
+          <Link href="/" className="font-display text-[1.4rem] tracking-[0.3em]">
+            ARZIVE
+          </Link>
+          <p className="mt-4 max-w-xs text-[0.95rem] leading-7 text-cream/65">
+            Notebooks built for recall, and a study tool that turns what you wrote
+            into practice.
           </p>
         </div>
-        <nav className="flex flex-wrap gap-x-7 gap-y-3 text-[0.62rem] uppercase tracking-[0.16em] text-forest/70">
-          <a href={shopifyStoreUrl()} className="transition hover:text-forest">
-            Shop
-          </a>
-          <Link href="/study" className="transition hover:text-forest">
-            Study
-          </Link>
-          <Link href="/pricing" className="transition hover:text-forest">
-            Pricing
-          </Link>
-          <a
-            href={shopifyStoreUrl("/pages/our-story")}
-            className="transition hover:text-forest"
-          >
-            Our story
-          </a>
-          <Link href="/account" className="transition hover:text-forest">
-            Account
-          </Link>
+        <nav aria-label="Notebooks">
+          <p className="text-sm font-medium text-cream/50">Notebooks</p>
+          <ul className="mt-4 space-y-2.5 text-[0.95rem] text-cream/85">
+            {products.map((product) => (
+              <li key={product.id}>
+                <a
+                  href={shopifyStoreUrl(`/products/${product.shopifyHandle}`)}
+                  className="hover:text-cream"
+                >
+                  {product.name}
+                </a>
+              </li>
+            ))}
+            <li>
+              <a href={shopifyStoreUrl("/collections/all")} className="hover:text-cream">
+                Shop all
+              </a>
+            </li>
+            <li>
+              <a href={shopifyStoreUrl("/pages/our-story")} className="hover:text-cream">
+                Our story
+              </a>
+            </li>
+          </ul>
         </nav>
+        <nav aria-label="Study with Arzive">
+          <p className="text-sm font-medium text-cream/50">Study with Arzive</p>
+          <ul className="mt-4 space-y-2.5 text-[0.95rem] text-cream/85">
+            <li>
+              <Link href="/study" className="hover:text-cream">
+                Open Study
+              </Link>
+            </li>
+            <li>
+              <Link href="/pricing" className="hover:text-cream">
+                Plans and pricing
+              </Link>
+            </li>
+            <li>
+              <Link href="/account" className="hover:text-cream">
+                Your account
+              </Link>
+            </li>
+          </ul>
+        </nav>
+      </div>
+      <div className="border-t border-cream/10">
+        <p className="mx-auto max-w-6xl px-5 py-5 text-sm text-cream/45 sm:px-8 lg:px-10">
+          © {year} ARZIVE
+        </p>
       </div>
     </footer>
   );

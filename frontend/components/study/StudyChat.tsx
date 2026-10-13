@@ -12,16 +12,14 @@ import {
   type StudyResponse,
   type UploadedDocument,
 } from "@/lib/api";
+import { friendlyError } from "@/lib/errors";
 import { studyTextBlockedMessage } from "@/lib/library";
-import type { PlanId } from "@/lib/plan";
 
 export const STUDY_CHIPS = [
   { id: "flashcards", label: "Make flashcards", run: "flashcards" },
   { id: "quiz", label: "Quiz me", run: "quiz" },
-  { id: "exam", label: "Practice exam", run: "soon-exam" },
-  { id: "explain", label: "Explain this", run: "ask" },
   { id: "summarize", label: "Summarize", run: "ask" },
-  { id: "plan", label: "Make a study plan", run: "soon-plan" },
+  { id: "explain", label: "Explain the key ideas", run: "ask" },
 ] as const;
 
 type ChipId = (typeof STUDY_CHIPS)[number]["id"];
@@ -31,7 +29,6 @@ type ChatItem = {
   role: "user" | "assistant";
   content: string;
   chipId?: string | null;
-  comingSoon?: "exam" | "plan";
   quizSession?: StudyResponse | null;
 };
 
@@ -39,22 +36,7 @@ type Props = {
   document: UploadedDocument | null;
   authHeaders: Record<string, string>;
   signedIn: boolean;
-  plan: PlanId;
   backendError: string | null;
-  onUsageChange: () => Promise<void> | void;
-};
-
-const SOON: Record<"exam" | "plan", { user: string; assistant: string }> = {
-  exam: {
-    user: "Practice exam",
-    assistant:
-      "Practice exam is coming next — a longer test with a score and a review at the end. It is not generated yet. Use Quiz me for short questions on this file.",
-  },
-  plan: {
-    user: "Make a study plan",
-    assistant:
-      "Study plans are coming next — a day-by-day schedule up to an exam date. This chip stays in the composer so the layout is complete; it does not invent a plan yet.",
-  },
 };
 
 function hasExtractedText(document: UploadedDocument | null) {
@@ -71,35 +53,33 @@ function fromApiMessage(message: StudyMessage): ChatItem {
   };
 }
 
-export function StudyChat({
-  document,
-  authHeaders,
-  signedIn,
-  plan,
-  backendError,
-  onUsageChange,
-}: Props) {
+function localId(prefix: string) {
+  return `${prefix}-${crypto.randomUUID()}`;
+}
+
+/** The parent keys this component by document id, so each file gets a fresh thread. */
+export function StudyChat(props: Props) {
+  return <Thread key={props.document?.id ?? "none"} {...props} />;
+}
+
+function Thread({ document, authHeaders, signedIn, backendError }: Props) {
+  const documentId = document?.id || null;
   const [items, setItems] = useState<ChatItem[]>([]);
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
-  const [loadingThread, setLoadingThread] = useState(false);
+  const [loadingThread, setLoadingThread] = useState(Boolean(documentId && signedIn));
   const [error, setError] = useState<string | null>(null);
   const threadRef = useRef<HTMLDivElement>(null);
-  const documentId = document?.id || null;
+  const readable = hasExtractedText(document);
+  const blockedMessage =
+    document && !readable ? studyTextBlockedMessage(document.filename, document.mime_type) : null;
 
   useEffect(() => {
-    if (!documentId || !signedIn) {
-      setItems([]);
-      setError(null);
-      return;
-    }
+    if (!documentId || !signedIn) return;
     let cancelled = false;
-    setLoadingThread(true);
-    setError(null);
     void listStudyMessages(documentId, authHeaders)
       .then((body) => {
-        if (cancelled) return;
-        setItems(body.messages.map(fromApiMessage));
+        if (!cancelled) setItems(body.messages.map(fromApiMessage));
       })
       .catch(() => {
         if (!cancelled) setItems([]);
@@ -118,49 +98,26 @@ export function StudyChat({
     node.scrollTop = node.scrollHeight;
   }, [items, busy]);
 
-  function pushLocal(userText: string, assistantText: string, comingSoon: "exam" | "plan") {
-    const stamp = Date.now();
-    setItems((current) => [
-      ...current,
-      { id: `u-${stamp}`, role: "user", content: userText, chipId: comingSoon, comingSoon },
-      {
-        id: `a-${stamp}`,
-        role: "assistant",
-        content: assistantText,
-        comingSoon,
-      },
-    ]);
+  function precheck(): boolean {
+    setError(null);
+    if (!document) {
+      setError("Choose a file from your library first.");
+      return false;
+    }
+    if (backendError) {
+      setError(backendError);
+      return false;
+    }
+    if (!readable) {
+      setError(blockedMessage);
+      return false;
+    }
+    return true;
   }
 
   async function runChip(chipId: ChipId) {
     const chip = STUDY_CHIPS.find((item) => item.id === chipId);
-    if (!chip) return;
-    setError(null);
-    if (!signedIn) {
-      setError("Sign in on Account first.");
-      return;
-    }
-    if (!document) {
-      setError("Select one file in your library.");
-      return;
-    }
-    if (chip.run === "soon-exam") {
-      pushLocal(SOON.exam.user, SOON.exam.assistant, "exam");
-      return;
-    }
-    if (chip.run === "soon-plan") {
-      pushLocal(SOON.plan.user, SOON.plan.assistant, "plan");
-      return;
-    }
-    if (backendError) {
-      setError(backendError);
-      return;
-    }
-    if (!hasExtractedText(document)) {
-      setError(studyTextBlockedMessage(document.filename, document.mime_type));
-      return;
-    }
-
+    if (!chip || !precheck() || !document) return;
     setBusy(true);
     try {
       if (chip.run === "flashcards" || chip.run === "quiz") {
@@ -171,28 +128,24 @@ export function StudyChat({
           },
           authHeaders,
         );
-        const stamp = Date.now();
         setItems((current) => [
           ...current,
-          { id: `u-${stamp}`, role: "user", content: chip.label, chipId: chip.id },
+          { id: localId("u"), role: "user", content: chip.label, chipId: chip.id },
           {
-            id: `a-${stamp}`,
+            id: localId("a"),
             role: "assistant",
-            content: chip.run === "flashcards" ? "Flashcards from this file." : "Short quiz from this file.",
+            content:
+              chip.run === "flashcards"
+                ? "Here are flashcards from this file. Tap a card to flip it."
+                : "Here's a short quiz from this file. Pick an answer to check it.",
             chipId: chip.id,
             quizSession: study,
           },
         ]);
-        await onUsageChange();
         return;
       }
       const asked = await askAboutFile(
-        {
-          documentId: document.id,
-          message: chip.label,
-          promptKind: "chip",
-          chipId: chip.id,
-        },
+        { documentId: document.id, message: chip.label, promptKind: "chip", chipId: chip.id },
         authHeaders,
       );
       setItems((current) => [
@@ -200,9 +153,8 @@ export function StudyChat({
         fromApiMessage(asked.user_message),
         fromApiMessage(asked.message),
       ]);
-      await onUsageChange();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "That request failed.");
+      setError(friendlyError(err, "That didn't work. Try again in a moment."));
     } finally {
       setBusy(false);
     }
@@ -211,32 +163,11 @@ export function StudyChat({
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
     const text = draft.trim();
-    if (!text) return;
-    setError(null);
-    if (!signedIn) {
-      setError("Sign in on Account first.");
-      return;
-    }
-    if (!document) {
-      setError("Select one file in your library.");
-      return;
-    }
-    if (backendError) {
-      setError(backendError);
-      return;
-    }
-    if (!hasExtractedText(document)) {
-      setError(studyTextBlockedMessage(document.filename, document.mime_type));
-      return;
-    }
+    if (!text || !precheck() || !document) return;
     setBusy(true);
     try {
       const asked = await askAboutFile(
-        {
-          documentId: document.id,
-          message: text,
-          promptKind: "free_text",
-        },
+        { documentId: document.id, message: text, promptKind: "free_text" },
         authHeaders,
       );
       setDraft("");
@@ -245,62 +176,73 @@ export function StudyChat({
         fromApiMessage(asked.user_message),
         fromApiMessage(asked.message),
       ]);
-      await onUsageChange();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "That question failed.");
+      setError(friendlyError(err, "Your question didn't go through. Try again."));
     } finally {
       setBusy(false);
     }
   }
 
-  const composerDisabled = Boolean(backendError) || busy || !signedIn;
+  const composerDisabled = Boolean(backendError) || busy || !signedIn || !document || !readable;
 
   return (
-    <section className="study-panel flex min-h-[32rem] flex-col lg:min-h-[40rem]">
-      <p className="study-label">03 · Chat</p>
-      <h2 className="mt-3 font-display text-2xl tracking-[0.03em] text-forest">
-        Ask about this file
+    <section
+      className="study-panel flex min-h-[34rem] flex-col lg:sticky lg:top-24 lg:max-h-[calc(100vh-7rem)]"
+      aria-labelledby="chat-heading"
+    >
+      <h2 id="chat-heading" className="font-display text-[1.75rem] leading-tight">
+        Study this file
       </h2>
-      <p className="mt-2 text-sm font-light leading-6 text-forest/70">
-        {document
-          ? `Selected · ${document.filename}`
-          : "Pick one library item. Chips and the question field both talk to that file."}
+      <p className="mt-1 truncate text-[0.95rem] text-forest/65">
+        {document ? document.filename : "Choose a file from your library to begin."}
       </p>
 
       <div
         ref={threadRef}
-        className="mt-5 min-h-[14rem] flex-1 space-y-3 overflow-y-auto border border-forest/10 bg-cream/40 px-3 py-4"
+        aria-live="polite"
+        className="mt-4 min-h-[16rem] flex-1 space-y-3 overflow-y-auto border border-forest/10 bg-white/60 px-3 py-4"
       >
         {loadingThread ? (
-          <p className="py-10 text-center text-sm font-light text-forest/50">Opening this thread…</p>
+          <p className="py-10 text-center text-forest/50">Loading this conversation…</p>
         ) : null}
 
         {!loadingThread && !items.length && !busy ? (
           <div className="px-3 py-10 text-center">
-            <p className="font-display text-[1.35rem] tracking-[0.02em] text-forest">
-              {document ? "Ask or tap a chip" : "Select one file"}
-            </p>
-            <p className="mx-auto mt-2 max-w-[18rem] text-sm font-light leading-6 text-forest/55">
-              {document
-                ? "Make flashcards, quiz yourself, explain, summarize, or type a question about this file."
-                : "The composer stays here. Choose a file with extracted text to start."}
-            </p>
+            {blockedMessage ? (
+              <>
+                <p className="font-display text-[1.4rem]">This file has no readable text</p>
+                <p className="mx-auto mt-2 max-w-sm text-[0.95rem] leading-6 text-forest/60">
+                  {blockedMessage}
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="font-display text-[1.4rem]">
+                  {document ? "What do you want to practise?" : "No file selected"}
+                </p>
+                <p className="mx-auto mt-2 max-w-xs text-[0.95rem] leading-6 text-forest/60">
+                  {document
+                    ? "Pick an option below or ask your own question. Answers come only from this file."
+                    : "Your flashcards, quizzes and answers will appear here."}
+                </p>
+              </>
+            )}
           </div>
         ) : null}
 
         {items.map((item) => (
           <article
             key={item.id}
-            className={item.role === "user" ? "ml-6 bg-forest px-4 py-3 text-cream" : "mr-6 bg-cream px-4 py-3"}
+            className={
+              item.role === "user"
+                ? "ml-8 bg-forest px-4 py-3 text-cream"
+                : "mr-4 border border-forest/10 bg-paper px-4 py-3"
+            }
           >
-            <p className={`text-[0.58rem] uppercase tracking-[0.14em] ${item.role === "user" ? "text-cream/55" : "text-forest/45"}`}>
-              {item.role === "user" ? "You" : "Study AI"}
+            <p className={`text-sm ${item.role === "user" ? "text-cream/60" : "text-brass"}`}>
+              {item.role === "user" ? "You" : "Study"}
             </p>
-            <p
-              className={`mt-1 whitespace-pre-wrap text-sm leading-6 ${item.role === "user" ? "text-cream" : "text-forest"}`}
-            >
-              {item.content}
-            </p>
+            <p className="mt-1 whitespace-pre-wrap text-[0.98rem] leading-7">{item.content}</p>
             {item.quizSession?.output_type === "flashcards" ? (
               <div className="mt-4">
                 <FlashcardDeck
@@ -321,14 +263,18 @@ export function StudyChat({
         ))}
 
         {busy ? (
-          <p className="border border-dashed border-forest/12 px-4 py-8 text-center text-sm font-light text-forest/55">
-            Retrieving your notes…
+          <p className="px-4 py-6 text-center text-forest/55" role="status">
+            Reading your notes…
           </p>
         ) : null}
       </div>
 
-      {error ? <p className="mt-3 text-sm text-red-800">{error}</p> : null}
-      <form onSubmit={onSubmit} className="mt-5">
+      {error ? (
+        <p role="alert" className="mt-3 text-[0.95rem] text-red-800">
+          {error}
+        </p>
+      ) : null}
+      <form onSubmit={onSubmit} className="mt-4">
         <div className="flex flex-wrap gap-2">
           {STUDY_CHIPS.map((chip) => (
             <button
@@ -342,21 +288,23 @@ export function StudyChat({
             </button>
           ))}
         </div>
-        <label className="mt-4 block">
-          <span className="sr-only">Ask about this file</span>
-          <div className="flex items-end gap-2">
-            <input
-              value={draft}
-              onChange={(event) => setDraft(event.target.value)}
-              placeholder="Ask about this file…"
-              disabled={composerDisabled}
-              className="study-input"
-            />
-            <button type="submit" disabled={composerDisabled || !draft.trim()} className="btn-ink shrink-0">
-              Send
-            </button>
-          </div>
-        </label>
+        <div className="mt-3 flex gap-2">
+          <label htmlFor="study-question" className="sr-only">
+            Ask a question about this file
+          </label>
+          <input
+            id="study-question"
+            value={draft}
+            maxLength={2000}
+            onChange={(event) => setDraft(event.target.value)}
+            placeholder={document ? "Ask a question about this file" : "Choose a file first"}
+            disabled={composerDisabled}
+            className="study-input"
+          />
+          <button type="submit" disabled={composerDisabled || !draft.trim()} className="btn-ink shrink-0">
+            Ask
+          </button>
+        </div>
       </form>
     </section>
   );

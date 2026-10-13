@@ -10,9 +10,7 @@ export default function ShopPage() {
   return (
     <main className="bg-cream">
       <section className="mx-auto max-w-6xl px-5 py-14 sm:px-8 sm:py-20 lg:px-10">
-        <p className="text-[0.62rem] uppercase tracking-[0.22em] text-forest/50">
-          Shop
-        </p>
+        <p className="text-[0.95rem] text-brass">Shop</p>
         <h1 className="mt-3 font-display text-4xl tracking-[0.03em] text-forest sm:text-5xl">
           Notebooks
         </h1>
@@ -45,7 +43,7 @@ export default function ShopPage() {
                     priority
                   />
                 </div>
-                <div className="mt-5 flex items-center gap-3 text-[0.62rem] uppercase tracking-[0.16em] text-forest/50">
+                <div className="mt-5 flex items-center gap-3 text-[0.95rem] text-brass">
                   <span
                     className="inline-block h-3.5 w-3.5 rounded-full border border-forest/20"
                     style={{ background: product.colorHex }}
@@ -59,13 +57,10 @@ export default function ShopPage() {
                   {product.description}
                 </p>
                 <div className="mt-6 flex flex-wrap gap-3">
-                  <a href={buyUrl} className="btn-ink" target="_blank" rel="noreferrer">
-                    Go to shop
+                  <a href={buyUrl} className="btn-ink">
+                    Shop the {product.shortName} Notebook
                   </a>
-                  <Link
-                    href="/study"
-                    className="border border-forest/25 px-4 py-2.5 text-[0.65rem] uppercase tracking-[0.14em] text-forest"
-                  >
+                  <Link href="/study" className="btn-line">
                     Study with Arzive
                   </Link>
                 </div>

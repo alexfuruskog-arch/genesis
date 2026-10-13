@@ -1,196 +1,211 @@
-"use client";
-
 import Image from "next/image";
 import Link from "next/link";
 
-import { shopifyStoreDomain, shopifyStoreUrl } from "@/lib/env";
+import { shopifyStoreUrl } from "@/lib/env";
 import { products, shopifyProductUrl } from "@/lib/products";
 
+const LOOP = [
+  {
+    cue: "Write",
+    notes:
+      "Take notes in a Cornell or Math notebook. The printed layout does the organising: cues on the left, notes on the right, a summary at the bottom.",
+  },
+  {
+    cue: "Scan",
+    notes:
+      "Photograph a finished page, or upload the lecture slides, PDF or Word notes it came from. Everything lands in one private library.",
+  },
+  {
+    cue: "Recall",
+    notes:
+      "Pick a file and Study turns it into flashcards, a short quiz, a summary or answers to your own questions — all based only on that file.",
+  },
+] as const;
+
 export default function HomePage() {
-  const cornell = products.find((p) => p.id === "cornell")!;
-  const math = products.find((p) => p.id === "math")!;
-  const cornellUrl =
-    shopifyProductUrl(cornell.shopifyHandle, shopifyStoreDomain) ||
-    shopifyStoreUrl(`/products/${cornell.shopifyHandle}`);
-  const mathUrl =
-    shopifyProductUrl(math.shopifyHandle, shopifyStoreDomain) ||
-    shopifyStoreUrl(`/products/${math.shopifyHandle}`);
   const shopUrl = shopifyStoreUrl();
-  const storyUrl = shopifyStoreUrl("/pages/our-story");
 
   return (
     <main className="bg-cream text-forest">
-      <section className="grid lg:grid-cols-2 lg:min-h-[min(88vh,52rem)]">
-        <div className="relative min-h-[28rem] overflow-hidden bg-cream-soft">
-          <Image
-            src="/products/notebook-cream.jpg"
-            alt="Cornell Notebook"
-            fill
-            className="object-cover"
-            priority
-            sizes="(max-width: 1024px) 100vw, 50vw"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-cream/95 via-cream/40 to-transparent" />
-          <div className="absolute left-5 top-5 z-10 grid h-[4.25rem] w-[4.25rem] place-items-center rounded-full bg-[#c4a574] text-center text-[0.55rem] font-semibold uppercase leading-tight tracking-wide text-[#1a1510] shadow-lg sm:left-6 sm:top-6">
-            3M+
-            <br />
-            pages
-            <br />
-            studied
-          </div>
-          <div className="absolute inset-x-0 bottom-0 z-10 p-6 sm:p-10">
-            <p className="text-[0.62rem] uppercase tracking-[0.2em] text-forest/70">
-              Cornell
-            </p>
-            <h1 className="mt-3 max-w-md font-display text-[1.85rem] leading-[1.15] tracking-[0.01em] sm:text-[2.35rem]">
-              Join students striving for top grades
+      {/* Hero */}
+      <section className="bg-forest text-cream">
+        <div className="mx-auto grid max-w-6xl items-center gap-12 px-5 pb-16 pt-12 sm:px-8 lg:grid-cols-[1fr_1.05fr] lg:gap-16 lg:px-10 lg:pb-24 lg:pt-20">
+          <div className="rise">
+            <p className="text-[0.95rem] text-brass-light">Cornell and Math notebooks</p>
+            <h1 className="mt-4 font-display text-[2.6rem] leading-[1.05] sm:text-[3.4rem] lg:text-[4rem]">
+              Write it once. Remember it on exam day.
             </h1>
-            <p className="mt-3 max-w-sm text-sm font-light leading-6 text-forest/75">
-              Cue, Main Notes, and Summary — the classic Cornell system on recycled
-              cream paper.
+            <p className="mt-6 max-w-md text-[1.05rem] leading-7 text-cream/75">
+              Research-backed notebooks that structure every page for revision, and
+              Study with Arzive to turn those pages into practice.
             </p>
-            <a href={cornellUrl} className="btn-ink mt-5 inline-flex">
-              Go to shop
-            </a>
-          </div>
-        </div>
-
-        <div className="relative min-h-[28rem] overflow-hidden bg-forest text-cream">
-          <Image
-            src="/products/notebook-green.jpg"
-            alt="Math Notebook"
-            fill
-            className="object-cover opacity-90"
-            priority
-            sizes="(max-width: 1024px) 100vw, 50vw"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-forest/95 via-forest/45 to-transparent" />
-          <div className="absolute inset-x-0 bottom-0 z-10 p-6 sm:p-10">
-            <p className="text-[0.62rem] uppercase tracking-[0.2em] text-cream/70">
-              Two systems
-            </p>
-            <h2 className="mt-3 max-w-md font-display text-[1.85rem] leading-[1.15] sm:text-[2.35rem]">
-              The notebooks teachers and students swear by
-            </h2>
-            <p className="mt-3 max-w-sm text-sm font-light leading-6 text-cream/72">
-              Cornell for structured thinking. Math for problem-solving — then Study
-              with Arzive turns pages into practice.
-            </p>
-            <div className="mt-5 flex flex-wrap gap-3">
-              <a href={mathUrl} className="btn-solid">
-                Go to shop
+            <div className="mt-9 flex flex-wrap gap-3">
+              <a href={shopUrl} className="btn-solid">
+                Shop notebooks
               </a>
               <Link href="/study" className="btn-ghost">
-                Study with Arzive
+                Try Study free
               </Link>
+            </div>
+            <p className="mt-10 text-sm text-cream/55">3M+ pages studied by students using ARZIVE</p>
+          </div>
+
+          <div className="rise-2 relative">
+            <div className="relative aspect-square overflow-hidden bg-cream-soft">
+              <Image
+                src="/products/cornell-pages.jpg"
+                alt="An open ARZIVE Cornell notebook showing the Cues, Main Notes and Summary sections"
+                fill
+                priority
+                className="object-cover"
+                sizes="(max-width: 1024px) 100vw, 50vw"
+              />
+            </div>
+            <div className="absolute -bottom-6 -left-4 hidden w-[34%] border-4 border-forest bg-forest sm:block lg:-left-10">
+              <div className="relative aspect-square">
+                <Image
+                  src="/products/notebook-green.jpg"
+                  alt="The forest-green Math Notebook cover"
+                  fill
+                  className="object-cover"
+                  sizes="20vw"
+                />
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="bg-forest py-4 text-cream">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-x-10 gap-y-3 px-5 text-[0.62rem] uppercase tracking-[0.16em] text-cream/90 sm:px-8">
-          <span>Trusted by students</span>
-          <span>Math notebook</span>
-          <span>Cornell method</span>
-          <span>Active recall practice</span>
-        </div>
-      </section>
-
-      <section className="px-5 py-16 text-center sm:px-8 sm:py-20">
-        <p className="font-display text-[0.95rem] tracking-[0.28em] text-forest/70">
-          Arzive&apos;s philosophy
-        </p>
-        <h2 className="mx-auto mt-5 max-w-3xl font-display text-[1.85rem] leading-[1.2] sm:text-[2.65rem]">
-          We believe every student deserves the tools to succeed.
-        </h2>
-        <p className="mt-6 text-[0.68rem] uppercase italic tracking-[0.2em] text-forest/55">
-          The only notebook that teaches you how to study.
-        </p>
-        <div className="mt-8 flex flex-wrap justify-center gap-3">
-          <a href={shopUrl} className="btn-ink">
-            Go to shop
-          </a>
-          <a
-            href={storyUrl}
-            className="border border-forest/25 px-4 py-2.5 text-[0.65rem] uppercase tracking-[0.14em] text-forest"
-          >
-            Our story
-          </a>
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-6xl px-5 pb-20 sm:px-8 lg:px-10">
-        <div className="text-center">
-          <p className="text-[0.62rem] uppercase tracking-[0.22em] text-forest/50">
-            Our notebooks
-          </p>
-          <h2 className="mt-3 font-display text-3xl sm:text-4xl">
-            Start with the right system
+      {/* The two notebooks */}
+      <section className="mx-auto max-w-6xl px-5 py-20 sm:px-8 lg:px-10 lg:py-28">
+        <div className="max-w-2xl">
+          <h2 className="font-display text-[2.1rem] leading-tight sm:text-[2.7rem]">
+            Two notebooks, one for each kind of thinking
           </h2>
+          <p className="mt-4 text-[1.05rem] leading-7 text-forest/70">
+            Both use the same recycled paper and spiral binding. The difference is
+            the page.
+          </p>
         </div>
-        <div className="mt-10 grid gap-5 md:grid-cols-2">
-          <article className="flex flex-col">
-            <div className="relative aspect-[4/5] overflow-hidden bg-cream-soft">
-              <Image
-                src="/products/notebook-cream.jpg"
-                alt="Cornell Notebook"
-                fill
-                className="object-cover"
-                sizes="(max-width: 768px) 100vw, 50vw"
-              />
-            </div>
-            <p className="mt-5 text-[0.58rem] font-semibold uppercase tracking-[0.16em] text-[#8a6b3d]">
-              Structured thinking
-            </p>
-            <h3 className="mt-2 font-display text-2xl">{cornell.name}</h3>
-            <p className="mt-2 max-w-sm text-sm font-light leading-6 text-forest/70">
-              {cornell.description}
-            </p>
-            <a href={cornellUrl} className="btn-ink mt-5 self-start">
-              Go to shop
-            </a>
-          </article>
-          <article className="flex flex-col">
-            <div className="relative aspect-[4/5] overflow-hidden bg-forest">
-              <Image
-                src="/products/notebook-green.jpg"
-                alt="Math Notebook"
-                fill
-                className="object-cover"
-                sizes="(max-width: 768px) 100vw, 50vw"
-              />
-            </div>
-            <p className="mt-5 text-[0.58rem] font-semibold uppercase tracking-[0.16em] text-[#8a6b3d]">
-              Mathematical clarity
-            </p>
-            <h3 className="mt-2 font-display text-2xl">{math.name}</h3>
-            <p className="mt-2 max-w-sm text-sm font-light leading-6 text-forest/70">
-              {math.description}
-            </p>
-            <a href={mathUrl} className="btn-ink mt-5 self-start">
-              Go to shop
-            </a>
-          </article>
+
+        <div className="mt-14 space-y-20">
+          {products.map((product, index) => {
+            const url =
+              shopifyProductUrl(product.shopifyHandle) ||
+              shopifyStoreUrl(`/products/${product.shopifyHandle}`);
+            const flip = index % 2 === 1;
+            return (
+              <article
+                key={product.id}
+                className="grid items-center gap-8 lg:grid-cols-2 lg:gap-14"
+              >
+                <div className={`grid aspect-[16/11] grid-cols-[0.8fr_1.2fr] gap-3 ${flip ? "lg:order-2" : ""}`}>
+                  <div className="relative h-full overflow-hidden bg-cream-soft">
+                    <Image
+                      src={product.coverImage}
+                      alt={`${product.name} cover in ${product.colorName.toLowerCase()}`}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 1024px) 40vw, 22vw"
+                    />
+                  </div>
+                  <div className="relative h-full overflow-hidden bg-cream-soft">
+                    <Image
+                      src={product.layoutImage}
+                      alt={`Inside pages of the ${product.name}`}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 1024px) 60vw, 32vw"
+                    />
+                  </div>
+                </div>
+                <div className={flip ? "lg:order-1" : ""}>
+                  <p className="text-[0.95rem] text-brass">{product.tagline}</p>
+                  <h3 className="mt-2 font-display text-[2rem] leading-tight sm:text-[2.4rem]">
+                    {product.name}
+                  </h3>
+                  <p className="mt-4 max-w-md text-[1.02rem] leading-7 text-forest/72">
+                    {product.description}
+                  </p>
+                  <div className="mt-7 flex flex-wrap items-center gap-5">
+                    <a href={url} className="btn-ink">
+                      Shop the {product.shortName} Notebook
+                    </a>
+                    <span className="inline-flex items-center gap-2 text-sm text-forest/60">
+                      <span
+                        className="inline-block h-3.5 w-3.5 rounded-full border border-forest/25"
+                        style={{ background: product.colorHex }}
+                        aria-hidden
+                      />
+                      {product.colorName} cover
+                    </span>
+                  </div>
+                </div>
+              </article>
+            );
+          })}
         </div>
       </section>
 
-      <section className="bg-forest px-5 py-16 text-cream sm:px-8 sm:py-20">
+      {/* How it works — laid out like a Cornell page */}
+      <section className="dark bg-forest text-cream">
+        <div className="mx-auto max-w-6xl px-5 py-20 sm:px-8 lg:px-10 lg:py-28">
+          <div className="max-w-2xl">
+            <p className="text-[0.95rem] text-brass-light">Study with Arzive</p>
+            <h2 className="mt-3 font-display text-[2.1rem] leading-tight sm:text-[2.7rem]">
+              Your notes, turned into practice
+            </h2>
+          </div>
+
+          <div className="cornell mt-12">
+            <div className="hidden text-sm text-cream/45 md:grid md:grid-cols-[13rem_1fr]">
+              <span className="py-3">Cues</span>
+              <span className="py-3 pl-8">Main notes</span>
+            </div>
+            {LOOP.map((step) => (
+              <div key={step.cue} className="cornell-row">
+                <p className="cornell-cue">{step.cue}</p>
+                <p className="cornell-notes max-w-2xl text-[1.05rem] leading-7 text-cream/78">
+                  {step.notes}
+                </p>
+              </div>
+            ))}
+            <div className="cornell-summary">
+              <p className="text-sm text-cream/45">Summary</p>
+              <div className="mt-3 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+                <p className="max-w-xl font-display text-[1.7rem] leading-snug sm:text-[2rem]">
+                  Read once. Recall hard. Remember longer.
+                </p>
+                <div className="flex flex-wrap gap-3">
+                  <Link href="/study" className="btn-solid">
+                    Open Study
+                  </Link>
+                  <Link href="/pricing" className="btn-ghost">
+                    See plans
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Philosophy */}
+      <section className="ruled px-5 py-20 sm:px-8 lg:py-28">
         <div className="mx-auto max-w-3xl text-center">
-          <h2 className="font-display text-3xl sm:text-4xl">
-            Read once. Recall hard. Remember longer.
+          <h2 className="font-display text-[2rem] leading-[1.2] sm:text-[2.7rem]">
+            We believe every student deserves the tools to succeed.
           </h2>
-          <p className="mx-auto mt-5 max-w-xl text-base font-light leading-7 text-cream/72">
-            ARZIVE notebooks teach structure on paper. Study with Arzive closes the
-            loop: capture what you wrote, practice what you forget, walk into exams
-            ready.
+          <p className="mx-auto mt-5 max-w-lg text-[1.05rem] leading-7 text-forest/70">
+            The only notebook that teaches you how to study, and a companion that
+            makes sure it sticks.
           </p>
-          <div className="mt-8 flex flex-wrap justify-center gap-3">
-            <Link href="/study" className="btn-solid">
-              Open Study
-            </Link>
-            <a href={shopUrl} className="btn-ghost">
-              Go to shop
+          <div className="mt-9 flex flex-wrap justify-center gap-3">
+            <a href={shopUrl} className="btn-ink">
+              Shop notebooks
+            </a>
+            <a href={shopifyStoreUrl("/pages/our-story")} className="btn-line">
+              Read our story
             </a>
           </div>
         </div>

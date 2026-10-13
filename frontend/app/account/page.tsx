@@ -6,20 +6,20 @@ import { useSearchParams } from "next/navigation";
 
 import { fetchMembership, type MembershipSnapshot } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
+import { friendlyError } from "@/lib/errors";
 import { shopifyMembershipUrl } from "@/lib/env";
 import { applyServerUsage, type PlanId } from "@/lib/plan";
-import { ShopifyConnect } from "@/components/ShopifyConnect";
 
-const PLAN_LABELS: Record<PlanId, string> = {
+const PLAN_NAMES: Record<PlanId, string> = {
   free: "Free",
-  plus: "Plus · $12/mo",
-  pro: "Pro · $19/mo",
+  plus: "Plus",
+  pro: "Pro",
 };
 
-const SHOPIFY_CHECKOUT_LABELS: Record<"standard" | "annual" | "scholar", string> = {
-  standard: "Plus · $12/mo",
-  annual: "Plus Annual · $79/yr",
-  scholar: "Pro · $19/mo",
+const CHECKOUT_LABELS: Record<"standard" | "annual" | "scholar", string> = {
+  standard: "Plus, $12 a month",
+  annual: "Plus Annual, $79 a year",
+  scholar: "Pro, $19 a month",
 };
 
 function parseShopifyPlan(raw: string | null): "standard" | "annual" | "scholar" | null {
@@ -32,30 +32,26 @@ function parseShopifyPlan(raw: string | null): "standard" | "annual" | "scholar"
 function AccountInner() {
   const searchParams = useSearchParams();
   const { user, ready, signIn, signUp, signOut, authHeaders } = useAuth();
-  const [mode, setMode] = useState<"login" | "signup">("login");
+  const intended = parseShopifyPlan(searchParams.get("plan"));
+  const [mode, setMode] = useState<"login" | "signup">(
+    intended || searchParams.get("mode") === "signup" ? "signup" : "login",
+  );
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
   const [membership, setMembership] = useState<MembershipSnapshot | null>(null);
-  const intended = parseShopifyPlan(searchParams.get("plan"));
   const plan: PlanId = membership?.plan || (user?.plan as PlanId | undefined) || "free";
+  const signedIn = Boolean(user?.email);
 
   useEffect(() => {
-    if (!ready || !user?.email) {
-      setMembership(null);
-      return;
-    }
+    if (!ready || !signedIn) return;
     let cancelled = false;
     void fetchMembership(authHeaders)
       .then((next) => {
         if (cancelled) return;
         setMembership(next);
         applyServerUsage({ plan: next.plan, uploads_used: next.uploads_used });
-        if (next.plan !== "free") {
-          setMessage(`${PLAN_LABELS[next.plan]} is active on this Study account.`);
-        }
       })
       .catch(() => {
         if (!cancelled) setMembership(null);
@@ -63,222 +59,200 @@ function AccountInner() {
     return () => {
       cancelled = true;
     };
-  }, [ready, user?.email, user?.plan, authHeaders]);
-
-  useEffect(() => {
-    if (intended) {
-      setMode("signup");
-      setMessage(
-        `Checkout ${SHOPIFY_CHECKOUT_LABELS[intended]} on Shopify with this same email. After the card charge, Study shows the paid plan automatically.`,
-      );
-    }
-  }, [intended]);
+  }, [ready, signedIn, authHeaders]);
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
     setBusy(true);
     setError(null);
-    setMessage(null);
     try {
       if (mode === "signup") {
         await signUp(email, password);
-        setMessage(
-          "Account created. If you already paid in Shopify with this email, your plan is unlocked.",
-        );
       } else {
         await signIn(email, password);
-        setMessage("Signed in.");
       }
       setPassword("");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Authentication failed.");
+      setError(
+        friendlyError(err, mode === "signup" ? "Could not create the account." : "Could not sign in."),
+      );
     } finally {
       setBusy(false);
     }
   }
 
-  return (
-    <>
-      {!ready ? (
-        <p className="mt-10 text-sm font-light text-cream/65">Loading session…</p>
-      ) : user?.email ? (
-        <div className="mt-10 w-full bg-cream p-7 text-forest sm:p-9">
-          <h1 className="font-display text-3xl tracking-[0.03em]">Welcome back</h1>
-          <p className="mt-3 text-sm font-light text-forest/70">
-            Signed in as <strong className="font-medium text-forest">{user.email}</strong>
-          </p>
-          <p className="mt-4 text-[0.62rem] uppercase tracking-[0.16em] text-forest/50">
-            Plan · {membership?.plan_label || PLAN_LABELS[plan]}
-          </p>
-          <p className="mt-3 text-sm font-light text-forest/65">
-            Shopify checkout and Study are two accounts until the emails match.
-            Use this address in the Shopify card form.
-          </p>
+  if (!ready) {
+    return <p className="mt-10 text-forest/60">Loading your account…</p>;
+  }
+
+  if (signedIn && user) {
+    const unlimited = plan !== "free";
+    return (
+      <div className="mt-10 w-full">
+        <div className="study-panel">
+          <h1 className="font-display text-[2.2rem] leading-tight">Your account</h1>
+          <dl className="mt-6 divide-y divide-forest/10 border-y border-forest/10">
+            <div className="flex flex-wrap justify-between gap-2 py-3.5">
+              <dt className="text-forest/60">Email</dt>
+              <dd className="font-medium">{user.email}</dd>
+            </div>
+            <div className="flex flex-wrap justify-between gap-2 py-3.5">
+              <dt className="text-forest/60">Plan</dt>
+              <dd className="font-medium">{PLAN_NAMES[plan]}</dd>
+            </div>
+            <div className="flex flex-wrap justify-between gap-2 py-3.5">
+              <dt className="text-forest/60">Uploads today</dt>
+              <dd className="font-medium">
+                {unlimited
+                  ? "Unlimited"
+                  : membership
+                    ? `${membership.uploads_used} of ${membership.uploads_cap} used`
+                    : "—"}
+              </dd>
+            </div>
+          </dl>
           <div className="mt-7 flex flex-wrap gap-3">
             <Link href="/study" className="btn-ink">
-              Study with Arzive
+              Open Study
             </Link>
-            {plan === "free" ? (
-              <a
-                href={shopifyMembershipUrl("standard")}
-                className="border border-forest/25 px-4 py-2.5 text-[0.62rem] tracking-[0.14em] uppercase text-forest"
-              >
-                Buy Plus · $12/mo
-              </a>
-            ) : (
-              <Link
-                href="/pricing"
-                className="border border-forest/25 px-4 py-2.5 text-[0.62rem] tracking-[0.14em] uppercase text-forest"
-              >
-                Compare plans
-              </Link>
-            )}
-            <button
-              type="button"
-              className="border border-forest/25 px-4 py-2.5 text-[0.62rem] tracking-[0.14em] uppercase text-forest"
-              onClick={() => void signOut()}
-            >
+            <button type="button" className="btn-line" onClick={() => void signOut()}>
               Sign out
             </button>
           </div>
-          {message ? <p className="mt-4 text-sm text-forest/70">{message}</p> : null}
         </div>
-      ) : (
-        <form
-          onSubmit={onSubmit}
-          className="mt-10 w-full bg-cream p-7 text-forest sm:p-9"
-        >
-          <h1 className="font-display text-3xl tracking-[0.03em]">
-            {mode === "signup" ? "Create account" : "Sign in"}
-          </h1>
-          <p className="mt-2 text-sm font-light text-forest/65">
-            One Study account. Paid plans unlock when this email matches the
-            Shopify customer email from checkout.
+
+        {!unlimited ? (
+          <UpgradePanel intended={intended} />
+        ) : (
+          <p className="mt-6 text-[0.95rem] leading-7 text-forest/65">
+            Your {PLAN_NAMES[plan]} plan is billed through the ARZIVE shop. To change
+            or cancel it, use the subscription link in your order email.
           </p>
-          <p className="mt-3 text-[0.62rem] uppercase tracking-[0.16em] text-forest/50">
-            Plan · {PLAN_LABELS[plan]}
-          </p>
-
-          <div className="mt-6 flex gap-2">
-            <button
-              type="button"
-              onClick={() => setMode("login")}
-              className={`px-3 py-2 text-[0.62rem] tracking-[0.14em] uppercase ${
-                mode === "login"
-                  ? "bg-forest text-cream"
-                  : "border border-forest/20 text-forest"
-              }`}
-            >
-              Sign in
-            </button>
-            <button
-              type="button"
-              onClick={() => setMode("signup")}
-              className={`px-3 py-2 text-[0.62rem] tracking-[0.14em] uppercase ${
-                mode === "signup"
-                  ? "bg-forest text-cream"
-                  : "border border-forest/20 text-forest"
-              }`}
-            >
-              Sign up
-            </button>
-          </div>
-
-          <label className="mt-6 block text-sm">
-            <span className="study-label">Email</span>
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              className="study-input mt-2"
-            />
-          </label>
-          <label className="mt-5 block text-sm">
-            <span className="study-label">Password</span>
-            <input
-              type="password"
-              required
-              minLength={6}
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              className="study-input mt-2"
-            />
-          </label>
-          {error ? <p className="mt-4 text-sm text-red-800">{error}</p> : null}
-          {message ? <p className="mt-4 text-sm text-forest/70">{message}</p> : null}
-          <button type="submit" disabled={busy} className="btn-ink mt-7 w-full">
-            {busy ? "Please wait…" : mode === "signup" ? "Create account" : "Sign in"}
-          </button>
-        </form>
-      )}
-
-      <div className="mt-10 w-full border-t border-cream/15 pt-8">
-        <p className="text-[0.62rem] uppercase tracking-[0.18em] text-cream/55">
-          Unlock Study on Shopify
-        </p>
-        <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
-          {(
-            [
-              ["standard", SHOPIFY_CHECKOUT_LABELS.standard],
-              ["annual", SHOPIFY_CHECKOUT_LABELS.annual],
-              ["scholar", SHOPIFY_CHECKOUT_LABELS.scholar],
-            ] as const
-          ).map(([id, label]) => (
-            <a
-              key={id}
-              href={shopifyMembershipUrl(id)}
-              className={`px-3 py-3 text-center text-[0.58rem] uppercase tracking-[0.12em] transition ${
-                intended === id
-                  ? "bg-cream text-forest"
-                  : "border border-cream/25 text-cream/80 hover:border-cream/50"
-              }`}
-            >
-              {label}
-            </a>
-          ))}
-        </div>
-        <p className="mt-3 text-xs font-light text-cream/50">
-          Recurring card via Shopify Payments — not Autogiro. After checkout,
-          open Study with the same email.{" "}
-          <Link href="/pricing" className="underline underline-offset-2">
-            Compare plans
-          </Link>
-          .
-        </p>
+        )}
       </div>
-    </>
+    );
+  }
+
+  return (
+    <div className="mt-10 w-full">
+      <form onSubmit={onSubmit} className="study-panel" noValidate={false}>
+        <h1 className="font-display text-[2.2rem] leading-tight">
+          {mode === "signup" ? "Create your account" : "Sign in"}
+        </h1>
+        <p className="mt-2 text-[0.98rem] leading-7 text-forest/68">
+          {mode === "signup"
+            ? "Free to start. If you buy a plan on the ARZIVE shop, use this same email and it unlocks automatically."
+            : "Welcome back. Sign in to open your Study library."}
+        </p>
+
+        {intended ? (
+          <p className="mt-5 border-l-2 border-brass bg-cream px-4 py-3 text-[0.95rem] leading-6">
+            Buying {CHECKOUT_LABELS[intended]}? Create your account with the email
+            you&apos;ll use at checkout, then{" "}
+            <a href={shopifyMembershipUrl(intended)} className="text-link font-medium">
+              continue to the shop
+            </a>
+            .
+          </p>
+        ) : null}
+
+        <div className="segmented mt-6" role="group" aria-label="Choose sign in or create account">
+          <button
+            type="button"
+            aria-pressed={mode === "login"}
+            onClick={() => {
+              setMode("login");
+              setError(null);
+            }}
+          >
+            Sign in
+          </button>
+          <button
+            type="button"
+            aria-pressed={mode === "signup"}
+            onClick={() => {
+              setMode("signup");
+              setError(null);
+            }}
+          >
+            Create account
+          </button>
+        </div>
+
+        <label className="mt-6 block">
+          <span className="study-label">Email</span>
+          <input
+            type="email"
+            required
+            autoComplete="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            className="study-input mt-1.5"
+          />
+        </label>
+        <label className="mt-4 block">
+          <span className="study-label">Password</span>
+          <input
+            type="password"
+            required
+            minLength={mode === "signup" ? 8 : undefined}
+            autoComplete={mode === "signup" ? "new-password" : "current-password"}
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            className="study-input mt-1.5"
+          />
+          {mode === "signup" ? (
+            <span className="mt-1.5 block text-sm text-forest/55">At least 8 characters.</span>
+          ) : null}
+        </label>
+        {error ? (
+          <p role="alert" className="mt-4 border-l-2 border-red-800 bg-red-50 px-3 py-2 text-[0.95rem] text-red-900">
+            {error}
+          </p>
+        ) : null}
+        <button type="submit" disabled={busy} className="btn-ink mt-6 w-full">
+          {busy ? "One moment…" : mode === "signup" ? "Create account" : "Sign in"}
+        </button>
+      </form>
+    </div>
+  );
+}
+
+function UpgradePanel({ intended }: { intended: "standard" | "annual" | "scholar" | null }) {
+  return (
+    <section className="mt-8">
+      <h2 className="font-display text-[1.6rem]">Want unlimited uploads?</h2>
+      <p className="mt-2 text-[0.98rem] leading-7 text-forest/68">
+        Paid plans are bought on the ARZIVE shop. Check out with the same email as
+        this account and Study upgrades as soon as the payment goes through.
+      </p>
+      <div className="mt-5 grid gap-2 sm:grid-cols-3">
+        {(Object.keys(CHECKOUT_LABELS) as Array<keyof typeof CHECKOUT_LABELS>).map((id) => (
+          <a
+            key={id}
+            href={shopifyMembershipUrl(id)}
+            className={intended === id ? "btn-ink" : "btn-line"}
+          >
+            {CHECKOUT_LABELS[id]}
+          </a>
+        ))}
+      </div>
+      <p className="mt-4 text-[0.95rem]">
+        <Link href="/pricing" className="text-link">
+          Compare plans
+        </Link>
+      </p>
+    </section>
   );
 }
 
 export default function AccountPage() {
   return (
-    <main className="min-h-[70vh] bg-forest text-cream">
-      <section className="mx-auto flex max-w-lg flex-col items-center px-5 py-16 sm:py-20">
-        <p className="font-display text-3xl tracking-[0.28em]">ARZIVE</p>
-        <p className="mt-3 text-[0.62rem] uppercase tracking-[0.22em] text-cream/55">
-          Account
-        </p>
-
-        <Suspense
-          fallback={
-            <p className="mt-10 text-sm font-light text-cream/65">Loading session…</p>
-          }
-        >
+    <main className="ruled min-h-[70vh] text-forest">
+      <section className="mx-auto flex max-w-lg flex-col px-5 py-14 sm:py-20">
+        <Suspense fallback={<p className="mt-10 text-forest/60">Loading your account…</p>}>
           <AccountInner />
         </Suspense>
-
-        <div className="mt-12 w-full border-t border-cream/15 pt-10">
-          <h2 className="font-display text-xl tracking-[0.04em] text-cream">
-            Merchant tools
-          </h2>
-          <p className="mt-2 mb-4 text-sm font-light text-cream/65">
-            Optional Shopify Admin connect for catalog sync.
-          </p>
-          <div className="bg-cream/5 p-1">
-            <ShopifyConnect />
-          </div>
-        </div>
       </section>
     </main>
   );
